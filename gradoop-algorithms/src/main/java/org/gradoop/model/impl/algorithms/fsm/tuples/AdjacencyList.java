@@ -22,4 +22,12 @@ public class AdjacencyList {
   public String toString() {
     return vertexLabel + ":" + entries;
   }
+
+  public String getVertexLabel() {
+    return vertexLabel;
+  }
+
+  public Collection<AdjacencyListEntry> getEntries() {
+    return entries;
+  }
 }
