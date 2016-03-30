@@ -25,6 +25,8 @@ public class GSpan
 
     this.config = collection.getConfig();
 
+    //
+
 
     return null;
   }
