@@ -60,8 +60,8 @@ public class AdjacencyListEntry {
   @Override
   public String toString() {
     return (outgoing ? "" : "<") +
-      "-[" + edgeLabel + "]-" +
+      "-" + edgeLabel + ":" + edgeId + "-" +
       (outgoing ? ">" : "") +
-      vertexLabel;
+      "(" + vertexLabel + ":" + vertexId + ")";
   }
 }
