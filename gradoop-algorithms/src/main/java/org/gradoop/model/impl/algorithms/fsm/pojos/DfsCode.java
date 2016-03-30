@@ -3,10 +3,11 @@ package org.gradoop.model.impl.algorithms.fsm.pojos;
 import com.google.common.collect.Lists;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-public class DfsCode {
+public class DfsCode implements Serializable {
   private final ArrayList<DfsStep> steps;
 
   public DfsCode(DfsStep step) {
@@ -56,5 +57,26 @@ public class DfsCode {
     }
 
     return equals;
+  }
+
+
+  public int getEdgeCount() {
+    return steps.size();
+  }
+
+  public int getVertexCount() {
+
+    int maxTime = 0;
+
+    for (DfsStep step : getSteps()) {
+      if(step.getFromTime() > maxTime) {
+        maxTime = step.getFromTime();
+      }
+      if(step.getToTime() > maxTime) {
+        maxTime = step.getToTime();
+      }
+    }
+
+    return maxTime;
   }
 }
