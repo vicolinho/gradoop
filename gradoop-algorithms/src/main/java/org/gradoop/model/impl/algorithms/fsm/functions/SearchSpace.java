@@ -4,9 +4,10 @@ import com.google.common.collect.Lists;
 import org.apache.flink.api.common.functions.JoinFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.gradoop.model.impl.algorithms.fsm.pojos.AdjacencyListEntry;
+import org.gradoop.model.impl.algorithms.fsm.pojos.CompressedDfsCode;
 import org.gradoop.model.impl.algorithms.fsm.pojos.DfsCode;
-import org.gradoop.model.impl.algorithms.fsm.pojos.DfsStep;
 import org.gradoop.model.impl.algorithms.fsm.pojos.DfsEmbedding;
+import org.gradoop.model.impl.algorithms.fsm.pojos.DfsStep;
 import org.gradoop.model.impl.algorithms.fsm.pojos.SearchSpaceItem;
 import org.gradoop.model.impl.algorithms.fsm.tuples.AdjacencyList;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SimpleEdge;
@@ -30,8 +31,9 @@ public class SearchSpace
 
     Map<GradoopId, String> vertexLabels = new HashMap<>();
     Map<GradoopId, AdjacencyList> adjacencyLists = new HashMap<>();
-    Map<DfsCode, Collection<DfsEmbedding>> codeWalks = new HashMap<>();
-    SearchSpaceItem item = new SearchSpaceItem(adjacencyLists, codeWalks);
+    Map<CompressedDfsCode, Collection<DfsEmbedding>> codeEmbeddingsMap = new HashMap<>();
+    SearchSpaceItem item =
+      new SearchSpaceItem(adjacencyLists, codeEmbeddingsMap);
 
     for(SimpleVertex vertex : graphVertices.f1) {
       vertexLabels.put(vertex.getId(), vertex.getLabel());
@@ -61,8 +63,6 @@ public class SearchSpace
 
       // update code embeddings
 
-      int sourceTargetLabelComparison = sourceLabel.compareTo(targetLabel);
-
       ArrayList<GradoopId> vertexTimes;
 
       Integer fromTime = 0;
@@ -72,7 +72,7 @@ public class SearchSpace
       String toLabel;
 
       // loop
-      if(sourceTargetLabelComparison == 0) {
+      if(sourceId.equals(targetId)) {
         toTime = 0;
 
         vertexTimes = Lists.newArrayList(sourceId);
@@ -85,7 +85,7 @@ public class SearchSpace
         toTime = 1;
 
         // in direction
-        if(sourceTargetLabelComparison < 0) {
+        if(sourceLabel.compareTo(targetLabel) < 0) {
           vertexTimes = Lists.newArrayList(sourceId, targetId);
 
           fromLabel = sourceLabel;
@@ -103,13 +103,13 @@ public class SearchSpace
       DfsStep step = new DfsStep(
         fromTime, fromLabel, outgoing, edgeLabel, toTime, toLabel);
 
-      DfsCode code = new DfsCode(step);
+      CompressedDfsCode code = new CompressedDfsCode(new DfsCode(step));
       DfsEmbedding embedding = new DfsEmbedding(vertexTimes, edgeId);
 
-      Collection<DfsEmbedding> embeddings = codeWalks.get(code);
+      Collection<DfsEmbedding> embeddings = codeEmbeddingsMap.get(code);
 
       if(embeddings == null) {
-        codeWalks.put(code, Lists.newArrayList(embedding));
+        codeEmbeddingsMap.put(code, Lists.newArrayList(embedding));
       } else {
         embeddings.add(embedding);
       }

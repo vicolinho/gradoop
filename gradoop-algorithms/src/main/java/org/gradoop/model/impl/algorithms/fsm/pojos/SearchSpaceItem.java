@@ -6,17 +6,15 @@ import org.gradoop.model.impl.id.GradoopId;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 
-/**
- * Created by peet on 30.03.16.
- */
 public class SearchSpaceItem {
 
   private final Map<GradoopId, AdjacencyList> adjacencyLists;
-  private final Map<DfsCode, Collection<DfsEmbedding>> codeEmbeddingsMap;
+  private final Map<CompressedDfsCode, Collection<DfsEmbedding>> codeEmbeddingsMap;
 
   public SearchSpaceItem(Map<GradoopId, AdjacencyList> adjacencyLists,
-    Map<DfsCode, Collection<DfsEmbedding>> codeEmbeddingsMap) {
+    Map<CompressedDfsCode, Collection<DfsEmbedding>> codeEmbeddingsMap) {
 
     this.adjacencyLists = adjacencyLists;
     this.codeEmbeddingsMap = codeEmbeddingsMap;
@@ -35,10 +33,10 @@ public class SearchSpaceItem {
 
     s += "\n\tDFS codes and embeddings";
 
-    for(Map.Entry<DfsCode, Collection<DfsEmbedding>> entry :
+    for(Map.Entry<CompressedDfsCode, Collection<DfsEmbedding>> entry :
       codeEmbeddingsMap.entrySet()) {
 
-      s += "\n\t\t" + entry.getKey();
+      s += "\n\t\t" + entry.getKey().getDfsCode();
 
       for(DfsEmbedding embedding : entry.getValue()) {
         s += embedding;
@@ -46,5 +44,9 @@ public class SearchSpaceItem {
     }
 
     return s;
+  }
+
+  public Set<CompressedDfsCode> getDfsCodes() {
+    return codeEmbeddingsMap.keySet();
   }
 }

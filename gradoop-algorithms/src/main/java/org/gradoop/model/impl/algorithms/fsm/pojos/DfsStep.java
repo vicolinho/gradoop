@@ -1,20 +1,23 @@
 package org.gradoop.model.impl.algorithms.fsm.pojos;
 
 
-public class DfsStep {
+import java.io.Serializable;
+import java.util.Objects;
+
+public class DfsStep implements Serializable {
 
   private final Integer fromTime;
   private final String fromLabel;
-  private final Boolean outgoing;
+  private final Boolean forward;
   private final String edgeLabel;
   private final Integer toTime;
   private final String toLabel;
 
-  public DfsStep(Integer fromTime, String fromLabel, Boolean outgoing,
+  public DfsStep(Integer fromTime, String fromLabel, Boolean forward,
     String edgeLabel, Integer toTime, String toLabel) {
     this.fromTime = fromTime;
     this.fromLabel = fromLabel;
-    this.outgoing = outgoing;
+    this.forward = forward;
     this.edgeLabel = edgeLabel;
     this.toTime = toTime;
     this.toLabel = toLabel;
@@ -23,7 +26,7 @@ public class DfsStep {
   @Override
   public String toString() {
     return "(" + fromTime + ":" + fromLabel + ")" +
-      (outgoing ? "" : "<") + "-" + edgeLabel + "-" + (outgoing ? ">" : "") +
+      (forward ? "" : "<") + "-" + edgeLabel + "-" + (forward ? ">" : "") +
       "(" + toTime + ":" + toLabel + ")";
   }
 
@@ -35,8 +38,8 @@ public class DfsStep {
     return fromLabel;
   }
 
-  public Boolean getOutgoing() {
-    return outgoing;
+  public Boolean isForward() {
+    return forward;
   }
 
   public String getEdgeLabel() {
@@ -68,7 +71,7 @@ public class DfsStep {
     if (!getFromLabel().equals(step.getFromLabel())) {
       return false;
     }
-    if (!getOutgoing().equals(step.getOutgoing())) {
+    if (!isForward().equals(step.isForward())) {
       return false;
     }
     if (!getEdgeLabel().equals(step.getEdgeLabel())) {
@@ -85,10 +88,14 @@ public class DfsStep {
   public int hashCode() {
     int result = getFromTime().hashCode();
     result = 31 * result + getFromLabel().hashCode();
-    result = 31 * result + getOutgoing().hashCode();
+    result = 31 * result + isForward().hashCode();
     result = 31 * result + getEdgeLabel().hashCode();
     result = 31 * result + getToTime().hashCode();
     result = 31 * result + getToLabel().hashCode();
     return result;
+  }
+
+  public Boolean isLoop() {
+    return Objects.equals(fromTime, toTime);
   }
 }
