@@ -8,7 +8,7 @@ import org.gradoop.model.impl.algorithms.fsm.pojos.CompressedDfsCode;
 import org.gradoop.model.impl.algorithms.fsm.pojos.DfsCode;
 import org.gradoop.model.impl.algorithms.fsm.pojos.DfsEmbedding;
 import org.gradoop.model.impl.algorithms.fsm.pojos.DfsStep;
-import org.gradoop.model.impl.algorithms.fsm.pojos.SearchSpaceItem;
+import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
 import org.gradoop.model.impl.algorithms.fsm.tuples.AdjacencyList;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SimpleEdge;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SimpleVertex;
@@ -29,11 +29,13 @@ public class SearchSpace
     Tuple2<GradoopId, Collection<SimpleEdge>> graphEdges) throws
     Exception {
 
+    GradoopId graphId = graphVertices.f0;
     Map<GradoopId, String> vertexLabels = new HashMap<>();
     Map<GradoopId, AdjacencyList> adjacencyLists = new HashMap<>();
     Map<CompressedDfsCode, Collection<DfsEmbedding>> codeEmbeddingsMap = new HashMap<>();
+
     SearchSpaceItem item =
-      new SearchSpaceItem(adjacencyLists, codeEmbeddingsMap);
+      new SearchSpaceItem(graphId, adjacencyLists, codeEmbeddingsMap);
 
     for(SimpleVertex vertex : graphVertices.f1) {
       vertexLabels.put(vertex.getId(), vertex.getLabel());
