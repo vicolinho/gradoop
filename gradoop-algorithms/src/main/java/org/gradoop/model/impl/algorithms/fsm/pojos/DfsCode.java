@@ -14,6 +14,10 @@ public class DfsCode implements Serializable {
     this.steps = Lists.newArrayList(step);
   }
 
+  public DfsCode() {
+    this.steps = new ArrayList<>();
+  }
+
   @Override
   public String toString() {
     return steps.toString();

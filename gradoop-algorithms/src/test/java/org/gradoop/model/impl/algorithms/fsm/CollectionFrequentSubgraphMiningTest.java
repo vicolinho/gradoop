@@ -41,4 +41,36 @@ public class CollectionFrequentSubgraphMiningTest extends GradoopFlinkTestBase {
 
     collectAndAssertTrue(expectation.equalsByGraphElementData(result));
   }
+
+  @Test
+  public void testSimpleGraphs() throws Exception {
+    GSpanBaseLine<GraphHeadPojo, VertexPojo, EdgePojo>
+      gSpan = new GSpanBaseLine<>(0.7f);
+
+    String asciiGraphs = "" +
+      "g1[(:A)-[:a]->(v1:B)-[:b]->(:C);(v1)-[:c]->(:D)]" +
+      "g2[(:A)-[:a]->(v2:B)-[:b]->(:C);(v2)-[:c]->(:E)]" +
+      "g3[(:A)-[:a]->(v3:B)-[:d]->(:C);(v3)-[:c]->(:E)]" +
+      "s1[(:A)-[:a]->(:B)]" +
+      "s2[(:B)-[:b]->(:C)]" +
+      "s3[(:B)-[:c]->(:E)]" +
+      "s4[(:A)-[:a]->(:B)-[:b]->(:C)]" ;
+
+    FlinkAsciiGraphLoader<GraphHeadPojo, VertexPojo, EdgePojo> loader =
+      getLoaderFromString(asciiGraphs);
+
+    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> searchSpace =
+      loader.getGraphCollectionByVariables("g1", "g2", "g3");
+
+    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> expectation =
+      loader.getGraphCollectionByVariables("s1", "s2", "s3", "s4");
+
+    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> result =
+      gSpan.execute(searchSpace);
+
+//    GradoopFlinkTestUtils.printCanonicalAdjacencyMatrix(expectation);
+    GradoopFlinkTestUtils.printCanonicalAdjacencyMatrix(result);
+
+    collectAndAssertTrue(expectation.equalsByGraphElementData(result));
+  }
 }
