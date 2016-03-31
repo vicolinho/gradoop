@@ -5,7 +5,7 @@ import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.pojos.CompressedDfsCode;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
 
-public class ExpandCollector implements
+public class ExpandFrequentDfsCodes implements
   FlatMapFunction<SearchSpaceItem, CompressedDfsCode> {
 
   @Override
@@ -13,7 +13,7 @@ public class ExpandCollector implements
     Collector<CompressedDfsCode> collector) throws Exception {
 
     for(CompressedDfsCode compressedDfsCode :
-      searchSpaceItem.getCollectedDfsCodes()) {
+      searchSpaceItem.getFrequentDfsCodes()) {
 
       collector.collect(compressedDfsCode);
     }

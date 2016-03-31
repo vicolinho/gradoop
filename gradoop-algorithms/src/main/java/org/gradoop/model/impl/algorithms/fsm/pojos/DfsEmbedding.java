@@ -14,8 +14,29 @@ public class DfsEmbedding {
     this.edgeTimes = Lists.newArrayList(edgeId);
   }
 
+  public DfsEmbedding(ArrayList<GradoopId> vertexTimes,
+    ArrayList<GradoopId> edgeTimes) {
+    this.vertexTimes = vertexTimes;
+    this.edgeTimes = edgeTimes;
+  }
+
   @Override
   public String toString() {
     return "\n\t\t\tVt : " + vertexTimes + "\n\t\t\t" + "Et : " + edgeTimes;
+  }
+
+  public ArrayList<GradoopId> getVertexTimes() {
+    return vertexTimes;
+  }
+
+  public ArrayList<GradoopId> getEdgeTimes() {
+    return edgeTimes;
+  }
+
+  public static DfsEmbedding deepCopy(DfsEmbedding embedding) {
+    return new DfsEmbedding(
+      Lists.newArrayList(embedding.getVertexTimes()),
+      Lists.newArrayList(embedding.getEdgeTimes())
+    );
   }
 }
