@@ -14,8 +14,8 @@ public class CollectionFrequentSubgraphMiningTest extends GradoopFlinkTestBase {
   @Test
   public void testSingleEdges() throws Exception {
 
-    GSpanBaseLine<GraphHeadPojo, VertexPojo, EdgePojo>
-      gSpan = new GSpanBaseLine<>(0.7f);
+    GSpan<GraphHeadPojo, VertexPojo, EdgePojo>
+      gSpan = new GSpan<>(FSMConfig.forDirectedMultigraph(0.7f));
 
     String asciiGraphs = "" +
       "g1[(v1:A)-[e1:a]->(v2:A)];" +
@@ -44,8 +44,8 @@ public class CollectionFrequentSubgraphMiningTest extends GradoopFlinkTestBase {
 
   @Test
   public void testSimpleGraphs() throws Exception {
-    GSpanBaseLine<GraphHeadPojo, VertexPojo, EdgePojo>
-      gSpan = new GSpanBaseLine<>(0.7f);
+    GSpan<GraphHeadPojo, VertexPojo, EdgePojo>
+      gSpan = new GSpan<>(FSMConfig.forDirectedMultigraph(0.7f));
 
     String asciiGraphs = "" +
       "g1[(:A)-[:a]->(v1:B)-[:b]->(:C);(v1)-[:c]->(:D)]" +

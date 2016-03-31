@@ -18,6 +18,10 @@ public class DfsCode implements Serializable {
     this.steps = new ArrayList<>();
   }
 
+  public DfsCode(ArrayList<DfsStep> steps) {
+    this.steps = steps;
+  }
+
   @Override
   public String toString() {
     return steps.toString();
@@ -82,5 +86,9 @@ public class DfsCode implements Serializable {
     }
 
     return maxTime;
+  }
+
+  public static DfsCode deepCopy(DfsCode dfsCode) {
+    return new DfsCode(Lists.newArrayList(dfsCode.getSteps()));
   }
 }

@@ -13,9 +13,9 @@ public class Report implements
   public void flatMap(SearchSpaceItem searchSpaceItem,
     Collector<Tuple2<CompressedDfsCode, Integer>> collector) throws Exception {
 
-    System.out.println("");
+    for(CompressedDfsCode code :
+      searchSpaceItem.getCodeEmbeddings().keySet()) {
 
-    for(CompressedDfsCode code : searchSpaceItem.getDfsCodes()) {
       collector.collect(new Tuple2<>(code, 1));
     }
   }

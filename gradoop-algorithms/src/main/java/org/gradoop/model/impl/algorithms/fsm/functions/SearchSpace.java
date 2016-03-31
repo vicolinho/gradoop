@@ -8,8 +8,8 @@ import org.gradoop.model.impl.algorithms.fsm.pojos.CompressedDfsCode;
 import org.gradoop.model.impl.algorithms.fsm.pojos.DfsCode;
 import org.gradoop.model.impl.algorithms.fsm.pojos.DfsEmbedding;
 import org.gradoop.model.impl.algorithms.fsm.pojos.DfsStep;
-import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
 import org.gradoop.model.impl.algorithms.fsm.tuples.AdjacencyList;
+import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SimpleEdge;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SimpleVertex;
 import org.gradoop.model.impl.id.GradoopId;
@@ -17,7 +17,6 @@ import org.gradoop.model.impl.id.GradoopId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.Map;
 
 public class SearchSpace
   implements JoinFunction<Tuple2<GradoopId,Collection<SimpleVertex>>,
@@ -30,12 +29,12 @@ public class SearchSpace
     Exception {
 
     GradoopId graphId = graphVertices.f0;
-    Map<GradoopId, String> vertexLabels = new HashMap<>();
-    Map<GradoopId, AdjacencyList> adjacencyLists = new HashMap<>();
-    Map<CompressedDfsCode, Collection<DfsEmbedding>> codeEmbeddingsMap = new HashMap<>();
+    HashMap<GradoopId, String> vertexLabels = new HashMap<>();
+    HashMap<GradoopId, AdjacencyList> adjacencyLists = new HashMap<>();
+    HashMap<CompressedDfsCode, Collection<DfsEmbedding>> codeEmbeddingsMap = new HashMap<>();
 
-    SearchSpaceItem item =
-      new SearchSpaceItem(graphId, adjacencyLists, codeEmbeddingsMap);
+    SearchSpaceItem item = SearchSpaceItem.createForGraph(
+      graphId, adjacencyLists, codeEmbeddingsMap);
 
     for(SimpleVertex vertex : graphVertices.f1) {
       vertexLabels.put(vertex.getId(), vertex.getLabel());
