@@ -21,8 +21,14 @@ public class EdgePatternComparator
 
     if(directed) {
       if(comparison == 0) {
-        comparison = ep1.getOutgoing()
-          .compareTo(ep2.getOutgoing());
+
+        if(ep1.isOutgoing() && ep2.isOutgoing()) {
+          comparison = 0;
+        } else if (ep1.isOutgoing()) {
+          comparison = -1;
+        } else {
+          comparison = 1;
+        }
 
         if(comparison == 0) {
           comparison = ep1.getEdgeLabel()

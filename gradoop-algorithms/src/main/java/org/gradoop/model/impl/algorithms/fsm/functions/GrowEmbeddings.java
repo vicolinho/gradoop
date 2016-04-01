@@ -5,30 +5,27 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.flink.api.common.functions.CrossFunction;
 import org.gradoop.model.impl.algorithms.fsm.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.comparators.DfsCodeComparator;
-import org.gradoop.model.impl.algorithms.fsm.pojos.EdgePattern;
 import org.gradoop.model.impl.algorithms.fsm.comparators.EdgePatternComparator;
 import org.gradoop.model.impl.algorithms.fsm.pojos.AdjacencyListEntry;
 import org.gradoop.model.impl.algorithms.fsm.pojos.CompressedDfsCode;
 import org.gradoop.model.impl.algorithms.fsm.pojos.DfsCode;
 import org.gradoop.model.impl.algorithms.fsm.pojos.DfsEmbedding;
 import org.gradoop.model.impl.algorithms.fsm.pojos.DfsStep;
+import org.gradoop.model.impl.algorithms.fsm.pojos.EdgePattern;
 import org.gradoop.model.impl.algorithms.fsm.tuples.AdjacencyList;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
 import org.gradoop.model.impl.id.GradoopId;
 import org.gradoop.model.impl.id.GradoopIdSet;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-public class GrowEmbeddings
-//  extends RichMapFunction<SearchSpaceItem, SearchSpaceItem>
-  implements CrossFunction
+public class GrowEmbeddings implements CrossFunction
   <SearchSpaceItem, CompressedDfsCode[], SearchSpaceItem> {
 
-
-//  public static final String DS_NAME = "DFSs";
-//  private CompressedDfsCode[] frequentDfsCodes;
   private final DfsCodeComparator dfsCodeComparator;
   private final EdgePatternComparator edgePatternComparator;
 
@@ -39,24 +36,9 @@ public class GrowEmbeddings
     this.edgePatternComparator = new EdgePatternComparator(directed);
   }
 
-//  @Override
-//  public void open(Configuration parameters) throws Exception {
-//    super.open(parameters);
-//
-//    this.frequentDfsCodes = getRuntimeContext()
-//      .<CompressedDfsCode[]>getBroadcastVariable(DS_NAME).get(0);
-//  }
-
-//  @Override
-//  public SearchSpaceItem map(SearchSpaceItem graph) throws Exception {
-//    return grow(graph);
-//  }
-
   @Override
   public SearchSpaceItem cross(SearchSpaceItem searchSpaceItem,
     CompressedDfsCode[] frequentDfsCodes) throws Exception {
-
-//    System.out.println(searchSpaceItem);
 
     if(searchSpaceItem.isCollector()) {
       searchSpaceItem = collect(searchSpaceItem, frequentDfsCodes);
@@ -93,109 +75,126 @@ public class GrowEmbeddings
 
   private SearchSpaceItem grow(SearchSpaceItem graph,
     CompressedDfsCode[] frequentDfsCodes) {
+
     // min DFS code per subgraph (set of edge ids)
-    Map<GradoopIdSet, DfsCode> coverageMinDfsCode = new HashMap<>();
+    Map<Integer, DfsCode> coverageMinDfsCode = new HashMap<>();
     // embeddings per DFS code
     Map<DfsCode, Collection<DfsEmbedding>> codeEmbeddings = new HashMap<>();
 
-    // for each supported frequent DFS code
+    // for each supported DFS code
     for(Map.Entry<CompressedDfsCode, Collection<DfsEmbedding>> entry :
       graph.getCodeEmbeddings().entrySet()) {
 
       CompressedDfsCode compressedDfsCode = entry.getKey();
+
+      // PRUNING : grow only embeddings of frequent DFS codes
       if(ArrayUtils.contains(frequentDfsCodes, compressedDfsCode)) {
 
         DfsCode parentDfsCode = compressedDfsCode.getDfsCode();
-
         EdgePattern minPattern = parentDfsCode.getMinEdgePattern();
+        List<Integer> rightmostPath = parentDfsCode.getRightMostPath();
 
         // for each embedding
         for(DfsEmbedding parentEmbedding : entry.getValue()) {
 
-          // for each vertex of embedding
-          for(GradoopId fromVertexId : parentEmbedding.getVertexTimes()) {
+          // rightmost path is inverse, so first element is rightmost vertex
+          Boolean rightMostVertex = true;
+          ArrayList<GradoopId> vertexTimes = parentEmbedding.getVertexTimes();
 
-            // for each incident edge
-            AdjacencyList adjacencyList =
-              graph.getAdjacencyLists().get(fromVertexId);
+          // for each time on rightmost path
+          for(Integer fromVertexTime : rightmostPath) {
 
+            // query fromVertex data
+            AdjacencyList adjacencyList = graph.getAdjacencyLists()
+              .get(vertexTimes.get(fromVertexTime));
             String fromVertexLabel = adjacencyList.getVertexLabel();
 
+            // for each incident edge
             for(AdjacencyListEntry adjacencyListEntry :
               adjacencyList.getEntries()) {
 
-              GradoopId edgeId = adjacencyListEntry.getEdgeId();
-              GradoopId toVertexId = adjacencyListEntry.getVertexId();
+              boolean outgoing = adjacencyListEntry.isOutgoing();
+              String edgeLabel = adjacencyListEntry.getEdgeLabel();
+              String toVertexLabel = adjacencyListEntry.getVertexLabel();
 
-              // if grow possible
-              if(!parentEmbedding.getEdgeTimes().contains(edgeId)) {
+              EdgePattern candidatePattern = new EdgePattern(
+                fromVertexLabel, outgoing, edgeLabel, toVertexLabel);
 
-                boolean outgoing = adjacencyListEntry.isOutgoing();
-                String edgeLabel = adjacencyListEntry.getEdgeLabel();
-                String toVertexLabel = adjacencyListEntry.getVertexLabel();
+              // PRUNING : continue only if edge pattern is lexicographically
+              // larger than first step of DFS code
+              if(edgePatternComparator
+                .compare(minPattern, candidatePattern) <= 0) {
+
+                GradoopId edgeId = adjacencyListEntry.getEdgeId();
+
+                // allow only edges not already contained
+                if(!parentEmbedding.getEdgeTimes().contains(edgeId)) {
 
 
-                DfsEmbedding embedding = DfsEmbedding.deepCopy(parentEmbedding);
-                DfsCode dfsCode = DfsCode.deepCopy(parentDfsCode);
+                  // query toVertexData
+                  GradoopId toVertexId = adjacencyListEntry.getVertexId();
+                  Integer toVertexTime = vertexTimes.indexOf(toVertexId);
+                  boolean forward = toVertexTime < 0;
 
-                EdgePattern candidatePattern = new EdgePattern(
-                  fromVertexLabel, outgoing, edgeLabel, toVertexLabel);
+                  // PRUNING : grow only forward
+                  // or backward from rightmost vertex
+                  if(forward || rightMostVertex) {
 
-                // prune by lexicographical order
-                if(edgePatternComparator.compare(minPattern,
-                  candidatePattern) >= 0) {
+                    DfsEmbedding embedding = DfsEmbedding
+                      .deepCopy(parentEmbedding);
+                    DfsCode dfsCode = DfsCode
+                      .deepCopy(parentDfsCode);
 
-                  Integer fromVertexTime = parentEmbedding
-                    .getVertexTimes().indexOf(fromVertexId);
-
-                  Integer toVertexTime = parentEmbedding
-                    .getVertexTimes().indexOf(toVertexId);
-
-                  // if forward
-                  if(toVertexTime >= 0) {
-                    embedding.getVertexTimes().add(toVertexId);
-                    toVertexTime = embedding.getVertexTimes().size();
-                  }
-
-                  dfsCode.getSteps().add(new DfsStep(
-                    fromVertexTime,
-                    fromVertexLabel,
-                    outgoing,
-                    edgeLabel,
-                    toVertexTime,
-                    toVertexLabel
-                  ));
-
-                  embedding.getEdgeTimes().add(edgeId);
-
-                  // check if subgraph already discovered
-                  GradoopIdSet coverage =
-                    GradoopIdSet.fromExisting(embedding.getEdgeTimes());
-
-                  // update min DFS code if subgraph not already discovered or
-                  // new DFS code is less than last one minimum one
-                  DfsCode minDfsCode = coverageMinDfsCode.get(coverage);
-                  Collection<DfsEmbedding> embeddings = codeEmbeddings
-                    .get(dfsCode);
-
-                  if(minDfsCode == null
-                    || dfsCodeComparator.compare(dfsCode, minDfsCode) < 0) {
-
-                    coverageMinDfsCode.put(coverage, dfsCode);
-
-                    if(minDfsCode != null) {
-                      codeEmbeddings.remove(minDfsCode);
+                    // add new vertex to embedding for forward steps
+                    if(forward) {
+                      embedding.getVertexTimes().add(toVertexId);
+                      toVertexTime = embedding.getVertexTimes().size() - 1;
                     }
-                  }
 
-                  if(embeddings == null) {
-                    codeEmbeddings.put(dfsCode, Lists.newArrayList(embedding));
-                  } else {
-                    embeddings.add(embedding);
+                    dfsCode.getSteps().add(new DfsStep(
+                      fromVertexTime,
+                      fromVertexLabel,
+                      outgoing,
+                      edgeLabel,
+                      toVertexTime,
+                      toVertexLabel
+                    ));
+
+                    embedding.getEdgeTimes().add(edgeId);
+
+                    // check if subgraph already discovered
+                    Integer coverage = GradoopIdSet
+                      .fromExisting(embedding.getEdgeTimes()).hashCode();
+
+                    // update min DFS code if subgraph not already discovered or
+                    // new DFS code is less than last one minimum one
+                    DfsCode minDfsCode = coverageMinDfsCode.get(coverage);
+
+                    Collection<DfsEmbedding> embeddings = codeEmbeddings
+                      .get(dfsCode);
+
+                    // new minimal DFS code found
+                    if(minDfsCode == null
+                      || dfsCodeComparator.compare(dfsCode, minDfsCode) < 0) {
+
+                      coverageMinDfsCode.put(coverage, dfsCode);
+
+                      if(minDfsCode != null) {
+                        codeEmbeddings.remove(minDfsCode);
+                      }
+
+                      if(embeddings == null) {
+                        codeEmbeddings.put(
+                          dfsCode, Lists.newArrayList(embedding));
+                      } else {
+                        embeddings.add(embedding);
+                      }
+                    }
                   }
                 }
               }
             }
+            rightMostVertex = false;
           }
         }
       }

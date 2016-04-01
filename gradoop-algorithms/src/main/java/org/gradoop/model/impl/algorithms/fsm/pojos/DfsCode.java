@@ -6,6 +6,7 @@ import org.apache.commons.lang.builder.HashCodeBuilder;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 public class DfsCode implements Serializable {
   private final ArrayList<DfsStep> steps;
@@ -29,6 +30,7 @@ public class DfsCode implements Serializable {
 
   @Override
   public int hashCode() {
+
     HashCodeBuilder builder = new HashCodeBuilder();
 
     for(DfsStep step : steps) {
@@ -102,5 +104,42 @@ public class DfsCode implements Serializable {
       firstStep.getEdgeLabel(),
       firstStep.getToLabel()
     );
+  }
+
+  public List<Integer> getRightMostPath() {
+
+    Integer lastFromTime = null;
+    Integer lastToTime = null;
+
+    List<Integer> rightMostPath = null;
+
+    for(DfsStep step : Lists.reverse(steps)) {
+
+      if(step.isForward() || lastToTime == null && step.isLoop()) {
+        int fromTime = step.getFromTime();
+        int toTime = step.getToTime();
+
+        if(lastToTime == null) {
+          // graph consists of a single loop
+          if(toTime == 0) {
+            rightMostPath = Lists.newArrayList(toTime);
+          } else {
+            rightMostPath = Lists.newArrayList(toTime, fromTime);
+          }
+        } else if(lastFromTime == toTime) {
+          rightMostPath.add(fromTime);
+        }
+
+        if(fromTime == 0) {
+          break;
+        }
+
+        lastFromTime = fromTime;
+        lastToTime = toTime;
+      }
+    }
+
+
+    return rightMostPath;
   }
 }

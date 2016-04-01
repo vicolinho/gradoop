@@ -9,15 +9,15 @@ import java.util.Objects;
 
 public class DfsStep implements Serializable {
 
-  private final Integer fromTime;
+  private final int fromTime;
   private final String fromLabel;
   private final Boolean outgoing;
   private final String edgeLabel;
-  private final Integer toTime;
+  private final int toTime;
   private final String toLabel;
 
-  public DfsStep(Integer fromTime, String fromLabel, Boolean outgoing,
-    String edgeLabel, Integer toTime, String toLabel) {
+  public DfsStep(int fromTime, String fromLabel, Boolean outgoing,
+    String edgeLabel, int toTime, String toLabel) {
     this.fromTime = fromTime;
     this.fromLabel = fromLabel;
     this.outgoing = outgoing;
@@ -33,7 +33,7 @@ public class DfsStep implements Serializable {
       "(" + toTime + ":" + toLabel + ")";
   }
 
-  public Integer getFromTime() {
+  public int getFromTime() {
     return fromTime;
   }
 
@@ -49,7 +49,7 @@ public class DfsStep implements Serializable {
     return edgeLabel;
   }
 
-  public Integer getToTime() {
+  public int getToTime() {
     return toTime;
   }
 
@@ -95,11 +95,11 @@ public class DfsStep implements Serializable {
   }
 
   public Boolean isLoop() {
-    return Objects.equals(fromTime, toTime);
+    return fromTime == toTime;
   }
 
   public Boolean isForward() {
-    return getFromTime() > getToTime();
+    return getFromTime() < getToTime() || getToTime() == 0;
   }
 
   public Boolean isBackward() {

@@ -26,7 +26,7 @@ public class DfsStepComparator implements Comparator<DfsStep>, Serializable {
       if (s1.isForward()) {
 
         // starts from same position
-        if (s1.getFromTime().equals(s2.getFromTime())) {
+        if (s1.getFromTime() == s2.getFromTime()) {
 
           // inherit edge comparison by labels (lexicographically order)
           comparison = compareLabels(s1, s2);
@@ -44,7 +44,7 @@ public class DfsStepComparator implements Comparator<DfsStep>, Serializable {
       } else {
 
         // refers same position
-        if (s1.getToTime().equals(s2.getToTime())) {
+        if (s1.getToTime() == s2.getToTime()) {
 
           // inherit edge comparison by labels (lexicographically order)
           comparison = compareLabels(s1, s2);
