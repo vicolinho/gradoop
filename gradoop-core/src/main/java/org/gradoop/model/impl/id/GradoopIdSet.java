@@ -18,6 +18,7 @@
 package org.gradoop.model.impl.id;
 
 import com.google.common.collect.Sets;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.hadoop.io.WritableComparable;
 
 import java.io.DataInput;
@@ -231,14 +232,37 @@ public class GradoopIdSet implements Iterable<GradoopId>,
 
   @Override
   public boolean equals(Object other) {
-    return other == this || other instanceof GradoopIdSet &&
-      this.identifiers.equals(((GradoopIdSet) other).identifiers);
+    Boolean equals = this == other;
+
+    if(!equals && other != null && other instanceof GradoopIdSet ) {
+
+      GradoopIdSet otherSet = (GradoopIdSet) other;
+
+      if(this.size() == otherSet.size()) {
+
+        Iterator<GradoopId> ownSteps = this.iterator();
+        Iterator<GradoopId> otherSteps = otherSet.iterator();
+
+        equals = true;
+
+        while(otherSteps.hasNext() && equals) {
+          equals = ownSteps.next().equals(otherSteps.next());
+        }
+      }
+    }
+
+    return equals;
   }
 
   @Override
   public int hashCode() {
-    return this.identifiers.hashCode();
-  }
+    HashCodeBuilder builder = new HashCodeBuilder();
+
+    for(GradoopId gradoopId : identifiers) {
+      builder.append(gradoopId.hashCode());
+    }
+
+    return builder.hashCode();  }
 
   @Override
   public String toString() {
