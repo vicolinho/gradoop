@@ -91,4 +91,16 @@ public class DfsCode implements Serializable {
   public static DfsCode deepCopy(DfsCode dfsCode) {
     return new DfsCode(Lists.newArrayList(dfsCode.getSteps()));
   }
+
+  public EdgePattern getMinEdgePattern() {
+
+    DfsStep firstStep = steps.get(0);
+
+    return new EdgePattern(
+      firstStep.getFromLabel(),
+      firstStep.isOutgoing(),
+      firstStep.getEdgeLabel(),
+      firstStep.getToLabel()
+    );
+  }
 }

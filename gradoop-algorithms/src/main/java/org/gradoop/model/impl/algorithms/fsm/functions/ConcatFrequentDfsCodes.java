@@ -8,7 +8,7 @@ import org.gradoop.model.impl.algorithms.fsm.pojos.CompressedDfsCode;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ConcatCompressedDfsCodes implements GroupReduceFunction
+public class ConcatFrequentDfsCodes implements GroupReduceFunction
   <Tuple2<CompressedDfsCode, Integer>, CompressedDfsCode[]> {
 
   @Override

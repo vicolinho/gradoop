@@ -7,11 +7,13 @@ public class FSMConfig implements Serializable {
   private final boolean  directed;
   private final boolean  multiGraph;
   private boolean multigraph;
+  private int maxEdgeCount;
 
   public FSMConfig(float threshold, boolean directed, boolean multiGraph) {
     this.threshold = threshold;
     this.directed = directed;
     this.multiGraph = multiGraph;
+    this.maxEdgeCount = 10;
   }
 
   public float getThreshold() {
@@ -28,5 +30,9 @@ public class FSMConfig implements Serializable {
 
   public boolean isDirected() {
     return directed;
+  }
+
+  public int getMaxEdgeCount() {
+    return maxEdgeCount;
   }
 }

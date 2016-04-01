@@ -1,6 +1,9 @@
 package org.gradoop.model.impl.algorithms.fsm.pojos;
 
 
+import org.apache.commons.lang.builder.EqualsBuilder;
+import org.apache.commons.lang.builder.HashCodeBuilder;
+
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -8,16 +11,16 @@ public class DfsStep implements Serializable {
 
   private final Integer fromTime;
   private final String fromLabel;
-  private final Boolean forward;
+  private final Boolean outgoing;
   private final String edgeLabel;
   private final Integer toTime;
   private final String toLabel;
 
-  public DfsStep(Integer fromTime, String fromLabel, Boolean forward,
+  public DfsStep(Integer fromTime, String fromLabel, Boolean outgoing,
     String edgeLabel, Integer toTime, String toLabel) {
     this.fromTime = fromTime;
     this.fromLabel = fromLabel;
-    this.forward = forward;
+    this.outgoing = outgoing;
     this.edgeLabel = edgeLabel;
     this.toTime = toTime;
     this.toLabel = toLabel;
@@ -26,7 +29,7 @@ public class DfsStep implements Serializable {
   @Override
   public String toString() {
     return "(" + fromTime + ":" + fromLabel + ")" +
-      (forward ? "" : "<") + "-" + edgeLabel + "-" + (forward ? ">" : "") +
+      (outgoing ? "" : "<") + "-" + edgeLabel + "-" + (outgoing ? ">" : "") +
       "(" + toTime + ":" + toLabel + ")";
   }
 
@@ -38,8 +41,8 @@ public class DfsStep implements Serializable {
     return fromLabel;
   }
 
-  public Boolean isForward() {
-    return forward;
+  public Boolean isOutgoing() {
+    return outgoing;
   }
 
   public String getEdgeLabel() {
@@ -55,47 +58,51 @@ public class DfsStep implements Serializable {
   }
 
   @Override
-  public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
-    if (o == null || getClass() != o.getClass()) {
-      return false;
+  public boolean equals(Object obj) {
+    boolean equals = obj == this;
+
+    if(!equals && obj != null && obj.getClass() == getClass()) {
+
+      DfsStep other = (DfsStep) obj;
+
+      EqualsBuilder builder = new EqualsBuilder();
+
+      builder.append(this.isOutgoing(), other.isOutgoing());
+      builder.append(this.getFromTime(), other.getFromTime());
+      builder.append(this.getToTime(), other.getToTime());
+      builder.append(this.getFromLabel(), other.getFromLabel());
+      builder.append(this.getEdgeLabel(), other.getEdgeLabel());
+      builder.append(this.getToLabel(), other.getToLabel());
+
+      equals = builder.isEquals();
     }
 
-    DfsStep step = (DfsStep) o;
-
-    if (!getFromTime().equals(step.getFromTime())) {
-      return false;
-    }
-    if (!getFromLabel().equals(step.getFromLabel())) {
-      return false;
-    }
-    if (!isForward().equals(step.isForward())) {
-      return false;
-    }
-    if (!getEdgeLabel().equals(step.getEdgeLabel())) {
-      return false;
-    }
-    if (!getToTime().equals(step.getToTime())) {
-      return false;
-    }
-    return getToLabel().equals(step.getToLabel());
-
+    return equals;
   }
 
   @Override
   public int hashCode() {
-    int result = getFromTime().hashCode();
-    result = 31 * result + getFromLabel().hashCode();
-    result = 31 * result + isForward().hashCode();
-    result = 31 * result + getEdgeLabel().hashCode();
-    result = 31 * result + getToTime().hashCode();
-    result = 31 * result + getToLabel().hashCode();
-    return result;
+    HashCodeBuilder builder = new HashCodeBuilder();
+
+    builder.append(isOutgoing());
+    builder.append(getFromTime());
+    builder.append(getToTime());
+    builder.append(getFromLabel());
+    builder.append(getEdgeLabel());
+    builder.append(getToLabel());
+
+    return builder.hashCode();
   }
 
   public Boolean isLoop() {
     return Objects.equals(fromTime, toTime);
+  }
+
+  public Boolean isForward() {
+    return getFromTime() > getToTime();
+  }
+
+  public Boolean isBackward() {
+    return !isForward();
   }
 }

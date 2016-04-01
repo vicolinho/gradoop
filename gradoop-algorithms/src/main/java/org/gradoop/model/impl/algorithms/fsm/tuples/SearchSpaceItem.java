@@ -99,25 +99,36 @@ public class SearchSpaceItem extends Tuple6<
   @Override
   public String toString() {
 
-    String s = "SearchSpaceItem\n\tAdjacency lists";
+    String s = "SearchSpaceItem";
 
-    for(Map.Entry<GradoopId, AdjacencyList> entry :
-      getAdjacencyLists().entrySet()) {
 
-      s += "\n\t\t(" + entry.getValue().getVertexLabel() + ":" +
-        entry.getKey() + ") : " +
-        StringUtils.join(entry.getValue().getEntries(), " | ");
-    }
+    if(isCollector()) {
+      s += " (Collector)\n\tFrequent DFS codes\n";
 
-    s += "\n\tDFS codes and embeddings";
+      for(CompressedDfsCode compressedDfsCode : getFrequentDfsCodes()) {
+        s+= "\n" + compressedDfsCode;
+      }
+    } else {
+      s += " (Graph)\n\tAdjacency lists";
 
-    for(Map.Entry<CompressedDfsCode, Collection<DfsEmbedding>> entry :
-      getCodeEmbeddings().entrySet()) {
+      for(Map.Entry<GradoopId, AdjacencyList> entry :
+        getAdjacencyLists().entrySet()) {
 
-      s += "\n\t\t" + entry.getKey().getDfsCode();
+        s += "\n\t\t(" + entry.getValue().getVertexLabel() + ":" +
+          entry.getKey() + ") : " +
+          StringUtils.join(entry.getValue().getEntries(), " | ");
+      }
 
-      for(DfsEmbedding embedding : entry.getValue()) {
-        s += embedding;
+      s += "\n\tDFS codes and embeddings";
+
+      for(Map.Entry<CompressedDfsCode, Collection<DfsEmbedding>> entry :
+        getCodeEmbeddings().entrySet()) {
+
+        s += "\n\t\t" + entry.getKey().getDfsCode();
+
+        for(DfsEmbedding embedding : entry.getValue()) {
+          s += embedding;
+        }
       }
     }
 

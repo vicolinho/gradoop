@@ -2,6 +2,7 @@ package org.gradoop.model.impl.algorithms.fsm.pojos;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.flink.api.java.tuple.Tuple1;
+import org.apache.flink.api.java.tuple.Tuple2;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -11,7 +12,7 @@ import java.io.ObjectOutputStream;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
-public class CompressedDfsCode extends Tuple1<byte[]> {
+public class CompressedDfsCode extends Tuple2<byte[], Integer> {
 
   public CompressedDfsCode() {}
 
@@ -24,6 +25,7 @@ public class CompressedDfsCode extends Tuple1<byte[]> {
       objectOS.writeObject(dfsCode);
       objectOS.close();
       this.f0 = byteArrayOS.toByteArray();
+      this.f1 = 1;
     } catch (IOException e) {
       e.printStackTrace();
     }
@@ -47,7 +49,7 @@ public class CompressedDfsCode extends Tuple1<byte[]> {
 
   @Override
   public String toString() {
-    return getDfsCode().toString();
+    return getSupport() + " " + getDfsCode().toString();
   }
 
   @Override
@@ -69,4 +71,11 @@ public class CompressedDfsCode extends Tuple1<byte[]> {
   }
 
 
+  public Integer getSupport() {
+    return this.f1;
+  }
+
+  public void setSupport(Integer support) {
+    this.f1 = support;
+  }
 }

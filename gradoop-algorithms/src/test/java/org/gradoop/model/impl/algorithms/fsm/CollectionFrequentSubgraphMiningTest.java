@@ -36,7 +36,9 @@ public class CollectionFrequentSubgraphMiningTest extends GradoopFlinkTestBase {
     GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> result =
       gSpan.execute(searchSpace);
 
+//    System.out.println("EXPECTED");
 //    GradoopFlinkTestUtils.printCanonicalAdjacencyMatrix(expectation);
+//    System.out.println("RESULT");
 //    GradoopFlinkTestUtils.printCanonicalAdjacencyMatrix(result);
 
     collectAndAssertTrue(expectation.equalsByGraphElementData(result));
@@ -54,7 +56,8 @@ public class CollectionFrequentSubgraphMiningTest extends GradoopFlinkTestBase {
       "s1[(:A)-[:a]->(:B)]" +
       "s2[(:B)-[:b]->(:C)]" +
       "s3[(:B)-[:c]->(:E)]" +
-      "s4[(:A)-[:a]->(:B)-[:b]->(:C)]" ;
+      "s4[(:A)-[:a]->(:B)-[:b]->(:C)]" +
+      "s5[(:A)-[:a]->(:B)-[:c]->(:E)]" ;
 
     FlinkAsciiGraphLoader<GraphHeadPojo, VertexPojo, EdgePojo> loader =
       getLoaderFromString(asciiGraphs);
@@ -63,13 +66,15 @@ public class CollectionFrequentSubgraphMiningTest extends GradoopFlinkTestBase {
       loader.getGraphCollectionByVariables("g1", "g2", "g3");
 
     GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> expectation =
-      loader.getGraphCollectionByVariables("s1", "s2", "s3", "s4");
+      loader.getGraphCollectionByVariables("s1", "s2", "s3", "s4", "s5");
 
     GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> result =
       gSpan.execute(searchSpace);
 
+//    System.out.println("EXPECTED");
 //    GradoopFlinkTestUtils.printCanonicalAdjacencyMatrix(expectation);
-    GradoopFlinkTestUtils.printCanonicalAdjacencyMatrix(result);
+//    System.out.println("RESULT");
+//    GradoopFlinkTestUtils.printCanonicalAdjacencyMatrix(result);
 
     collectAndAssertTrue(expectation.equalsByGraphElementData(result));
   }

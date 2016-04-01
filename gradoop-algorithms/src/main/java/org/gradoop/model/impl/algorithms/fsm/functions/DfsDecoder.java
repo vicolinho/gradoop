@@ -70,7 +70,10 @@ public class DfsDecoder
 
     DfsCode dfsCode = compressedDfsCode.getDfsCode();
 
-    G graphHead = graphHeadFactory.createGraphHead(dfsCode.toString());
+    G graphHead = graphHeadFactory.createGraphHead();
+
+    graphHead.setProperty("dfsCode", dfsCode.toString());
+    graphHead.setProperty("support", compressedDfsCode.getSupport());
 
     GradoopIdSet graphIds = GradoopIdSet.fromExisting(graphHead.getId());
 
@@ -93,7 +96,7 @@ public class DfsDecoder
       GradoopId targetId;
       GradoopId sourceId;
 
-      if(step.isForward()) {
+      if(step.isOutgoing()) {
         sourceId = getOrCreateVertex(
           fromTime, fromLabel, vertices, vertexTimeId, graphIds);
 
