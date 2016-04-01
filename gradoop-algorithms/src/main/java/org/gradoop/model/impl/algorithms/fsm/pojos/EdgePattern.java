@@ -22,7 +22,7 @@ public class EdgePattern {
     return minVertexLabel;
   }
 
-  public Boolean getOutgoing() {
+  public Boolean isOutgoing() {
     return outgoing;
   }
 

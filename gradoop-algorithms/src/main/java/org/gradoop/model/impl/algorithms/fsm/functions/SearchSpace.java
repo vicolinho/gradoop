@@ -86,7 +86,7 @@ public class SearchSpace
         toTime = 1;
 
         // in direction
-        if(sourceLabel.compareTo(targetLabel) < 0) {
+        if(sourceLabel.compareTo(targetLabel) <= 0) {
           vertexTimes = Lists.newArrayList(sourceId, targetId);
 
           fromLabel = sourceLabel;
