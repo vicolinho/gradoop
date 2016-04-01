@@ -6,16 +6,14 @@ import org.apache.flink.util.Collector;
 
 import java.util.Collection;
 
-public class VertexExpander<G, V, E>
-  implements FlatMapFunction<Tuple3<G, Collection<V>, Collection<E>>, V> {
+public class ExpandEdges<G, V, E>
+  implements FlatMapFunction<Tuple3<G, Collection<V>, Collection<E>>, E> {
   @Override
   public void flatMap(Tuple3<G, Collection<V>, Collection<E>> triple,
-    Collector<V> collector) throws Exception {
+    Collector<E> collector) throws Exception {
 
-    for (V vertex : triple.f1) {
-      collector.collect(vertex);
+    for (E edge : triple.f2) {
+      collector.collect(edge);
     }
   }
 }
-
-

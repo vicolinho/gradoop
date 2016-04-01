@@ -6,7 +6,7 @@ import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.pojos.CompressedDfsCode;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
 
-public class Report implements
+public class ReportDfsCodes implements
   FlatMapFunction<SearchSpaceItem, Tuple2<CompressedDfsCode, Integer>> {
 
   @Override
