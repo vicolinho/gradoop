@@ -6,8 +6,9 @@ import org.gradoop.model.impl.algorithms.fsm.pojos.CompressedDfsCode;
 import org.gradoop.model.impl.algorithms.fsm.pojos.DfsEmbedding;
 import org.gradoop.model.impl.id.GradoopId;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 
 /**
@@ -25,7 +26,7 @@ public class SearchSpaceItem extends Tuple6<
     Boolean,
     Boolean,
     HashMap<GradoopId, AdjacencyList>,
-    HashMap<CompressedDfsCode, Collection<DfsEmbedding>>,
+    HashMap<CompressedDfsCode, HashSet<DfsEmbedding>>,
     CompressedDfsCode[]
   > {
 
@@ -37,7 +38,7 @@ public class SearchSpaceItem extends Tuple6<
     boolean collector,
     boolean active,
     HashMap<GradoopId, AdjacencyList> adjacencyLists,
-    HashMap<CompressedDfsCode, Collection<DfsEmbedding>> codeEmbeddings,
+    HashMap<CompressedDfsCode, HashSet<DfsEmbedding>> codeEmbeddings,
     CompressedDfsCode[] frequentDfsCodes) {
 
     setId(graphId);
@@ -78,13 +79,13 @@ public class SearchSpaceItem extends Tuple6<
     this.f3 = adjacencyLists;
   }
 
-  public HashMap<CompressedDfsCode, Collection<DfsEmbedding>>
+  public HashMap<CompressedDfsCode, HashSet<DfsEmbedding>>
   getCodeEmbeddings() {
     return f4;
   }
 
   public void setCodeEmbeddings(
-    HashMap<CompressedDfsCode, Collection<DfsEmbedding>> codeEmbeddings) {
+    HashMap<CompressedDfsCode, HashSet<DfsEmbedding>> codeEmbeddings) {
     this.f4 = codeEmbeddings;
   }
 
@@ -121,7 +122,7 @@ public class SearchSpaceItem extends Tuple6<
 
       s += "\n\tDFS codes and embeddings";
 
-      for(Map.Entry<CompressedDfsCode, Collection<DfsEmbedding>> entry :
+      for(Map.Entry<CompressedDfsCode, HashSet<DfsEmbedding>> entry :
         getCodeEmbeddings().entrySet()) {
 
         s += "\n\t\t" + entry.getKey().getDfsCode();
@@ -137,7 +138,7 @@ public class SearchSpaceItem extends Tuple6<
 
   public static SearchSpaceItem createForGraph(GradoopId graphId,
     HashMap<GradoopId, AdjacencyList> adjacencyLists,
-    HashMap<CompressedDfsCode, Collection<DfsEmbedding>> codeEmbeddings) {
+    HashMap<CompressedDfsCode, HashSet<DfsEmbedding>> codeEmbeddings) {
 
     return new SearchSpaceItem(
       graphId,
@@ -153,7 +154,7 @@ public class SearchSpaceItem extends Tuple6<
   public static SearchSpaceItem createCollector() {
 
     HashMap<GradoopId, AdjacencyList> adjacencyLists = new HashMap<>();
-    HashMap<CompressedDfsCode, Collection<DfsEmbedding>> codeEmbeddings = new
+    HashMap<CompressedDfsCode, HashSet<DfsEmbedding>> codeEmbeddings = new
       HashMap<>();
 
     return new SearchSpaceItem(

@@ -1,6 +1,7 @@
 package org.gradoop.model.impl.algorithms.fsm.functions;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.flink.api.common.functions.CrossFunction;
 import org.gradoop.model.impl.algorithms.fsm.FSMConfig;
@@ -18,8 +19,9 @@ import org.gradoop.model.impl.id.GradoopId;
 import org.gradoop.model.impl.id.GradoopIdSet;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -77,12 +79,11 @@ public class GrowEmbeddings implements CrossFunction
     CompressedDfsCode[] frequentDfsCodes) {
 
     // min DFS code per subgraph (set of edge ids)
-    Map<Integer, DfsCode> coverageMinDfsCode = new HashMap<>();
-    // embeddings per DFS code
-    Map<DfsCode, Collection<DfsEmbedding>> codeEmbeddings = new HashMap<>();
+    Map<Integer, ArrayList<DfsCode>> coverageDfsCodes = new HashMap<>();
+    Map<DfsCode, HashSet<DfsEmbedding>> codeEmbeddings = new HashMap<>();
 
     // for each supported DFS code
-    for(Map.Entry<CompressedDfsCode, Collection<DfsEmbedding>> entry :
+    for(Map.Entry<CompressedDfsCode, HashSet<DfsEmbedding>> entry :
       graph.getCodeEmbeddings().entrySet()) {
 
       CompressedDfsCode compressedDfsCode = entry.getKey();
@@ -166,29 +167,24 @@ public class GrowEmbeddings implements CrossFunction
                     Integer coverage = GradoopIdSet
                       .fromExisting(embedding.getEdgeTimes()).hashCode();
 
-                    // update min DFS code if subgraph not already discovered or
-                    // new DFS code is less than last one minimum one
-                    DfsCode minDfsCode = coverageMinDfsCode.get(coverage);
+                    ArrayList<DfsCode> dfsCodes =
+                      coverageDfsCodes.get(coverage);
 
-                    Collection<DfsEmbedding> embeddings = codeEmbeddings
-                      .get(dfsCode);
+                    if(dfsCodes == null) {
+                      coverageDfsCodes.put(
+                        coverage, Lists.newArrayList(dfsCode));
+                    } else {
+                      dfsCodes.add(dfsCode);
+                    }
 
-                    // new minimal DFS code found
-                    if(minDfsCode == null
-                      || dfsCodeComparator.compare(dfsCode, minDfsCode) < 0) {
+                    HashSet<DfsEmbedding> embeddings =
+                      codeEmbeddings.get(dfsCode);
 
-                      coverageMinDfsCode.put(coverage, dfsCode);
-
-                      if(minDfsCode != null) {
-                        codeEmbeddings.remove(minDfsCode);
-                      }
-
-                      if(embeddings == null) {
-                        codeEmbeddings.put(
-                          dfsCode, Lists.newArrayList(embedding));
-                      } else {
-                        embeddings.add(embedding);
-                      }
+                    if(embeddings == null) {
+                      codeEmbeddings.put(
+                        dfsCode, Sets.newHashSet(embedding));
+                    } else {
+                      embeddings.add(embedding);
                     }
                   }
                 }
@@ -200,17 +196,47 @@ public class GrowEmbeddings implements CrossFunction
       }
     }
 
-    HashMap<CompressedDfsCode, Collection<DfsEmbedding>>
+    HashMap<CompressedDfsCode, HashSet<DfsEmbedding>>
       compressedCodeEmbeddings = new HashMap<>();
 
-    for(Map.Entry<DfsCode, Collection<DfsEmbedding>> entry :
-      codeEmbeddings.entrySet()) {
+    for(ArrayList<DfsCode> dfsCodes : coverageDfsCodes.values()) {
+      DfsCode minDfsCode = null;
 
-      compressedCodeEmbeddings.put(
-        new CompressedDfsCode(entry.getKey()),
-        entry.getValue()
-      );
+      if(dfsCodes.size() > 1) {
+        for(DfsCode dfsCode : dfsCodes) {
+          if(minDfsCode == null ||
+            dfsCodeComparator.compare(dfsCode, minDfsCode) < 0) {
+            minDfsCode = dfsCode;
+          }
+        }
+      }
+      else {
+        minDfsCode = dfsCodes.get(0);
+      }
+
+      CompressedDfsCode minCompressedDfsCode = new CompressedDfsCode
+        (minDfsCode);
+
+      HashSet<DfsEmbedding> minDfsCodeEmbeddings =
+        compressedCodeEmbeddings.get(minCompressedDfsCode);
+
+      HashSet<DfsEmbedding> coverageMinDfsCodeEmbeddings = codeEmbeddings
+        .get(minDfsCode);
+
+      if(minDfsCodeEmbeddings == null) {
+        compressedCodeEmbeddings.put(minCompressedDfsCode, coverageMinDfsCodeEmbeddings);
+      } else {
+        minDfsCodeEmbeddings.addAll(coverageMinDfsCodeEmbeddings);
+      }
     }
+//
+//    System.out.println("\n");
+//
+//    for(Map.Entry<CompressedDfsCode, HashSet<DfsEmbedding>> entry :
+//      compressedCodeEmbeddings.entrySet()) {
+//
+//      System.out.println(entry.getKey() + " => " + entry.getValue().size());
+//    }
 
     graph.setCodeEmbeddings(compressedCodeEmbeddings);
     graph.setActive(! compressedCodeEmbeddings.isEmpty());

@@ -66,6 +66,8 @@ public class GSpan
     DeltaIteration<SearchSpaceItem, SearchSpaceItem> iteration =
       initialSearchSpace
       .iterateDelta(initialSearchSpace, fsmConfig.getMaxEdgeCount(), 0);
+//      .iterateDelta(initialSearchSpace, 2, 0);
+
 
     DataSet<SearchSpaceItem> searchSpace = iteration.getWorkset();
 
@@ -94,8 +96,10 @@ public class GSpan
 
     // stop iterating
     // if no graph can grow child embeddings of frequent DFS codes
-    DataSet<CompressedDfsCode> allFrequentDfsCodes = iteration
-      .closeWith(grownSearchSpace, growableSearchSpace)
+    DataSet<SearchSpaceItem> solution =
+      iteration.closeWith(grownSearchSpace, growableSearchSpace);
+
+    DataSet<CompressedDfsCode> allFrequentDfsCodes = solution
       .filter(new IsCollector())              // get only collector
       .flatMap(new ExpandFrequentDfsCodes()); // expand array to data set
 

@@ -1,6 +1,7 @@
 package org.gradoop.model.impl.algorithms.fsm.functions;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.apache.flink.api.common.functions.JoinFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.gradoop.model.impl.algorithms.fsm.pojos.AdjacencyListEntry;
@@ -17,6 +18,7 @@ import org.gradoop.model.impl.id.GradoopId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 
 public class SearchSpace
   implements JoinFunction<Tuple2<GradoopId,Collection<SimpleVertex>>,
@@ -31,7 +33,8 @@ public class SearchSpace
     GradoopId graphId = graphVertices.f0;
     HashMap<GradoopId, String> vertexLabels = new HashMap<>();
     HashMap<GradoopId, AdjacencyList> adjacencyLists = new HashMap<>();
-    HashMap<CompressedDfsCode, Collection<DfsEmbedding>> codeEmbeddingsMap = new HashMap<>();
+    HashMap<CompressedDfsCode, HashSet<DfsEmbedding>> codeEmbeddingsMap = new
+      HashMap<>();
 
     SearchSpaceItem item = SearchSpaceItem.createForGraph(
       graphId, adjacencyLists, codeEmbeddingsMap);
@@ -110,7 +113,7 @@ public class SearchSpace
       Collection<DfsEmbedding> embeddings = codeEmbeddingsMap.get(code);
 
       if(embeddings == null) {
-        codeEmbeddingsMap.put(code, Lists.newArrayList(embedding));
+        codeEmbeddingsMap.put(code, Sets.newHashSet(embedding));
       } else {
         embeddings.add(embedding);
       }
