@@ -1,7 +1,7 @@
 package org.gradoop.model.impl.algorithms.fsm;
 
 import org.gradoop.model.GradoopFlinkTestBase;
-import org.gradoop.model.impl.GradoopFlinkTestUtils;
+import org.gradoop.model.api.operators.UnaryCollectionToCollectionOperator;
 import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.pojo.EdgePojo;
 import org.gradoop.model.impl.pojo.GraphHeadPojo;
@@ -9,13 +9,13 @@ import org.gradoop.model.impl.pojo.VertexPojo;
 import org.gradoop.util.FlinkAsciiGraphLoader;
 import org.junit.Test;
 
+import java.util.ArrayList;
+import java.util.Collection;
+
 public class CollectionFrequentSubgraphMiningTest extends GradoopFlinkTestBase {
 
   @Test
   public void testSingleEdges() throws Exception {
-
-    GSpan<GraphHeadPojo, VertexPojo, EdgePojo>
-      gSpan = new GSpan<>(FSMConfig.forDirectedMultigraph(0.7f));
 
     String asciiGraphs = "" +
       "g1[(v1:A)-[e1:a]->(v2:A)];" +
@@ -24,30 +24,19 @@ public class CollectionFrequentSubgraphMiningTest extends GradoopFlinkTestBase {
       "g4[(:A)-[:b]->(:A);(:A)-[:b]->(:A);(:A)-[:b]->(:A)];" +
       "s1[(:A)-[:a]->(:A)]";
 
-    FlinkAsciiGraphLoader<GraphHeadPojo, VertexPojo, EdgePojo> loader =
-      getLoaderFromString(asciiGraphs);
+    String[] searchSpaceVariables = {"g1", "g2", "g3", "g4"};
+    String[] expectedResultVariables = {"s1"};
 
-    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> searchSpace =
-      loader.getGraphCollectionByVariables("g1", "g2", "g3", "g4");
+    for(UnaryCollectionToCollectionOperator<GraphHeadPojo, VertexPojo, EdgePojo>
+      miner : getDirectedMultigraphMiners()) {
 
-    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> expectation =
-      loader.getGraphCollectionByVariables("s1");
-
-    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> result =
-      gSpan.execute(searchSpace);
-
-//    System.out.println("EXPECTED");
-//    GradoopFlinkTestUtils.printCanonicalAdjacencyMatrix(expectation);
-//    System.out.println("RESULT");
-//    GradoopFlinkTestUtils.printCanonicalAdjacencyMatrix(result);
-
-    collectAndAssertTrue(expectation.equalsByGraphElementData(result));
+      compareExpectationAndResult(
+        miner, asciiGraphs, searchSpaceVariables, expectedResultVariables);
+    }
   }
 
   @Test
   public void testSimpleGraphs() throws Exception {
-    GSpan<GraphHeadPojo, VertexPojo, EdgePojo>
-      gSpan = new GSpan<>(FSMConfig.forDirectedMultigraph(0.7f));
 
     String asciiGraphs = "" +
       "g1[(:A)-[:a]->(v1:B)-[:b]->(:C);(v1)-[:c]->(:D)]" +
@@ -59,30 +48,19 @@ public class CollectionFrequentSubgraphMiningTest extends GradoopFlinkTestBase {
       "s4[(:A)-[:a]->(:B)-[:b]->(:C)]" +
       "s5[(:A)-[:a]->(:B)-[:c]->(:E)]" ;
 
-    FlinkAsciiGraphLoader<GraphHeadPojo, VertexPojo, EdgePojo> loader =
-      getLoaderFromString(asciiGraphs);
+    String[] searchSpaceVariables = {"g1", "g2", "g3"};
+    String[] expectedResultVariables = {"s1", "s2", "s3", "s4", "s5"};
 
-    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> searchSpace =
-      loader.getGraphCollectionByVariables("g1", "g2", "g3");
+    for(UnaryCollectionToCollectionOperator<GraphHeadPojo, VertexPojo, EdgePojo>
+      miner : getDirectedMultigraphMiners()) {
 
-    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> expectation =
-      loader.getGraphCollectionByVariables("s1", "s2", "s3", "s4", "s5");
-
-    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> result =
-      gSpan.execute(searchSpace);
-
-//    System.out.println("EXPECTED");
-//    GradoopFlinkTestUtils.printCanonicalAdjacencyMatrix(expectation);
-//    System.out.println("RESULT");
-//    GradoopFlinkTestUtils.printCanonicalAdjacencyMatrix(result);
-
-    collectAndAssertTrue(expectation.equalsByGraphElementData(result));
+      compareExpectationAndResult(
+        miner, asciiGraphs, searchSpaceVariables, expectedResultVariables);
+    }
   }
 
   @Test
   public void testParallelEdges() throws Exception {
-    GSpan<GraphHeadPojo, VertexPojo, EdgePojo>
-      gSpan = new GSpan<>(FSMConfig.forDirectedMultigraph(0.7f));
 
     String asciiGraphs = "" +
       "g1[(v1:A)-[:a]->(:A)-[:a]->(v1:A)]" +
@@ -91,30 +69,20 @@ public class CollectionFrequentSubgraphMiningTest extends GradoopFlinkTestBase {
       "s1[(:A)-[:a]->(:A)]" +
       "s2[(v3:A)-[:a]->(:A)-[:a]->(v3:A)]";
 
-    FlinkAsciiGraphLoader<GraphHeadPojo, VertexPojo, EdgePojo> loader =
-      getLoaderFromString(asciiGraphs);
+    String[] searchSpaceVariables = {"g1", "g2", "g3"};
+    String[] expectedResultVariables = {"s1", "s2"};
 
-    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> searchSpace =
-      loader.getGraphCollectionByVariables("g1", "g2", "g3");
 
-    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> expectation =
-      loader.getGraphCollectionByVariables("s1", "s2");
+    for(UnaryCollectionToCollectionOperator<GraphHeadPojo, VertexPojo, EdgePojo>
+      miner : getDirectedMultigraphMiners()) {
 
-    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> result =
-      gSpan.execute(searchSpace);
-
-//    System.out.println("EXPECTED");
-//    GradoopFlinkTestUtils.printCanonicalAdjacencyMatrix(expectation);
-//    System.out.println("RESULT");
-//    GradoopFlinkTestUtils.printCanonicalAdjacencyMatrix(result);
-
-    collectAndAssertTrue(expectation.equalsByGraphElementData(result));
+      compareExpectationAndResult(
+        miner, asciiGraphs, searchSpaceVariables, expectedResultVariables);
+    }
   }
 
   @Test
   public void testLoop() throws Exception {
-    GSpan<GraphHeadPojo, VertexPojo, EdgePojo>
-      gSpan = new GSpan<>(FSMConfig.forDirectedMultigraph(0.7f));
 
     String asciiGraphs = "" +
       "g1[(v1:A)-[:a]->(v1)-[:a]->(:A)]" +
@@ -124,30 +92,19 @@ public class CollectionFrequentSubgraphMiningTest extends GradoopFlinkTestBase {
       "s2[(v3:A)-[:a]->(v3)]" +
       "s3[(v4:A)-[:a]->(v4)-[:a]->(:A)]";
 
-    FlinkAsciiGraphLoader<GraphHeadPojo, VertexPojo, EdgePojo> loader =
-      getLoaderFromString(asciiGraphs);
+    String[] searchSpaceVariables = {"g1", "g2", "g3"};
+    String[] expectedResultVariables = {"s1", "s2", "s3"};
 
-    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> searchSpace =
-      loader.getGraphCollectionByVariables("g1", "g2", "g3");
+    for(UnaryCollectionToCollectionOperator<GraphHeadPojo, VertexPojo, EdgePojo>
+      miner : getDirectedMultigraphMiners()) {
 
-    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> expectation =
-      loader.getGraphCollectionByVariables("s1", "s2", "s3");
-
-    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> result =
-      gSpan.execute(searchSpace);
-
-//    System.out.println("EXPECTED");
-//    GradoopFlinkTestUtils.printCanonicalAdjacencyMatrix(expectation);
-//    System.out.println("RESULT");
-//    GradoopFlinkTestUtils.printCanonicalAdjacencyMatrix(result);
-
-    collectAndAssertTrue(expectation.equalsByGraphElementData(result));
+      compareExpectationAndResult(
+        miner, asciiGraphs, searchSpaceVariables, expectedResultVariables);
+    }
   }
 
   @Test
   public void testDiamond() throws Exception {
-    GSpan<GraphHeadPojo, VertexPojo, EdgePojo>
-      gSpan = new GSpan<>(FSMConfig.forDirectedMultigraph(0.7f));
 
     String asciiGraphs = "" +
       "g1[(v1:A)-[:a]->(v2:A)-[:a]->(v4:A);(v1:A)-[:a]->(v3:A)-[:a]->(v4:A)]" +
@@ -163,31 +120,21 @@ public class CollectionFrequentSubgraphMiningTest extends GradoopFlinkTestBase {
       "s6[             (v2:A)-[:a]->(v4:A);             (v3:A)-[:a]->(v4:A)]" +
       "s7[(v1:A)-[:a]->(v2:A)                                              ]";
 
-    FlinkAsciiGraphLoader<GraphHeadPojo, VertexPojo, EdgePojo> loader =
-      getLoaderFromString(asciiGraphs);
+    String[] searchSpaceVariables = {"g1", "g2", "g3"};
+    String[] expectedResultVariables =
+      {"s1", "s2", "s3", "s4", "s5", "s6", "s7"};
 
-    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> searchSpace =
-      loader.getGraphCollectionByVariables("g1", "g2", "g3");
 
-    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> expectation =
-      loader.getGraphCollectionByVariables(
-        "s1", "s2", "s3", "s4", "s5", "s6", "s7");
+    for(UnaryCollectionToCollectionOperator<GraphHeadPojo, VertexPojo, EdgePojo>
+      miner : getDirectedMultigraphMiners()) {
 
-    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> result =
-      gSpan.execute(searchSpace);
-
-//    System.out.println("EXPECTED");
-//    GradoopFlinkTestUtils.printCanonicalAdjacencyMatrix(expectation);
-//    System.out.println("RESULT");
-//    GradoopFlinkTestUtils.printCanonicalAdjacencyMatrix(result);
-
-    collectAndAssertTrue(expectation.equalsByGraphElementData(result));
+      compareExpectationAndResult(
+        miner, asciiGraphs, searchSpaceVariables, expectedResultVariables);
+    }
   }
 
   @Test
   public void testCircleWithBranch() throws Exception {
-    GSpan<GraphHeadPojo, VertexPojo, EdgePojo>
-      gSpan = new GSpan<>(FSMConfig.forDirectedMultigraph(0.7f));
 
     String asciiGraphs = "" +
       "g1[(v1:A)-[:a]->(:A)-[:a]->(:A)-[:a]->(v1)-[:b]->(:B)]" +
@@ -207,25 +154,54 @@ public class CollectionFrequentSubgraphMiningTest extends GradoopFlinkTestBase {
       "s11[(:A)-[:a]->(:A)]" +
       "s12[(:A)-[:b]->(:B)]";
 
+    String[] searchSpaceVariables = {"g1", "g2", "g3"};
 
-      FlinkAsciiGraphLoader<GraphHeadPojo, VertexPojo, EdgePojo> loader =
+    String[] expectedResultVariables =
+      {"s11", "s12", "s21", "s22", "s23", "s31", "s32", "s33", "s34", "s41"};
+
+    for(UnaryCollectionToCollectionOperator<GraphHeadPojo, VertexPojo, EdgePojo>
+      miner : getDirectedMultigraphMiners()) {
+
+      compareExpectationAndResult(
+        miner, asciiGraphs, searchSpaceVariables, expectedResultVariables);
+    }
+  }
+
+  private void compareExpectationAndResult(
+    UnaryCollectionToCollectionOperator<GraphHeadPojo, VertexPojo, EdgePojo> gSpan, String asciiGraphs,
+    String[] searchSpaceVariables, String[] expectedResultVariables) throws
+    Exception {
+    FlinkAsciiGraphLoader<GraphHeadPojo, VertexPojo, EdgePojo> loader =
       getLoaderFromString(asciiGraphs);
 
     GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> searchSpace =
-      loader.getGraphCollectionByVariables("g1", "g2", "g3");
+      loader.getGraphCollectionByVariables(searchSpaceVariables);
+
 
     GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> expectation =
-      loader.getGraphCollectionByVariables(
-        "s11", "s12", "s21", "s22", "s23", "s31", "s32", "s33", "s34", "s41");
+      loader.getGraphCollectionByVariables(expectedResultVariables);
 
     GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> result =
       gSpan.execute(searchSpace);
 
-    System.out.println("EXPECTED");
-    GradoopFlinkTestUtils.printCanonicalAdjacencyMatrix(expectation);
-    System.out.println("RESULT");
-    GradoopFlinkTestUtils.printCanonicalAdjacencyMatrix(result);
+//    System.out.println("EXPECTED");
+//    GradoopFlinkTestUtils.printCanonicalAdjacencyMatrix(expectation);
+//    System.out.println("RESULT");
+//    GradoopFlinkTestUtils.printCanonicalAdjacencyMatrix(result);
 
     collectAndAssertTrue(expectation.equalsByGraphElementData(result));
+  }
+
+  private Collection<UnaryCollectionToCollectionOperator
+    <GraphHeadPojo, VertexPojo, EdgePojo>> getDirectedMultigraphMiners() {
+
+    Collection<UnaryCollectionToCollectionOperator
+      <GraphHeadPojo, VertexPojo, EdgePojo>> miners = new ArrayList<>();
+
+    miners.add(
+      new GSpan<GraphHeadPojo, VertexPojo, EdgePojo>(
+        FSMConfig.forDirectedMultigraph(0.7f)));
+
+    return miners;
   }
 }
