@@ -1,3 +1,20 @@
+/*
+ * This file is part of Gradoop.
+ *
+ * Gradoop is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Gradoop is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.gradoop.model.impl.algorithms.fsm.functions;
 
 import com.google.common.collect.Lists;
@@ -5,11 +22,11 @@ import com.google.common.collect.Sets;
 import org.apache.flink.api.common.functions.JoinFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.gradoop.model.impl.algorithms.fsm.pojos.AdjacencyListEntry;
-import org.gradoop.model.impl.algorithms.fsm.pojos.CompressedDfsCode;
-import org.gradoop.model.impl.algorithms.fsm.pojos.DfsCode;
-import org.gradoop.model.impl.algorithms.fsm.pojos.DfsEmbedding;
-import org.gradoop.model.impl.algorithms.fsm.pojos.DfsStep;
-import org.gradoop.model.impl.algorithms.fsm.tuples.AdjacencyList;
+import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
+import org.gradoop.model.impl.algorithms.fsm.pojos.DFSCode;
+import org.gradoop.model.impl.algorithms.fsm.pojos.DFSEmbedding;
+import org.gradoop.model.impl.algorithms.fsm.pojos.DFSStep;
+import org.gradoop.model.impl.algorithms.fsm.pojos.AdjacencyList;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SimpleEdge;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SimpleVertex;
@@ -20,8 +37,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 
+/**
+ * (GraphId, [Vertex,..]) |><| (GraphId, [Edge,..]) => Graph
+ */
 public class SearchSpace
-  implements JoinFunction<Tuple2<GradoopId,Collection<SimpleVertex>>,
+  implements JoinFunction<Tuple2<GradoopId, Collection<SimpleVertex>>,
     Tuple2<GradoopId, Collection<SimpleEdge>>, SearchSpaceItem> {
 
   @Override
@@ -33,18 +53,18 @@ public class SearchSpace
     GradoopId graphId = graphVertices.f0;
     HashMap<GradoopId, String> vertexLabels = new HashMap<>();
     HashMap<GradoopId, AdjacencyList> adjacencyLists = new HashMap<>();
-    HashMap<CompressedDfsCode, HashSet<DfsEmbedding>> codeEmbeddingsMap = new
+    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddingsMap = new
       HashMap<>();
 
-    SearchSpaceItem item = SearchSpaceItem.createForGraph(
+    SearchSpaceItem graph = SearchSpaceItem.createForGraph(
       graphId, adjacencyLists, codeEmbeddingsMap);
 
-    for(SimpleVertex vertex : graphVertices.f1) {
+    for (SimpleVertex vertex : graphVertices.f1) {
       vertexLabels.put(vertex.getId(), vertex.getLabel());
       adjacencyLists.put(vertex.getId(), new AdjacencyList(vertex.getLabel()));
     }
 
-    for(SimpleEdge edge : graphEdges.f1) {
+    for (SimpleEdge edge : graphEdges.f1) {
 
       GradoopId edgeId = edge.getId();
       String edgeLabel = edge.getLabel();
@@ -57,12 +77,12 @@ public class SearchSpace
 
       // update adjacency lists
 
-      adjacencyLists.get(sourceId).add(AdjacencyListEntry.newOutgoing(
-        edgeId, edgeLabel, targetId, targetLabel));
+      adjacencyLists.get(sourceId).getEntries().add(AdjacencyListEntry
+        .newOutgoing(edgeId, edgeLabel, targetId, targetLabel));
 
-      if(!sourceId.equals(targetId)) {
-        adjacencyLists.get(targetId).add(AdjacencyListEntry.newIncoming(
-          edgeId, edgeLabel, sourceId, sourceLabel));
+      if (!sourceId.equals(targetId)) {
+        adjacencyLists.get(targetId).getEntries().add(AdjacencyListEntry
+          .newIncoming(edgeId, edgeLabel, sourceId, sourceLabel));
       }
 
       // update code embeddings
@@ -76,7 +96,7 @@ public class SearchSpace
       String toLabel;
 
       // loop
-      if(sourceId.equals(targetId)) {
+      if (sourceId.equals(targetId)) {
         toTime = 0;
 
         vertexTimes = Lists.newArrayList(sourceId);
@@ -89,7 +109,7 @@ public class SearchSpace
         toTime = 1;
 
         // in direction
-        if(sourceLabel.compareTo(targetLabel) <= 0) {
+        if (sourceLabel.compareTo(targetLabel) <= 0) {
           vertexTimes = Lists.newArrayList(sourceId, targetId);
 
           fromLabel = sourceLabel;
@@ -104,21 +124,21 @@ public class SearchSpace
         }
       }
 
-      DfsStep step = new DfsStep(
+      DFSStep step = new DFSStep(
         fromTime, fromLabel, outgoing, edgeLabel, toTime, toLabel);
 
-      CompressedDfsCode code = new CompressedDfsCode(new DfsCode(step));
-      DfsEmbedding embedding = new DfsEmbedding(vertexTimes, edgeId);
+      CompressedDFSCode code = new CompressedDFSCode(new DFSCode(step));
+      DFSEmbedding embedding = new DFSEmbedding(vertexTimes, edgeId);
 
-      Collection<DfsEmbedding> embeddings = codeEmbeddingsMap.get(code);
+      Collection<DFSEmbedding> embeddings = codeEmbeddingsMap.get(code);
 
-      if(embeddings == null) {
+      if (embeddings == null) {
         codeEmbeddingsMap.put(code, Sets.newHashSet(embedding));
       } else {
         embeddings.add(embedding);
       }
     }
 
-    return item;
+    return graph;
   }
 }

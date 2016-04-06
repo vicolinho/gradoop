@@ -1,3 +1,20 @@
+/*
+ * This file is part of Gradoop.
+ *
+ * Gradoop is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Gradoop is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.gradoop.model.impl.algorithms.fsm;
 
 import org.apache.flink.api.java.DataSet;
@@ -20,12 +37,12 @@ import org.gradoop.model.impl.algorithms.fsm.functions.GraphElements;
 import org.gradoop.model.impl.algorithms.fsm.functions.GraphSimpleEdge;
 import org.gradoop.model.impl.algorithms.fsm.functions.GraphSimpleVertex;
 import org.gradoop.model.impl.algorithms.fsm.functions.GrowEmbeddings;
-import org.gradoop.model.impl.algorithms.fsm.functions.MinCount;
+import org.gradoop.model.impl.algorithms.fsm.functions.MinSupport;
 import org.gradoop.model.impl.algorithms.fsm.functions.ReportDfsCodes;
 import org.gradoop.model.impl.algorithms.fsm.functions.SearchSpace;
 import org.gradoop.model.impl.algorithms.fsm.functions.StoreSupport;
 import org.gradoop.model.impl.algorithms.fsm.functions.ExpandVertices;
-import org.gradoop.model.impl.algorithms.fsm.pojos.CompressedDfsCode;
+import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SimpleEdge;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SimpleVertex;
@@ -36,48 +53,64 @@ import org.gradoop.util.GradoopFlinkConfig;
 
 import java.util.Collection;
 
+/**
+ * The gSpan frequent subgraph mining algorithm implemented as Gradoop Operator
+ * @param <G> graph type
+ * @param <V> vertex type
+ * @param <E> edge type
+ */
 public class GSpan
   <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge>
   implements UnaryCollectionToCollectionOperator<G, V, E> {
 
+  /**
+   * minimum support
+   */
+  protected DataSet<Integer> minSupport;
+  /**
+   * frequent subgraph mining configuration
+   */
   private final FSMConfig fsmConfig;
+  /**
+   * Gradoop configuration
+   */
   private GradoopFlinkConfig<G, V, E> gradoopConfig;
 
-  protected DataSet<Integer> minCount;
-
+  /**
+   * constructor
+   * @param fsmConfig frequent subgraph mining configuration
+   */
   public GSpan(FSMConfig fsmConfig) {
     this.fsmConfig = fsmConfig;
-
   }
 
   @Override
-  public GraphCollection<G, V, E> execute(GraphCollection<G, V, E> collection)
-  {
-    this.gradoopConfig = collection.getConfig();
-    setMinCount(collection);
+  public GraphCollection<G, V, E>
+  execute(GraphCollection<G, V, E> collection)  {
+
+    setGradoopConfig(collection);
+    setMinSupport(collection);
 
     // pre processing
     DataSet<SearchSpaceItem> initialSearchSpace = gradoopConfig
       .getExecutionEnvironment()
       .fromElements(SearchSpaceItem.createCollector())
-      .union(expandGraphs(collection));
+      .union(getSearchSpaceGraphs(collection));
 
     // init iteration
     DeltaIteration<SearchSpaceItem, SearchSpaceItem> iteration =
       initialSearchSpace
       .iterateDelta(initialSearchSpace, fsmConfig.getMaxEdgeCount(), 0);
-//      .iterateDelta(initialSearchSpace, 2, 0);
-
 
     DataSet<SearchSpaceItem> searchSpace = iteration.getWorkset();
 
     // report DFS codes initially created or grown in last iteration
-    DataSet<CompressedDfsCode[]> currentFrequentDfsCodes = searchSpace
+    DataSet<CompressedDFSCode[]> currentFrequentDfsCodes = searchSpace
       .flatMap(new ReportDfsCodes())  // report codes
       .groupBy(0)                     // group by code
       .sum(1)                         // count support
       .filter(new Frequent())         // filter by min support
-      .withBroadcastSet(minCount, Frequent.DS_NAME)
+      .withBroadcastSet(minSupport, Frequent.DS_NAME)
       .map(new StoreSupport())         // store support at code,
       .groupBy(1)                     // reuse tuple for grouping by ZERO
       .reduceGroup(new ConcatFrequentDfsCodes());
@@ -99,21 +132,30 @@ public class GSpan
     DataSet<SearchSpaceItem> solution =
       iteration.closeWith(grownSearchSpace, growableSearchSpace);
 
-    DataSet<CompressedDfsCode> allFrequentDfsCodes = solution
+    DataSet<CompressedDFSCode> allFrequentDfsCodes = solution
       .filter(new IsCollector())              // get only collector
       .flatMap(new ExpandFrequentDfsCodes()); // expand array to data set
 
     // post processing
-    return createResultCollection(allFrequentDfsCodes);
+    return decodeDfsCodes(allFrequentDfsCodes);
   }
 
-  protected void setMinCount(GraphCollection<G, V, E> collection) {
-    this.minCount = Count
+  private void setGradoopConfig(GraphCollection<G, V, E> collection) {
+    this.gradoopConfig = collection.getConfig();
+  }
+
+  protected void setMinSupport(GraphCollection<G, V, E> collection) {
+    this.minSupport = Count
       .count(collection.getGraphHeads())
-      .map(new MinCount(fsmConfig.getThreshold()));
+      .map(new MinSupport(fsmConfig.getThreshold()));
   }
 
-  private DataSet<SearchSpaceItem> expandGraphs(
+  /**
+   * turns a graph collection into a data set of search space items
+   * @param collection input collection
+   * @return search space
+   */
+  private DataSet<SearchSpaceItem> getSearchSpaceGraphs(
     GraphCollection<G, V, E> collection) {
 
     DataSet<Tuple2<GradoopId, Collection<SimpleVertex>>> graphVertices =
@@ -136,11 +178,16 @@ public class GSpan
       .with(new SearchSpace());
   }
 
-  protected GraphCollection<G, V, E> createResultCollection(
-    DataSet<CompressedDfsCode> allFrequentDfsCodes) {
+  /**
+   * turns a data set of DFS codes into a graph collection
+   * @param dfsCodes DFS code data set
+   * @return graph collection
+   */
+  protected GraphCollection<G, V, E> decodeDfsCodes(
+    DataSet<CompressedDFSCode> dfsCodes) {
 
     DataSet<Tuple3<G, Collection<V>, Collection<E>>> frequentSubgraphs =
-      allFrequentDfsCodes
+      dfsCodes
         .map(new DfsDecoder<>(
           gradoopConfig.getGraphHeadFactory(),
           gradoopConfig.getVertexFactory(),

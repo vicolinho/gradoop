@@ -1,12 +1,29 @@
+/*
+ * This file is part of Gradoop.
+ *
+ * Gradoop is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Gradoop is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.gradoop.model.impl.algorithms.fsm.tuples;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.java.tuple.Tuple6;
-import org.gradoop.model.impl.algorithms.fsm.pojos.CompressedDfsCode;
-import org.gradoop.model.impl.algorithms.fsm.pojos.DfsEmbedding;
+import org.gradoop.model.impl.algorithms.fsm.pojos.AdjacencyList;
+import org.gradoop.model.impl.algorithms.fsm.pojos.DFSEmbedding;
 import org.gradoop.model.impl.id.GradoopId;
+import scala.collection.mutable.StringBuilder;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -26,20 +43,32 @@ public class SearchSpaceItem extends Tuple6<
     Boolean,
     Boolean,
     HashMap<GradoopId, AdjacencyList>,
-    HashMap<CompressedDfsCode, HashSet<DfsEmbedding>>,
-    CompressedDfsCode[]
+    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>>,
+    CompressedDFSCode[]
   > {
 
+  /**
+   * default constructor
+   */
   public SearchSpaceItem() {
   }
 
+  /**
+   * valued constructor
+   * @param graphId graph id
+   * @param collector true for collector, false for graph
+   * @param active true for active, false for inactive
+   * @param adjacencyLists adjacency lists (empty for collector)
+   * @param codeEmbeddings embeddings of DFS codes (empty for collector)
+   * @param frequentDfsCodes frequent DFS codes (empty for graph)
+   */
   public SearchSpaceItem(
     GradoopId graphId,
     boolean collector,
     boolean active,
     HashMap<GradoopId, AdjacencyList> adjacencyLists,
-    HashMap<CompressedDfsCode, HashSet<DfsEmbedding>> codeEmbeddings,
-    CompressedDfsCode[] frequentDfsCodes) {
+    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings,
+    CompressedDFSCode[] frequentDfsCodes) {
 
     setId(graphId);
     setCollector(collector);
@@ -48,6 +77,21 @@ public class SearchSpaceItem extends Tuple6<
     setCodeEmbeddings(codeEmbeddings);
     setFrequentDfsCodes(frequentDfsCodes);
   }
+
+  /**
+   * setter search space item to active or inactive.
+   * If set to inactive, graph data will be dropped to release memory.
+   * @param active true for active, false for inactive
+   */
+  public void setActive(Boolean active) {
+    this.f2 = active;
+
+    if (! active && ! isCollector()) {
+      getCodeEmbeddings().clear();
+      getAdjacencyLists().clear();
+    }
+  }
+
 
   public void setId(GradoopId id) {
     this.f0 = id;
@@ -65,10 +109,6 @@ public class SearchSpaceItem extends Tuple6<
     return this.f2;
   }
 
-  public void setActive(Boolean active) {
-    this.f2 = active;
-  }
-
   public Map<GradoopId, AdjacencyList> getAdjacencyLists() {
     return f3;
   }
@@ -79,66 +119,72 @@ public class SearchSpaceItem extends Tuple6<
     this.f3 = adjacencyLists;
   }
 
-  public HashMap<CompressedDfsCode, HashSet<DfsEmbedding>>
+  public HashMap<CompressedDFSCode, HashSet<DFSEmbedding>>
   getCodeEmbeddings() {
     return f4;
   }
 
   public void setCodeEmbeddings(
-    HashMap<CompressedDfsCode, HashSet<DfsEmbedding>> codeEmbeddings) {
+    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings) {
     this.f4 = codeEmbeddings;
   }
 
-  public CompressedDfsCode[] getFrequentDfsCodes() {
+  public CompressedDFSCode[] getFrequentDfsCodes() {
     return this.f5;
   }
 
-  public void setFrequentDfsCodes(CompressedDfsCode[] collectedDfsCodes) {
+  public void setFrequentDfsCodes(CompressedDFSCode[] collectedDfsCodes) {
     this.f5 = collectedDfsCodes;
   }
 
   @Override
   public String toString() {
 
-    String s = "SearchSpaceItem";
+    StringBuilder builder = new StringBuilder("SearchSpaceItem");
 
+    if (isCollector()) {
+      builder.append(" (Collector)\n\tFrequent DFS codes\n");
 
-    if(isCollector()) {
-      s += " (Collector)\n\tFrequent DFS codes\n";
-
-      for(CompressedDfsCode compressedDfsCode : getFrequentDfsCodes()) {
-        s+= "\n" + compressedDfsCode;
+      for (CompressedDFSCode compressedDfsCode : getFrequentDfsCodes()) {
+        builder.append("\n" + compressedDfsCode);
       }
     } else {
-      s += " (Graph)\n\tAdjacency lists";
+      builder.append(" (Graph)\n\tAdjacency lists");
 
-      for(Map.Entry<GradoopId, AdjacencyList> entry :
+      for (Map.Entry<GradoopId, AdjacencyList> entry :
         getAdjacencyLists().entrySet()) {
 
-        s += "\n\t\t(" + entry.getValue().getVertexLabel() + ":" +
+        builder.append("\n\t\t(" + entry.getValue().getVertexLabel() + ":" +
           entry.getKey() + ") : " +
-          StringUtils.join(entry.getValue().getEntries(), " | ");
+          StringUtils.join(entry.getValue().getEntries(), " | "));
       }
 
-      s += "\n\tDFS codes and embeddings";
+      builder.append("\n\tDFS codes and embeddings");
 
-      for(Map.Entry<CompressedDfsCode, HashSet<DfsEmbedding>> entry :
+      for (Map.Entry<CompressedDFSCode, HashSet<DFSEmbedding>> entry :
         getCodeEmbeddings().entrySet()) {
 
-        s += "\n\t\t" + entry.getKey().getDfsCode();
+        builder.append("\n\t\t" + entry.getKey().getDfsCode());
 
-        for(DfsEmbedding embedding : entry.getValue()) {
-          s += embedding;
+        for (DFSEmbedding embedding : entry.getValue()) {
+          builder.append(embedding);
         }
       }
     }
 
-    return s;
+    return builder.toString();
   }
 
+  /**
+   * factory method
+   * @param graphId graph id
+   * @param adjacencyLists adjacency lists
+   * @param codeEmbeddings embeddings of DFS codes
+   * @return a search space item representing a graph transaction
+   */
   public static SearchSpaceItem createForGraph(GradoopId graphId,
     HashMap<GradoopId, AdjacencyList> adjacencyLists,
-    HashMap<CompressedDfsCode, HashSet<DfsEmbedding>> codeEmbeddings) {
+    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings) {
 
     return new SearchSpaceItem(
       graphId,
@@ -146,15 +192,17 @@ public class SearchSpaceItem extends Tuple6<
       true,
       adjacencyLists,
       codeEmbeddings,
-      new CompressedDfsCode[0]
+      new CompressedDFSCode[0]
     );
   }
 
-
+  /**
+   * factory method
+   * @return a search space item representing the collector
+   */
   public static SearchSpaceItem createCollector() {
-
     HashMap<GradoopId, AdjacencyList> adjacencyLists = new HashMap<>();
-    HashMap<CompressedDfsCode, HashSet<DfsEmbedding>> codeEmbeddings = new
+    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings = new
       HashMap<>();
 
     return new SearchSpaceItem(
@@ -163,7 +211,7 @@ public class SearchSpaceItem extends Tuple6<
       true,
       adjacencyLists,
       codeEmbeddings,
-      new CompressedDfsCode[0]
+      new CompressedDFSCode[0]
     );
   }
 }

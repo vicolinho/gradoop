@@ -17,16 +17,28 @@
 
 package org.gradoop.model.impl.algorithms.fsm.functions;
 
-import org.apache.flink.api.common.functions.FilterFunction;
-import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
+import org.apache.flink.api.common.functions.MapFunction;
 
 /**
- * Filters active search space items
+ * graphCount =[threshold]=> minimum support
  */
-public class IsActive implements FilterFunction<SearchSpaceItem> {
-  @Override
-  public boolean filter(SearchSpaceItem searchSpaceItem) throws Exception {
+public class MinSupport implements MapFunction<Long, Integer> {
 
-    return searchSpaceItem.isActive();
+  /**
+   * minimum relative support
+   */
+  private final float threshold;
+
+  /**
+   * constructor
+   * @param threshold minimum relative support
+   */
+  public MinSupport(float threshold) {
+    this.threshold = threshold;
+  }
+
+  @Override
+  public Integer map(Long totalCount) throws Exception {
+    return Math.round((float) totalCount * threshold);
   }
 }

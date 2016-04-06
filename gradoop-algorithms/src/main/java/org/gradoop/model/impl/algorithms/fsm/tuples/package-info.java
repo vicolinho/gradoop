@@ -15,18 +15,7 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.impl.algorithms.fsm.functions;
-
-import org.apache.flink.api.common.functions.FilterFunction;
-import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
-
 /**
- * Filters active search space items
+ * tuple types used for frequent subgraph mining
  */
-public class IsActive implements FilterFunction<SearchSpaceItem> {
-  @Override
-  public boolean filter(SearchSpaceItem searchSpaceItem) throws Exception {
-
-    return searchSpaceItem.isActive();
-  }
-}
+package org.gradoop.model.impl.algorithms.fsm.tuples;
