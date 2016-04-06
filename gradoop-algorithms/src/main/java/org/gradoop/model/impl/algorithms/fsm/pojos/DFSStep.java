@@ -1,22 +1,66 @@
-package org.gradoop.model.impl.algorithms.fsm.pojos;
+/*
+ * This file is part of Gradoop.
+ *
+ * Gradoop is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Gradoop is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
+ */
 
+package org.gradoop.model.impl.algorithms.fsm.pojos;
 
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import java.io.Serializable;
-import java.util.Objects;
 
-public class DfsStep implements Serializable {
-
+/**
+ * pojo representing an DFS traversal step
+ */
+public class DFSStep implements Serializable {
+  /**
+   * discovery time of traversal start vertex
+   */
   private final int fromTime;
+  /**
+   * label of traversal start vertex
+   */
   private final String fromLabel;
+  /**
+   * true, if edge was traversed in direction
+   */
   private final Boolean outgoing;
+  /**
+   * label of the traversed edge
+   */
   private final String edgeLabel;
+  /**
+   * discovery time of traversal end vertex
+   */
   private final int toTime;
+  /**
+   * label of traversal end vertex
+   */
   private final String toLabel;
 
-  public DfsStep(int fromTime, String fromLabel, Boolean outgoing,
+  /**
+   * constructor
+   * @param fromTime discovery time of traversal start vertex
+   * @param fromLabel label of traversal start vertex
+   * @param outgoing true, if edge was traversed in direction
+   * @param edgeLabel label of the traversed edge
+   * @param toTime discovery time of traversal end vertex
+   * @param toLabel label of traversal end vertex
+   */
+  public DFSStep(int fromTime, String fromLabel, Boolean outgoing,
     String edgeLabel, int toTime, String toLabel) {
     this.fromTime = fromTime;
     this.fromLabel = fromLabel;
@@ -61,9 +105,9 @@ public class DfsStep implements Serializable {
   public boolean equals(Object obj) {
     boolean equals = obj == this;
 
-    if(!equals && obj != null && obj.getClass() == getClass()) {
+    if (!equals && obj != null && obj.getClass() == getClass()) {
 
-      DfsStep other = (DfsStep) obj;
+      DFSStep other = (DFSStep) obj;
 
       EqualsBuilder builder = new EqualsBuilder();
 

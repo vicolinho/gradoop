@@ -15,29 +15,43 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.impl.algorithms.fsm.functions;
+package org.gradoop.model.impl.algorithms.fsm.pojos;
 
-import org.apache.flink.api.common.functions.FlatMapFunction;
-import org.apache.flink.api.java.tuple.Tuple3;
-import org.apache.flink.util.Collector;
-
+import java.util.ArrayList;
 import java.util.Collection;
 
 /**
- * (GraphId, [Vertex,..], [Edge,..]) => [Edge,..]
- * @param <G> graph type
- * @param <V> vertex type
- * @param <E> edge type
+ * pojo representing an adjacency list
  */
-public class ExpandEdges<G, V, E>
-  implements FlatMapFunction<Tuple3<G, Collection<V>, Collection<E>>, E> {
+public class AdjacencyList {
+  /**
+   * label of the associated vertex
+   */
+  private final String vertexLabel;
+  /**
+   * adjacency list entries
+   */
+  private final Collection<AdjacencyListEntry> entries;
+
+  /**
+   * constructor
+   * @param vertexLabel vertex label
+   */
+  public AdjacencyList(String vertexLabel) {
+    this.vertexLabel = vertexLabel;
+    entries = new ArrayList<>();
+  }
 
   @Override
-  public void flatMap(Tuple3<G, Collection<V>, Collection<E>> triple,
-    Collector<E> collector) throws Exception {
+  public String toString() {
+    return vertexLabel + ":" + entries;
+  }
 
-    for (E edge : triple.f2) {
-      collector.collect(edge);
-    }
+  public String getVertexLabel() {
+    return vertexLabel;
+  }
+
+  public Collection<AdjacencyListEntry> getEntries() {
+    return entries;
   }
 }
