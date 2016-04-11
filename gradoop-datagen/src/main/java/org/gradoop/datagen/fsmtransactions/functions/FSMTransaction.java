@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.Set;
 
 public class FSMTransaction
@@ -35,14 +36,21 @@ public class FSMTransaction
   private final FSMTransactionGeneratorConfig config;
   private final EPGMVertexFactory<V> vertexFactory;
   private final EPGMEdgeFactory<E> edgeFactory;
+  private final List<String> vertexLabels;
+  private final List<String> edgeLabels;
 
-  public FSMTransaction(GradoopFlinkConfig<G, V, E> gradoopFlinkConfig,
-    FSMTransactionGeneratorConfig generatorConfig) {
+  public FSMTransaction(
+    GradoopFlinkConfig<G, V, E> gradoopFlinkConfig,
+    FSMTransactionGeneratorConfig generatorConfig,
+    List<String> vertexLabels,
+    List<String> edgeLabels) {
 
     this.graphHeadFactory = gradoopFlinkConfig.getGraphHeadFactory();
     this.vertexFactory = gradoopFlinkConfig.getVertexFactory();
     this.edgeFactory = gradoopFlinkConfig.getEdgeFactory();
     this.config = generatorConfig;
+    this.vertexLabels = vertexLabels;
+    this.edgeLabels = edgeLabels;
   }
 
   @Override
@@ -56,65 +64,32 @@ public class FSMTransaction
   @Override
   public GraphTransaction<G, V, E> cross(Long x, Long n) throws Exception {
 
-    // create graph
-    GraphTransaction<G, V, E> graph = new GraphTransaction<>();
+    int vertexCount = config.calculateVertexCount(x, n);
+    int edgeCount = config.calculateEdgeCount(x, n);
+
+    // create graph head
     G graphHead = graphHeadFactory.createGraphHead(x.toString());
     GradoopIdSet graphIds = GradoopIdSet.fromExisting(graphHead.getId());
 
     // create vertices
-
-    int vertexCount = config.calculateVertexCount(x, n);
-    int edgeCount = config.calculateEdgeCount(x, n);
-
-    Collection<Integer> vertexIndices = Lists.newArrayListWithCapacity(vertexCount);
     List<GradoopId> vertexIds = Lists.newArrayListWithCapacity(vertexCount);
-
-    Set<Integer> connectedVertexIndices = Sets
-      .newHashSetWithExpectedSize(vertexCount);
-
-    Map<Integer, Collection<Integer>> sourceTargets =
-      Maps.newHashMapWithExpectedSize(vertexCount);
-
-    for(int i = 0; i < vertexCount; i++) {
-      vertexIndices.add(i);
-      vertexIds.add(GradoopId.get());
-    }
-
-    sourceTargets.put(1, Lists.newArrayList(2));
-    connectedVertexIndices.add(1);
-    connectedVertexIndices.add(2);
-
-    Iterator<Integer> sourceIterator = connectedVertexIndices.iterator();
-    Iterator<Integer> targetIterator = vertexIndices.iterator();
-
-    for(int i = 2; i< edgeCount; i++) {
-      if(! sourceIterator.hasNext()) {
-        sourceIterator = connectedVertexIndices.iterator();
-      }
-      if(! targetIterator.hasNext()) {
-        targetIterator = connectedVertexIndices.iterator();
-      }
-
-      int sourceIndex = sourceIterator.next();
-      int targetIndex = targetIterator.next();
-
-      Collection<Integer> targetIndices = sourceTargets.get(sourceIndex);
-
-      if (targetIndices == null) {
-        sourceTargets.put(sourceIndex, Lists.newArrayList(targetIndex));
-      } else {
-        targetIndices.add(targetIndex);
-      }
-    }
-
     Set<V> vertices = Sets.newHashSetWithExpectedSize(vertexCount);
+    createVertices(vertexCount, graphIds, vertexIds, vertices);
 
-    for(GradoopId vertexId : vertexIds) {
-      String label = "A";
-      vertices.add(vertexFactory.initVertex(vertexId, label, graphIds));
-    }
-
+    // create edges
     Set<E> edges =  Sets.newHashSetWithExpectedSize(edgeCount);
+    createEdges(vertexCount, edgeCount, graphIds, vertexIds, edges);
+
+    return new GraphTransaction<>(graphHead, vertices, edges);
+  }
+
+  public void createEdges(int vertexCount, int edgeCount, GradoopIdSet graphIds,
+    List<GradoopId> vertexIds, Set<E> edges) {
+    Map<Integer, Collection<Integer>> sourceTargets =
+      getSourceTargetIndices(vertexCount, edgeCount);
+
+    int edgeIndex = 0;
+    int edgeLabelCount = edgeLabels.size();
 
     for(Map.Entry<Integer, Collection<Integer>> entry :
       sourceTargets.entrySet()) {
@@ -127,11 +102,64 @@ public class FSMTransaction
       for(int targetIndex : targetIndices) {
         GradoopId targetId = vertexIds.get(targetIndex);
 
-        String label = "a";
+        String label = edgeLabels.get(edgeIndex % edgeLabelCount);
 
         edges.add(edgeFactory.createEdge(label, sourceId, targetId, graphIds));
       }
+      edgeIndex++;
+    }
+  }
+
+  public void createVertices(int vertexCount, GradoopIdSet graphIds,
+    List<GradoopId> vertexIds, Set<V> vertices) {
+    for(int i = 0; i < vertexCount; i++) {
+      vertexIds.add(GradoopId.get());
     }
 
-    return new GraphTransaction<>(graphHead, vertices, edges);  }
+    int vertexIndex = 0;
+    int vertexLabelCount = vertexLabels.size();
+
+    for(GradoopId vertexId : vertexIds) {
+      String label = vertexLabels.get(vertexIndex % vertexLabelCount);
+      vertices.add(vertexFactory.initVertex(vertexId, label, graphIds));
+      vertexIndex++;
+    }
+  }
+
+  public Map<Integer, Collection<Integer>> getSourceTargetIndices(
+    int vertexCount, int edgeCount) {
+    Map<Integer, Collection<Integer>> sourceTargets =
+      Maps.newHashMapWithExpectedSize(vertexCount);
+
+    sourceTargets.put(1, Lists.newArrayList(2));
+
+    Random random = new Random();
+
+    int maxIndex = vertexCount - 1;
+    int maxConnectedIndex = 1;
+
+    for(int i = 1; i < edgeCount; i++) {
+
+      int sourceIndex;
+      int targetIndex;
+
+      if(maxConnectedIndex < vertexCount) {
+        sourceIndex = maxConnectedIndex;
+        targetIndex = random.nextInt(maxConnectedIndex);
+        maxConnectedIndex++;
+      } else {
+        sourceIndex = random.nextInt(maxIndex);
+        targetIndex = random.nextInt(maxIndex);
+      }
+
+      Collection<Integer> targetIndices = sourceTargets.get(sourceIndex);
+
+      if (targetIndices == null) {
+        sourceTargets.put(sourceIndex, Lists.newArrayList(targetIndex));
+      } else {
+        targetIndices.add(targetIndex);
+      }
+    }
+    return sourceTargets;
+  }
 }

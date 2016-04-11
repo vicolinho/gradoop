@@ -29,6 +29,11 @@ public class GraphHeadToDataString<G extends EPGMGraphHead>
 
   @Override
   public GraphHeadString map(G graph) throws Exception {
-    return new GraphHeadString(graph.getId(), "|" + label(graph) + "|");
+    return new GraphHeadString(graph.getId(), label(graph));
+  }
+
+  @Override
+  public String label(G graph) {
+    return "|" + super.label(graph) + "|";
   }
 }

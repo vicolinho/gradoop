@@ -10,10 +10,17 @@ public class FSMTransactionGeneratorConfig implements Serializable {
   private final int edgeDistribution;
   private final int minEdgeCount;
   private final int maxEdgeCount;
+  private final int vertexLabelCount;
+  private final int vertexLabelSize;
+  private final int edgeLabelCount;
+  private final int edgeLabelSize;
 
   public FSMTransactionGeneratorConfig(int graphCount, int minVertexCount,
-    int maxVertexCount, int minEdgeCount, int maxEdgeCount) {
+    int maxVertexCount, int minEdgeCount, int maxEdgeCount,
+    int vertexLabelCount, int vertexLabelSize, int edgeLabelCount,
+    int edgeLabelSize) {
     this.graphCount = graphCount;
+
 
     vertexDistribution = Distributions.LINEAR;
     this.minVertexCount = minVertexCount;
@@ -22,18 +29,16 @@ public class FSMTransactionGeneratorConfig implements Serializable {
     edgeDistribution = Distributions.LINEAR;
     this.minEdgeCount = minEdgeCount;
     this.maxEdgeCount = maxEdgeCount;
+
+    this.vertexLabelCount = vertexLabelCount;
+    this.vertexLabelSize = vertexLabelSize;
+
+    this.edgeLabelCount = edgeLabelCount;
+    this.edgeLabelSize = edgeLabelSize;
   }
 
   public long getGraphCount() {
     return graphCount;
-  }
-
-  public int getMinVertexCount() {
-    return minVertexCount;
-  }
-
-  public int getMaxVertexCount() {
-    return maxVertexCount;
   }
 
   public int calculateVertexCount(Long x, Long n) {
@@ -58,7 +63,21 @@ public class FSMTransactionGeneratorConfig implements Serializable {
     return count;
   }
 
+  public int getVertexLabelCount() {
+    return vertexLabelCount;
+  }
 
+  public int getVertexLabelSize() {
+    return vertexLabelSize;
+  }
+
+  public int getEdgeLabelCount() {
+    return edgeLabelCount;
+  }
+
+  public int getEdgeLabelSize() {
+    return edgeLabelSize;
+  }
 
   public class Distributions {
     public static final int LINEAR = 0;
