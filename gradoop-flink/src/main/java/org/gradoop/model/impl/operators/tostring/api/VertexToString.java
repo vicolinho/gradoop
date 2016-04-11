@@ -26,4 +26,5 @@ import org.gradoop.model.impl.operators.tostring.tuples.VertexString;
  */
 public interface VertexToString<V extends EPGMVertex>
   extends FlatMapFunction<V, VertexString> {
+  String label(V vertex);
 }

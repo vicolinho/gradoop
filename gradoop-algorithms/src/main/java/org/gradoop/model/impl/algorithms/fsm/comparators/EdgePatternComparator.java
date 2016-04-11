@@ -17,7 +17,7 @@
 
 package org.gradoop.model.impl.algorithms.fsm.comparators;
 
-import org.gradoop.model.impl.algorithms.fsm.pojos.EdgePattern;
+import org.gradoop.model.impl.operators.tostring.pojos.EdgePattern;
 
 import java.io.Serializable;
 import java.util.Comparator;

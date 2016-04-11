@@ -31,8 +31,8 @@ import org.gradoop.model.api.EPGMGraphHeadFactory;
 import org.gradoop.model.api.EPGMVertex;
 import org.gradoop.model.api.EPGMVertexFactory;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.pojos.DFSCode;
-import org.gradoop.model.impl.algorithms.fsm.pojos.DFSStep;
+import org.gradoop.model.impl.operators.tostring.pojos.DFSCode;
+import org.gradoop.model.impl.operators.tostring.pojos.DFSStep;
 import org.gradoop.model.impl.id.GradoopId;
 import org.gradoop.model.impl.id.GradoopIdSet;
 
