@@ -26,5 +26,4 @@ import org.gradoop.model.impl.operators.tostring.tuples.EdgeString;
  */
 public interface EdgeToString<E extends EPGMEdge>
   extends FlatMapFunction<E, EdgeString> {
-  String label(E edge);
 }

@@ -35,16 +35,11 @@ public class EdgeToDataString<E extends EPGMEdge>
 
     GradoopId sourceId = edge.getSourceId();
     GradoopId targetId = edge.getTargetId();
-    String edgeLabel = label(edge);
+    String edgeLabel = "[" + label(edge) + "]";
 
     for (GradoopId graphId : edge.getGraphIds()) {
       collector.collect(new EdgeString(graphId, sourceId, targetId, edgeLabel));
     }
 
-  }
-
-  @Override
-  public String label(E edge) {
-    return "[" + super.label(edge) + "]";
   }
 }

@@ -34,7 +34,7 @@ public class VertexToIdString<V extends EPGMVertex>
     V vertex, Collector<VertexString> collector) throws Exception {
 
     GradoopId vertexId = vertex.getId();
-    String vertexLabel = label(vertex);
+    String vertexLabel = "(" + vertex.getId() + ")";
 
     for (GradoopId graphId : vertex.getGraphIds()) {
       collector.collect(new VertexString(graphId, vertexId, vertexLabel));
@@ -42,8 +42,4 @@ public class VertexToIdString<V extends EPGMVertex>
 
   }
 
-  @Override
-  public String label(V vertex) {
-    return "(" + vertex.getId() + ")";
-  }
 }
