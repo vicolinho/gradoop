@@ -21,12 +21,10 @@ import org.apache.flink.api.java.DataSet;
 import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
+import org.gradoop.model.api.operators.UnaryGraphCollectionToValueOperator;
 import org.gradoop.model.impl.GraphCollection;
-import org.gradoop.model.impl.operators.tostring.api.EdgeToString;
-import org.gradoop.model.impl.operators.tostring.api.GraphHeadToString;
-import org.gradoop.model.impl.operators.tostring.api.VertexToString;
-import org.gradoop.model.impl.operators.tostring.tuples
-  .AbstractStringRepresentationBuilder;
+import org.gradoop.model.impl.operators.tostring.functions
+  .EPGMElementToDataString;
 
 /**
  * Operator deriving a string representation from a graph collection.
@@ -37,21 +35,34 @@ import org.gradoop.model.impl.operators.tostring.tuples
  */
 public class MinDFSCodeBuilder
   <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge>
-  extends AbstractStringRepresentationBuilder<G, V, E> {
+  implements UnaryGraphCollectionToValueOperator<G, V, E, String> {
 
+  /**
+   * function describing string representation of graph heads
+   */
+  protected final EPGMElementToDataString<G> graphHeadToString;
+  /**
+   * function describing string representation of vertices
+   */
+  protected final EPGMElementToDataString<V> vertexToString;
+  /**
+   * function describing string representation of edges
+   */
+  protected final EPGMElementToDataString<E> egeLabelingFunction;
 
   /**
    * constructor
-   *
-   * @param graphHeadToString   representation of graph heads
-   * @param vertexToString      representation of vertices
+   * @param graphHeadToString representation of graph heads
+   * @param vertexToString representation of vertices
    * @param egeLabelingFunction representation of edges
    */
   public MinDFSCodeBuilder(
-    GraphHeadToString<G> graphHeadToString,
-    VertexToString<V> vertexToString,
-    EdgeToString<E> egeLabelingFunction) {
-    super(graphHeadToString, vertexToString, egeLabelingFunction);
+    EPGMElementToDataString<G> graphHeadToString,
+    EPGMElementToDataString<V> vertexToString,
+    EPGMElementToDataString<E> egeLabelingFunction) {
+    this.graphHeadToString = graphHeadToString;
+    this.vertexToString = vertexToString;
+    this.egeLabelingFunction = egeLabelingFunction;
   }
 
   @Override

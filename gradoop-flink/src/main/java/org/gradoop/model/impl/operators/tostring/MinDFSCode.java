@@ -15,6 +15,8 @@ import org.gradoop.model.impl.operators.tostring.api.VertexToString;
 import org.gradoop.model.impl.operators.tostring.comparators.DfsCodeComparator;
 import org.gradoop.model.impl.operators.tostring.comparators
   .EdgePatternComparator;
+import org.gradoop.model.impl.operators.tostring.functions
+  .EPGMElementToDataString;
 import org.gradoop.model.impl.operators.tostring.pojos.DFSCode;
 import org.gradoop.model.impl.operators.tostring.pojos.DFSEmbedding;
 import org.gradoop.model.impl.operators.tostring.pojos.DFSStep;
@@ -29,14 +31,14 @@ public class MinDFSCode
   <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge>
   implements MapFunction<GraphTransaction<G, V, E>, String> {
 
-  private final GraphHeadToString<G> graphHeadToString;
-  private final VertexToString<V> vertexToString;
-  private final EdgeToString<E> edgeToString;
+  private final EPGMElementToDataString<G> graphHeadToString;
+  private final EPGMElementToDataString<V> vertexToString;
+  private final EPGMElementToDataString<E> edgeToString;
 
   public MinDFSCode(
-    GraphHeadToString<G> graphHeadToString,
-    VertexToString<V> vertexToString,
-    EdgeToString<E> edgeToString) {
+    EPGMElementToDataString<G> graphHeadToString,
+    EPGMElementToDataString<V> vertexToString,
+    EPGMElementToDataString<E> edgeToString) {
 
     this.graphHeadToString = graphHeadToString;
     this.vertexToString = vertexToString;

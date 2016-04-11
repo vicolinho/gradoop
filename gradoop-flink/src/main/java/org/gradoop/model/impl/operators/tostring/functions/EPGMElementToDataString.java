@@ -21,6 +21,7 @@ import org.gradoop.model.api.EPGMElement;
 import org.gradoop.model.impl.properties.Property;
 import org.gradoop.model.impl.properties.PropertyList;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -30,14 +31,15 @@ import java.util.List;
  * such including label and properties
  * @param <EL> EPGM element type
  */
-public abstract class EPGMElementToDataString<EL extends EPGMElement> {
+public class EPGMElementToDataString<EL extends EPGMElement>
+  implements Serializable {
 
   /**
    * generalization of label and properties string concatenation
    * @param el graph head, vertex or edge
    * @return string representation
    */
-  protected String label(EL el) {
+  public String label(EL el) {
 
     String label = el.getLabel();
 

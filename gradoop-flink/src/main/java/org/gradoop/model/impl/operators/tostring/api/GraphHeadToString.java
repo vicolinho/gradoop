@@ -26,5 +26,4 @@ import org.gradoop.model.impl.operators.tostring.tuples.GraphHeadString;
  */
 public interface GraphHeadToString<G extends EPGMGraphHead>
   extends MapFunction<G, GraphHeadString> {
-  String label(G graphHead);
 }
