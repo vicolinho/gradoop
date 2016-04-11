@@ -22,6 +22,7 @@ import org.apache.flink.api.java.DataSet;
 import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
+import org.gradoop.model.impl.GraphTransaction;
 import org.gradoop.model.impl.LogicalGraph;
 import org.gradoop.model.impl.id.GradoopId;
 import org.gradoop.model.impl.id.GradoopIdSet;
@@ -274,4 +275,10 @@ public interface GraphCollectionOperators
    * @see org.gradoop.model.impl.operators.combination.Combination
    */
   LogicalGraph<G, V, E> reduce(ReducibleBinaryGraphToGraphOperator<G, V, E> op);
+
+  /**
+   * Transforms a graph collection into a set of graph transactions.
+   * @return graph transactions representing the graph collection
+   */
+  DataSet<GraphTransaction<G,V,E>> toTransactions();
 }

@@ -15,7 +15,7 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.impl.algorithms.fsm.pojos;
+package org.gradoop.model.impl.operators.tostring.pojos;
 
 /**
  * pojo representing an edge pattern

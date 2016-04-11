@@ -20,7 +20,7 @@ package org.gradoop.model.impl.algorithms.fsm.tuples;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.java.tuple.Tuple6;
 import org.gradoop.model.impl.algorithms.fsm.pojos.AdjacencyList;
-import org.gradoop.model.impl.algorithms.fsm.pojos.DFSEmbedding;
+import org.gradoop.model.impl.operators.tostring.pojos.DFSEmbedding;
 import org.gradoop.model.impl.id.GradoopId;
 import scala.collection.mutable.StringBuilder;
 

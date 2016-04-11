@@ -27,18 +27,23 @@ import org.gradoop.model.impl.operators.tostring.tuples.VertexString;
  * @param <V> vertex type
  */
 public class VertexToIdString<V extends EPGMVertex>
-  extends EPGMElementToDataString<V> implements VertexToString<V> {
+  implements VertexToString<V> {
 
   @Override
   public void flatMap(
     V vertex, Collector<VertexString> collector) throws Exception {
 
     GradoopId vertexId = vertex.getId();
-    String vertexLabel = "(" + vertex.getId() + ")";
+    String vertexLabel = label(vertex);
 
     for (GradoopId graphId : vertex.getGraphIds()) {
       collector.collect(new VertexString(graphId, vertexId, vertexLabel));
     }
 
+  }
+
+  @Override
+  public String label(V vertex) {
+    return "(" + vertex.getId() + ")";
   }
 }
