@@ -18,4 +18,4 @@
 /**
  * comparators used for frequent subgraph mining
  */
-package org.gradoop.model.impl.algorithms.fsm.comparators;
+package org.gradoop.model.impl.operators.tostring.comparators;

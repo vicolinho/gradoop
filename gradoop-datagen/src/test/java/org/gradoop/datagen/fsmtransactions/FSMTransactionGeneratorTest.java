@@ -17,15 +17,17 @@ public class FSMTransactionGeneratorTest  extends GradoopFlinkTestBase {
         3,  // min vertex count
         9,  // max vertex count
         2,  // min edge count
-        20  // max edge count
+        20, // max edge count
+        5,  // vertex label count
+        1,  // vertex label size
+        3,  // edgeLabelCount,
+        5   // edgeLabelSize
       );
 
     FSMTransactionGenerator<GraphHeadPojo, VertexPojo, EdgePojo> gen =
       new FSMTransactionGenerator<>(getConfig(), generatorConfig);
 
-    GradoopFlinkTestUtils.printCanonicalAdjacencyMatrix(
-      gen.execute()
-    );
+    GradoopFlinkTestUtils.printMinDFSCode(gen.execute());
   }
 
 }

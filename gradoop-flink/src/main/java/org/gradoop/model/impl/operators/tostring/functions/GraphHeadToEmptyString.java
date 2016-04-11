@@ -29,6 +29,11 @@ public class GraphHeadToEmptyString<G extends EPGMGraphHead>
 
   @Override
   public GraphHeadString map(G graphHead) throws Exception {
-    return new GraphHeadString(graphHead.getId(), "");
+    return new GraphHeadString(graphHead.getId(), label(graphHead));
+  }
+
+  @Override
+  public String label(G graphHead) {
+    return "";
   }
 }

@@ -15,7 +15,7 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.impl.algorithms.fsm.comparators;
+package org.gradoop.model.impl.operators.tostring.comparators;
 
 import org.gradoop.model.impl.operators.tostring.pojos.DFSStep;
 
