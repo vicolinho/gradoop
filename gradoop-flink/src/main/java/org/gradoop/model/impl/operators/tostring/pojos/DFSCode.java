@@ -120,31 +120,32 @@ public class DFSCode implements Serializable {
 
   @Override
   public String toString() {
-    Collection<String> vertexLabels = Lists
-      .newArrayList();
-    Collection<String> edgeLabels = Lists
-      .newArrayListWithExpectedSize(steps.size());
-
-    for(DFSStep step : steps) {
-
-      int fromTime = step.getFromTime();
-      int toTime = step.getToTime();
-
-      if(vertexLabels.isEmpty()) {
-        vertexLabels.add("(" + fromTime + ":" + step.getFromLabel() + ")");
-      }
-      if(toTime > fromTime) {
-        vertexLabels.add("(" + toTime + ":" + step.getToLabel() + ")");
-      }
-
-      edgeLabels.add("(" + fromTime + ")" +
-        (step.isOutgoing() ?
-        "-" + step.getEdgeLabel() + "->" : "<-" + step.getEdgeLabel()) +
-        "(" + toTime + ")");
-    }
-
-    return "\n" + StringUtils.join(vertexLabels,",") + "\n\t" +
-      StringUtils.join(edgeLabels, ",");
+//    Collection<String> vertexLabels = Lists
+//      .newArrayList();
+//    Collection<String> edgeLabels = Lists
+//      .newArrayListWithExpectedSize(steps.size());
+//
+//    for(DFSStep step : steps) {
+//
+//      int fromTime = step.getFromTime();
+//      int toTime = step.getToTime();
+//
+//      if(vertexLabels.isEmpty()) {
+//        vertexLabels.add("(" + fromTime + ":" + step.getFromLabel() + ")");
+//      }
+//      if(toTime > fromTime) {
+//        vertexLabels.add("(" + toTime + ":" + step.getToLabel() + ")");
+//      }
+//
+//      edgeLabels.add("(" + fromTime + ")" +
+//        (step.isOutgoing() ?
+//        "-" + step.getEdgeLabel() + "->" : "<-" + step.getEdgeLabel()) +
+//        "(" + toTime + ")");
+//    }
+//
+//    return "\n" + StringUtils.join(vertexLabels,",") + "\n\t" +
+//      StringUtils.join(edgeLabels, ",");
+    return steps.toString();
   }
 
   @Override

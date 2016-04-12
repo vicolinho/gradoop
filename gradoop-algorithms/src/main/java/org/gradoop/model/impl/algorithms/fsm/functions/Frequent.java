@@ -20,13 +20,14 @@ package org.gradoop.model.impl.algorithms.fsm.functions;
 import org.apache.flink.api.common.functions.RichFilterFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.configuration.Configuration;
+import org.apache.hadoop.util.Time;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
 
 /**
  * filters frequent (CompressedDfsCodes, Support), i.e., Support > minSupport
  */
 public class Frequent
-  extends RichFilterFunction<Tuple2<CompressedDFSCode, Integer>> {
+  extends RichFilterFunction<CompressedDFSCode> {
 
   /**
    * name of broadcast data set for minimum support
@@ -46,7 +47,10 @@ public class Frequent
   }
 
   @Override
-  public boolean filter(Tuple2<CompressedDFSCode, Integer> c) throws Exception {
-    return c.f1 >= minSupport;
+  public boolean filter(CompressedDFSCode c) throws Exception {
+
+//    System.out.println(c);
+
+    return c.getSupport() >= minSupport;
   }
 }

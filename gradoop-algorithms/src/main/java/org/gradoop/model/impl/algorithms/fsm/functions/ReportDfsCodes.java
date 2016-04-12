@@ -17,9 +17,11 @@
 
 package org.gradoop.model.impl.algorithms.fsm.functions;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.util.Collector;
+import org.apache.hadoop.util.Time;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
 
@@ -27,16 +29,22 @@ import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
  * Graph => [(CompressedDFSCode, 1),..]
  */
 public class ReportDfsCodes implements
-  FlatMapFunction<SearchSpaceItem, Tuple2<CompressedDFSCode, Integer>> {
+  FlatMapFunction<SearchSpaceItem, CompressedDFSCode> {
 
   @Override
   public void flatMap(SearchSpaceItem searchSpaceItem,
-    Collector<Tuple2<CompressedDFSCode, Integer>> collector) throws Exception {
+    Collector<CompressedDFSCode> collector) throws Exception {
+      if(! searchSpaceItem.isCollector()) {
 
-    for (CompressedDFSCode code :
-      searchSpaceItem.getCodeEmbeddings().keySet()) {
+      for (CompressedDFSCode code :
+        searchSpaceItem.getCodeEmbeddings().keySet()) {
 
-      collector.collect(new Tuple2<>(code, 1));
+        collector.collect(code);
+      }
+
+//      System.out.println(searchSpaceItem.getGraphId() +
+//        " reports " + StringUtils.join(
+//        searchSpaceItem.getCodeEmbeddings().keySet(), ","));
     }
   }
 }

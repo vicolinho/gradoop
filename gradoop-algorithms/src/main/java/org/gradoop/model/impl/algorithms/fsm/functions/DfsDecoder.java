@@ -116,6 +116,8 @@ public class DfsDecoder
   public Tuple3<G, Collection<V>, Collection<E>> map(
     CompressedDFSCode compressedDfsCode) throws  Exception {
 
+//    System.out.println("decode " + compressedDfsCode);
+
     DFSCode dfsCode = compressedDfsCode.getDfsCode();
 
     G graphHead = graphHeadFactory.createGraphHead();
