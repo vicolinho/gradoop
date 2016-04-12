@@ -18,7 +18,7 @@
 package org.gradoop.model.impl.algorithms.fsm;
 
 import org.apache.flink.api.java.DataSet;
-import org.apache.flink.api.java.operators.DeltaIteration;
+import org.apache.flink.api.java.operators.IterativeDataSet;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.gradoop.model.api.EPGMEdge;
@@ -26,22 +26,23 @@ import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
 import org.gradoop.model.api.operators.UnaryCollectionToCollectionOperator;
 import org.gradoop.model.impl.GraphCollection;
-import org.gradoop.model.impl.algorithms.fsm.functions.IsActive;
-import org.gradoop.model.impl.algorithms.fsm.functions.IsCollector;
+import org.gradoop.model.impl.algorithms.fsm.functions.ArrayNotEmpty;
 import org.gradoop.model.impl.algorithms.fsm.functions.ConcatFrequentDfsCodes;
 import org.gradoop.model.impl.algorithms.fsm.functions.DfsDecoder;
 import org.gradoop.model.impl.algorithms.fsm.functions.ExpandEdges;
 import org.gradoop.model.impl.algorithms.fsm.functions.ExpandFrequentDfsCodes;
+import org.gradoop.model.impl.algorithms.fsm.functions.ExpandVertices;
 import org.gradoop.model.impl.algorithms.fsm.functions.Frequent;
 import org.gradoop.model.impl.algorithms.fsm.functions.GraphElements;
 import org.gradoop.model.impl.algorithms.fsm.functions.GraphSimpleEdge;
 import org.gradoop.model.impl.algorithms.fsm.functions.GraphSimpleVertex;
 import org.gradoop.model.impl.algorithms.fsm.functions.GrowEmbeddings;
+import org.gradoop.model.impl.algorithms.fsm.functions.IsActive;
+import org.gradoop.model.impl.algorithms.fsm.functions.IsCollector;
 import org.gradoop.model.impl.algorithms.fsm.functions.MinSupport;
 import org.gradoop.model.impl.algorithms.fsm.functions.ReportDfsCodes;
 import org.gradoop.model.impl.algorithms.fsm.functions.SearchSpace;
 import org.gradoop.model.impl.algorithms.fsm.functions.StoreSupport;
-import org.gradoop.model.impl.algorithms.fsm.functions.ExpandVertices;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SimpleEdge;
@@ -59,7 +60,7 @@ import java.util.Collection;
  * @param <V> vertex type
  * @param <E> edge type
  */
-public class GSpan
+public class GSpanBulkIteration
   <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge>
   implements UnaryCollectionToCollectionOperator<G, V, E> {
 
@@ -80,29 +81,24 @@ public class GSpan
    * constructor
    * @param fsmConfig frequent subgraph mining configuration
    */
-  public GSpan(FSMConfig fsmConfig) {
+  public GSpanBulkIteration(FSMConfig fsmConfig) {
     this.fsmConfig = fsmConfig;
   }
 
   @Override
   public GraphCollection<G, V, E>
   execute(GraphCollection<G, V, E> collection)  {
-
     setGradoopConfig(collection);
     setMinSupport(collection);
 
+//    gradoopConfig.getExecutionEnvironment().setParallelism(1);
+
     // pre processing
-    DataSet<SearchSpaceItem> initialSearchSpace = gradoopConfig
+    IterativeDataSet<SearchSpaceItem> searchSpace = gradoopConfig
       .getExecutionEnvironment()
       .fromElements(SearchSpaceItem.createCollector())
-      .union(getSearchSpaceGraphs(collection));
-
-    // init iteration
-    DeltaIteration<SearchSpaceItem, SearchSpaceItem> iteration =
-      initialSearchSpace
-      .iterateDelta(initialSearchSpace, fsmConfig.getMaxEdgeCount(), 0);
-
-    DataSet<SearchSpaceItem> searchSpace = iteration.getWorkset();
+      .union(getSearchSpaceGraphs(collection))
+      .iterate(fsmConfig.getMaxEdgeCount());
 
     // report DFS codes initially created or grown in last iteration
     DataSet<CompressedDFSCode[]> currentFrequentDfsCodes = searchSpace
@@ -111,28 +107,21 @@ public class GSpan
       .sum(1)                         // count support
       .filter(new Frequent())         // filter by min support
       .withBroadcastSet(minSupport, Frequent.DS_NAME)
-      .map(new StoreSupport())         // store support at code,
-      .groupBy(1)                     // reuse tuple for grouping by ZERO
       .reduceGroup(new ConcatFrequentDfsCodes());
-                                      // concat frequent DFS codes
+    // concat frequent DFS codes
 
     // grow child embeddings of frequent DFS codes
-    DataSet<SearchSpaceItem> grownSearchSpace = searchSpace
-      // broadcast frequent DFS codes to all graphs and the collector
-      .cross(currentFrequentDfsCodes)
-      // grow embeddings of frequent DFS codes
-      .with(new GrowEmbeddings(fsmConfig));
+    DataSet<SearchSpaceItem> growableSearchSpace = searchSpace
+      .filter(new IsActive())
+//      .cross(currentFrequentDfsCodes)
+//      .with(new GrowEmbeddings(fsmConfig));
+      .map(new GrowEmbeddings(fsmConfig))
+      .withBroadcastSet(currentFrequentDfsCodes, GrowEmbeddings.DS_NAME);
 
-    // filter graphs that grew embeddings
-    DataSet<SearchSpaceItem> growableSearchSpace = grownSearchSpace
-      .filter(new IsActive());
+    DataSet<SearchSpaceItem> collector = searchSpace
+      .closeWith(growableSearchSpace, currentFrequentDfsCodes);
 
-    // stop iterating
-    // if no graph can grow child embeddings of frequent DFS codes
-    DataSet<SearchSpaceItem> solution =
-      iteration.closeWith(grownSearchSpace, growableSearchSpace);
-
-    DataSet<CompressedDFSCode> allFrequentDfsCodes = solution
+    DataSet<CompressedDFSCode> allFrequentDfsCodes = collector
       .filter(new IsCollector())              // get only collector
       .flatMap(new ExpandFrequentDfsCodes()); // expand array to data set
 

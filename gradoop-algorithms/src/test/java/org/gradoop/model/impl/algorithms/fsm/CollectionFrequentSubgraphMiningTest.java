@@ -2,6 +2,7 @@ package org.gradoop.model.impl.algorithms.fsm;
 
 import org.gradoop.model.GradoopFlinkTestBase;
 import org.gradoop.model.api.operators.UnaryCollectionToCollectionOperator;
+import org.gradoop.model.impl.GradoopFlinkTestUtils;
 import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.pojo.EdgePojo;
 import org.gradoop.model.impl.pojo.GraphHeadPojo;
@@ -185,9 +186,9 @@ public class CollectionFrequentSubgraphMiningTest extends GradoopFlinkTestBase {
       gSpan.execute(searchSpace);
 
 //    System.out.println("EXPECTED");
-//    GradoopFlinkTestUtils.printCanonicalAdjacencyMatrix(expectation);
+//    GradoopFlinkTestUtils.printMinDFSCode(expectation);
 //    System.out.println("RESULT");
-//    GradoopFlinkTestUtils.printCanonicalAdjacencyMatrix(result);
+//    GradoopFlinkTestUtils.printMinDFSCode(result);
 
     collectAndAssertTrue(expectation.equalsByGraphElementData(result));
   }
@@ -198,9 +199,13 @@ public class CollectionFrequentSubgraphMiningTest extends GradoopFlinkTestBase {
     Collection<UnaryCollectionToCollectionOperator
       <GraphHeadPojo, VertexPojo, EdgePojo>> miners = new ArrayList<>();
 
+    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.7f);
+
+//    miners.add(
+//      new GSpanDeltaIteration<GraphHeadPojo, VertexPojo, EdgePojo>(fsmConfig));
+
     miners.add(
-      new GSpan<GraphHeadPojo, VertexPojo, EdgePojo>(
-        FSMConfig.forDirectedMultigraph(0.7f)));
+      new GSpanBulkIteration<GraphHeadPojo, VertexPojo, EdgePojo>(fsmConfig));
 
     return miners;
   }

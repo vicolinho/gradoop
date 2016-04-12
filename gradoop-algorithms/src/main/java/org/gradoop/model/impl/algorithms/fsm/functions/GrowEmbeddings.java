@@ -20,6 +20,9 @@ package org.gradoop.model.impl.algorithms.fsm.functions;
 import com.google.common.collect.Sets;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.flink.api.common.functions.CrossFunction;
+import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.functions.RichMapFunction;
+import org.apache.flink.configuration.Configuration;
 import org.gradoop.model.impl.algorithms.fsm.FSMConfig;
 import org.gradoop.model.impl.operators.tostring.comparators.DfsCodeComparator;
 import org.gradoop.model.impl.operators.tostring.comparators.EdgePatternComparator;
@@ -43,9 +46,12 @@ import java.util.Map;
 /**
  * Core of gSpan implementation. Grows embeddings of Frequent DFS codes.
  */
-public class GrowEmbeddings implements CrossFunction
+public class GrowEmbeddings
+  extends RichMapFunction<SearchSpaceItem, SearchSpaceItem>
+  implements CrossFunction
   <SearchSpaceItem, CompressedDFSCode[], SearchSpaceItem> {
 
+  public static String DS_NAME = "compressedDfsCodes";
   /**
    * DFS code comparator
    */
@@ -54,6 +60,7 @@ public class GrowEmbeddings implements CrossFunction
    * edge pattern comparator
    */
   private final EdgePatternComparator edgePatternComparator;
+  private CompressedDFSCode[] frequentDfsCodes;
 
   /**
    * constructor
@@ -64,6 +71,19 @@ public class GrowEmbeddings implements CrossFunction
 
     this.dfsCodeComparator = new DfsCodeComparator(directed);
     this.edgePatternComparator = new EdgePatternComparator(directed);
+  }
+
+  @Override
+  public void open(Configuration parameters) throws Exception {
+    super.open(parameters);
+    List<CompressedDFSCode[]> broadcast = getRuntimeContext()
+      .getBroadcastVariable(DS_NAME);
+
+    if(broadcast.isEmpty()) {
+      this.frequentDfsCodes = null;
+    } else {
+      this.frequentDfsCodes = broadcast.get(0);
+    }
   }
 
   @Override
@@ -79,6 +99,23 @@ public class GrowEmbeddings implements CrossFunction
     return searchSpaceItem;
   }
 
+  @Override
+  public SearchSpaceItem map(SearchSpaceItem searchSpaceItem) throws Exception {
+
+//    System.out.println(searchSpaceItem.getGraphId() +
+//      " was triggered to grow / collect");
+
+    if(frequentDfsCodes != null) {
+      if (searchSpaceItem.isCollector()) {
+        searchSpaceItem = updateCollector(searchSpaceItem, frequentDfsCodes);
+      } else {
+        searchSpaceItem = growFrequentDfsCodeEmbeddings(
+          searchSpaceItem, frequentDfsCodes);
+      }
+    }
+    return searchSpaceItem;
+  }
+
   /**
    * appends frequent DFS codes collected so far by new ones
    * @param collector collector search space item
@@ -90,22 +127,22 @@ public class GrowEmbeddings implements CrossFunction
 
     CompressedDFSCode[] pastFrequentDfsCodes = collector.getFrequentDfsCodes();
 
-    CompressedDFSCode[] allFrequentDfsCode = new CompressedDFSCode[
+    CompressedDFSCode[] allFrequentDfsCodes = new CompressedDFSCode[
       pastFrequentDfsCodes.length + newFrequentDfsCodes.length];
 
     int i = 0;
 
     for (CompressedDFSCode code : pastFrequentDfsCodes) {
-      allFrequentDfsCode[i] = code;
+      allFrequentDfsCodes[i] = code;
       i++;
     }
 
     for (CompressedDFSCode code : newFrequentDfsCodes) {
-      allFrequentDfsCode[i] = code;
+      allFrequentDfsCodes[i] = code;
       i++;
     }
 
-    collector.setFrequentDfsCodes(allFrequentDfsCode);
+    collector.setFrequentDfsCodes(allFrequentDfsCodes);
 
     return collector;
   }
@@ -227,6 +264,12 @@ public class GrowEmbeddings implements CrossFunction
                     } else {
                       embeddings.add(embedding);
                     }
+
+//                    System.out.println(
+//                      graph.getGraphId() +
+//                        " grew " + parentDfsCode +
+//                        " to " + dfsCode
+//                    );
                   }
                 }
               }
@@ -242,6 +285,10 @@ public class GrowEmbeddings implements CrossFunction
 
     graph.setCodeEmbeddings(compressedCodeEmbeddings);
     graph.setActive(! compressedCodeEmbeddings.isEmpty());
+
+//    if(compressedCodeEmbeddings.isEmpty()) {
+//      System.out.println(graph.getGraphId() + " grew nothing");
+//    }
 
     return graph;
   }

@@ -126,6 +126,10 @@ public class SearchSpaceItem extends Tuple6<
 
   public void setCodeEmbeddings(
     HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings) {
+
+//    System.out.println(getGraphId() + " updated embeddings to " +
+//      codeEmbeddings.keySet());
+
     this.f4 = codeEmbeddings;
   }
 
@@ -213,5 +217,9 @@ public class SearchSpaceItem extends Tuple6<
       codeEmbeddings,
       new CompressedDFSCode[0]
     );
+  }
+
+  public GradoopId getGraphId() {
+    return f0;
   }
 }
