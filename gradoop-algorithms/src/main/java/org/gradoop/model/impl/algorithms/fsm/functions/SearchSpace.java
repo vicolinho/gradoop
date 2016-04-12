@@ -23,13 +23,13 @@ import org.apache.flink.api.common.functions.JoinFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.gradoop.model.impl.algorithms.fsm.pojos.AdjacencyListEntry;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
+import org.gradoop.model.impl.algorithms.fsm.tuples.StringLabeledEdge;
 import org.gradoop.model.impl.operators.tostring.pojos.DFSCode;
 import org.gradoop.model.impl.operators.tostring.pojos.DFSEmbedding;
 import org.gradoop.model.impl.operators.tostring.pojos.DFSStep;
 import org.gradoop.model.impl.algorithms.fsm.pojos.AdjacencyList;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
-import org.gradoop.model.impl.algorithms.fsm.tuples.SimpleEdge;
-import org.gradoop.model.impl.algorithms.fsm.tuples.SimpleVertex;
+import org.gradoop.model.impl.algorithms.fsm.tuples.StringLabeledVertex;
 import org.gradoop.model.impl.id.GradoopId;
 
 import java.util.ArrayList;
@@ -41,13 +41,13 @@ import java.util.HashSet;
  * (GraphId, [Vertex,..]) |><| (GraphId, [Edge,..]) => Graph
  */
 public class SearchSpace
-  implements JoinFunction<Tuple2<GradoopId, Collection<SimpleVertex>>,
-    Tuple2<GradoopId, Collection<SimpleEdge>>, SearchSpaceItem> {
+  implements JoinFunction<Tuple2<GradoopId, Collection<StringLabeledVertex>>,
+    Tuple2<GradoopId, Collection<StringLabeledEdge>>, SearchSpaceItem> {
 
   @Override
   public SearchSpaceItem join(
-    Tuple2<GradoopId, Collection<SimpleVertex>> graphVertices,
-    Tuple2<GradoopId, Collection<SimpleEdge>> graphEdges) throws
+    Tuple2<GradoopId, Collection<StringLabeledVertex>> graphVertices,
+    Tuple2<GradoopId, Collection<StringLabeledEdge>> graphEdges) throws
     Exception {
 
     GradoopId graphId = graphVertices.f0;
@@ -59,12 +59,12 @@ public class SearchSpace
     SearchSpaceItem graph = SearchSpaceItem.createForGraph(
       graphId, adjacencyLists, codeEmbeddingsMap);
 
-    for (SimpleVertex vertex : graphVertices.f1) {
+    for (StringLabeledVertex vertex : graphVertices.f1) {
       vertexLabels.put(vertex.getId(), vertex.getLabel());
       adjacencyLists.put(vertex.getId(), new AdjacencyList(vertex.getLabel()));
     }
 
-    for (SimpleEdge edge : graphEdges.f1) {
+    for (StringLabeledEdge edge : graphEdges.f1) {
 
       GradoopId edgeId = edge.getId();
       String edgeLabel = edge.getLabel();

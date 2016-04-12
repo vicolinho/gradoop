@@ -26,27 +26,30 @@ import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
 import org.gradoop.model.api.operators.UnaryCollectionToCollectionOperator;
 import org.gradoop.model.impl.GraphCollection;
-import org.gradoop.model.impl.algorithms.fsm.functions.ArrayNotEmpty;
 import org.gradoop.model.impl.algorithms.fsm.functions.ConcatFrequentDfsCodes;
 import org.gradoop.model.impl.algorithms.fsm.functions.DfsDecoder;
+import org.gradoop.model.impl.algorithms.fsm.functions.EdgeLabelGraphId;
 import org.gradoop.model.impl.algorithms.fsm.functions.ExpandEdges;
 import org.gradoop.model.impl.algorithms.fsm.functions.ExpandFrequentDfsCodes;
 import org.gradoop.model.impl.algorithms.fsm.functions.ExpandVertices;
 import org.gradoop.model.impl.algorithms.fsm.functions.Frequent;
+import org.gradoop.model.impl.algorithms.fsm.functions.FrequentLabel;
 import org.gradoop.model.impl.algorithms.fsm.functions.GraphElements;
-import org.gradoop.model.impl.algorithms.fsm.functions.GraphSimpleEdge;
-import org.gradoop.model.impl.algorithms.fsm.functions.GraphSimpleVertex;
+import org.gradoop.model.impl.algorithms.fsm.functions.GraphIdStringLabeledEdge;
+import org.gradoop.model.impl.algorithms.fsm.functions.GraphIdStringLabeledVertex;
 import org.gradoop.model.impl.algorithms.fsm.functions.GrowEmbeddings;
 import org.gradoop.model.impl.algorithms.fsm.functions.IsActive;
 import org.gradoop.model.impl.algorithms.fsm.functions.IsCollector;
+import org.gradoop.model.impl.algorithms.fsm.functions.LabelTranslation;
 import org.gradoop.model.impl.algorithms.fsm.functions.MinSupport;
 import org.gradoop.model.impl.algorithms.fsm.functions.ReportDfsCodes;
 import org.gradoop.model.impl.algorithms.fsm.functions.SearchSpace;
-import org.gradoop.model.impl.algorithms.fsm.functions.StoreSupport;
+import org.gradoop.model.impl.algorithms.fsm.functions.VertexLabelGraphId;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
+import org.gradoop.model.impl.algorithms.fsm.tuples.StringLabeledEdge;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
-import org.gradoop.model.impl.algorithms.fsm.tuples.SimpleEdge;
-import org.gradoop.model.impl.algorithms.fsm.tuples.SimpleVertex;
+import org.gradoop.model.impl.algorithms.fsm.tuples.StringLabeledVertex;
+import org.gradoop.model.impl.functions.tuple.Project0And2Of3;
 import org.gradoop.model.impl.functions.tuple.Value0Of3;
 import org.gradoop.model.impl.id.GradoopId;
 import org.gradoop.model.impl.operators.count.Count;
@@ -90,8 +93,6 @@ public class GSpanBulkIteration
   execute(GraphCollection<G, V, E> collection)  {
     setGradoopConfig(collection);
     setMinSupport(collection);
-
-//    gradoopConfig.getExecutionEnvironment().setParallelism(1);
 
     // pre processing
     IterativeDataSet<SearchSpaceItem> searchSpace = gradoopConfig
@@ -147,19 +148,49 @@ public class GSpanBulkIteration
   private DataSet<SearchSpaceItem> getSearchSpaceGraphs(
     GraphCollection<G, V, E> collection) {
 
-    DataSet<Tuple2<GradoopId, Collection<SimpleVertex>>> graphVertices =
-      collection
-        .getVertices()
-        .flatMap(new GraphSimpleVertex<V>())
-        .groupBy(0)
-        .reduceGroup(new GraphElements<SimpleVertex>());
+    // vertices
 
-    DataSet<Tuple2<GradoopId, Collection<SimpleEdge>>> graphEdges =
-      collection
-        .getEdges()
-        .flatMap(new GraphSimpleEdge<E>())
+    DataSet<Tuple2<GradoopId, StringLabeledVertex>> graphIdVertex = collection
+      .getVertices()
+      .flatMap(new GraphIdStringLabeledVertex<V>());
+
+    DataSet<Tuple2<String, Integer>> vertexLabelDictionary =
+      graphIdVertex
+        .map(new VertexLabelGraphId())
+        .distinct()
+        .map(new Project0And2Of3<String, GradoopId, Integer>())
         .groupBy(0)
-        .reduceGroup(new GraphElements<SimpleEdge>());
+        .sum(1)
+        .filter(new FrequentLabel())
+        .withBroadcastSet(minSupport, Frequent.DS_NAME)
+        .reduceGroup(new LabelTranslation());
+
+    DataSet<Tuple2<GradoopId, Collection<StringLabeledVertex>>> graphVertices =
+      graphIdVertex
+        .groupBy(0)
+        .reduceGroup(new GraphElements<StringLabeledVertex>());
+
+    // edges
+
+    DataSet<Tuple2<GradoopId, StringLabeledEdge>> graphIdEdge = collection
+      .getEdges()
+      .flatMap(new GraphIdStringLabeledEdge<E>());
+
+    DataSet<Tuple2<String, Integer>> edgeLabelDictionary =
+      graphIdEdge
+        .map(new EdgeLabelGraphId())
+        .distinct()
+        .map(new Project0And2Of3<String, GradoopId, Integer>())
+        .groupBy(0)
+        .sum(1)
+        .filter(new FrequentLabel())
+        .withBroadcastSet(minSupport, Frequent.DS_NAME)
+        .reduceGroup(new LabelTranslation());
+
+    DataSet<Tuple2<GradoopId, Collection<StringLabeledEdge>>> graphEdges =
+      graphIdEdge
+        .groupBy(0)
+        .reduceGroup(new GraphElements<StringLabeledEdge>());
 
     return graphVertices
       .join(graphEdges)
