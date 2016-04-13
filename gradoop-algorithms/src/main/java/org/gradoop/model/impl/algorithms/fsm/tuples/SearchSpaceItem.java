@@ -25,7 +25,6 @@ import org.gradoop.model.impl.id.GradoopId;
 import scala.collection.mutable.StringBuilder;
 
 import java.util.ArrayList;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -43,9 +42,9 @@ import java.util.Map;
 public class SearchSpaceItem<L extends Comparable<L>> extends Tuple5<
     Boolean,
     Boolean,
-    HashMap<GradoopId, AdjacencyList<L>>,
-    HashMap<CompressedDFSCode<L>, HashSet<DFSEmbedding>>,
-    ArrayList<CompressedDFSCode<L>>
+    HashMap<GradoopId, AdjacencyList>,
+    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>>,
+    ArrayList<CompressedDFSCode>
   > {
 
   /**
@@ -63,9 +62,9 @@ public class SearchSpaceItem<L extends Comparable<L>> extends Tuple5<
    * @param frequentDfsCodes frequent DFS codes (empty for graph)
    */
   public SearchSpaceItem(boolean collector, boolean active,
-    HashMap<GradoopId, AdjacencyList<L>> adjacencyLists,
-    HashMap<CompressedDFSCode<L>, HashSet<DFSEmbedding>> codeEmbeddings,
-    ArrayList<CompressedDFSCode<L>> frequentDfsCodes) {
+    HashMap<GradoopId, AdjacencyList> adjacencyLists,
+    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings,
+    ArrayList<CompressedDFSCode> frequentDfsCodes) {
 
     setCollector(collector);
     setActive(active);
@@ -100,23 +99,23 @@ public class SearchSpaceItem<L extends Comparable<L>> extends Tuple5<
     return this.f1;
   }
 
-  public Map<GradoopId, AdjacencyList<L>> getAdjacencyLists() {
+  public Map<GradoopId, AdjacencyList> getAdjacencyLists() {
     return f2;
   }
 
   public void setAdjacencyLists(
-    HashMap<GradoopId, AdjacencyList<L>> adjacencyLists) {
+    HashMap<GradoopId, AdjacencyList> adjacencyLists) {
 
     this.f2 = adjacencyLists;
   }
 
-  public HashMap<CompressedDFSCode<L>, HashSet<DFSEmbedding>>
+  public HashMap<CompressedDFSCode, HashSet<DFSEmbedding>>
   getCodeEmbeddings() {
     return f3;
   }
 
   public void setCodeEmbeddings(
-    HashMap<CompressedDFSCode<L>, HashSet<DFSEmbedding>> codeEmbeddings) {
+    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings) {
 
 //    System.out.println(getGraphId() + " updated embeddings to " +
 //      codeEmbeddings.keySet());
@@ -124,11 +123,11 @@ public class SearchSpaceItem<L extends Comparable<L>> extends Tuple5<
     this.f3 = codeEmbeddings;
   }
 
-  public ArrayList<CompressedDFSCode<L>> getFrequentDfsCodes() {
+  public ArrayList<CompressedDFSCode> getFrequentDfsCodes() {
     return this.f4;
   }
 
-  public void setFrequentDfsCodes(ArrayList<CompressedDFSCode<L>> collectedDfsCodes) {
+  public void setFrequentDfsCodes(ArrayList<CompressedDFSCode> collectedDfsCodes) {
     this.f4 = collectedDfsCodes;
   }
 
@@ -140,13 +139,13 @@ public class SearchSpaceItem<L extends Comparable<L>> extends Tuple5<
     if (isCollector()) {
       builder.append(" (Collector)\n\tFrequent DFS codes\n");
 
-      for (CompressedDFSCode<L> compressedDfsCode : getFrequentDfsCodes()) {
+      for (CompressedDFSCode compressedDfsCode : getFrequentDfsCodes()) {
         builder.append("\n" + compressedDfsCode);
       }
     } else {
       builder.append(" (Graph)\n\tAdjacency lists");
 
-      for (Map.Entry<GradoopId, AdjacencyList<L>> entry :
+      for (Map.Entry<GradoopId, AdjacencyList> entry :
         getAdjacencyLists().entrySet()) {
 
         builder.append("\n\t\t(" + entry.getValue().getVertexLabel() + ":" +
@@ -156,7 +155,7 @@ public class SearchSpaceItem<L extends Comparable<L>> extends Tuple5<
 
       builder.append("\n\tDFS codes and embeddings");
 
-      for (Map.Entry<CompressedDFSCode<L>, HashSet<DFSEmbedding>> entry :
+      for (Map.Entry<CompressedDFSCode, HashSet<DFSEmbedding>> entry :
         getCodeEmbeddings().entrySet()) {
 
         builder.append("\n\t\t" + entry.getKey().getDfsCode());
@@ -177,11 +176,11 @@ public class SearchSpaceItem<L extends Comparable<L>> extends Tuple5<
    * @return a search space item representing a graph transaction
    */
   public static <L extends Comparable<L>> SearchSpaceItem<L> createForGraph(
-    HashMap<GradoopId, AdjacencyList<L>> adjacencyLists,
-    HashMap<CompressedDFSCode<L>, HashSet<DFSEmbedding>> codeEmbeddings) {
+    HashMap<GradoopId, AdjacencyList> adjacencyLists,
+    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings) {
 
     return new SearchSpaceItem<>(false, true, adjacencyLists, codeEmbeddings,
-      new ArrayList<CompressedDFSCode<L>>());
+      new ArrayList<CompressedDFSCode>());
   }
 
   /**
@@ -189,11 +188,11 @@ public class SearchSpaceItem<L extends Comparable<L>> extends Tuple5<
    * @return a search space item representing the collector
    */
   public static <L extends Comparable<L>> SearchSpaceItem<L> createCollector() {
-    HashMap<GradoopId, AdjacencyList<L>> adjacencyLists = new HashMap<>();
-    HashMap<CompressedDFSCode<L>, HashSet<DFSEmbedding>> codeEmbeddings = new
+    HashMap<GradoopId, AdjacencyList> adjacencyLists = new HashMap<>();
+    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings = new
       HashMap<>();
 
     return new SearchSpaceItem<>(true, true, adjacencyLists, codeEmbeddings,
-      new ArrayList<CompressedDFSCode<L>>());
+      new ArrayList<CompressedDFSCode>());
   }
 }

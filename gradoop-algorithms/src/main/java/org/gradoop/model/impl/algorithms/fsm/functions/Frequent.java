@@ -25,7 +25,7 @@ import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
  * filters frequent (CompressedDfsCodes, Support), i.e., Support > minSupport
  */
 public class Frequent<L extends Comparable<L>>
-  extends RichFilterFunction<CompressedDFSCode<L>> {
+  extends RichFilterFunction<CompressedDFSCode> {
 
   /**
    * name of broadcast data set for minimum support
@@ -45,7 +45,7 @@ public class Frequent<L extends Comparable<L>>
   }
 
   @Override
-  public boolean filter(CompressedDFSCode<L> c) throws Exception {
+  public boolean filter(CompressedDFSCode c) throws Exception {
 
 //    System.out.println(c);
 

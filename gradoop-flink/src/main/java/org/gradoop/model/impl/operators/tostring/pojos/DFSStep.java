@@ -25,7 +25,7 @@ import java.io.Serializable;
 /**
  * pojo representing an DFS traversal step
  */
-public class DFSStep<L extends Comparable<L>> implements Serializable {
+public class DFSStep implements Serializable {
   /**
    * discovery time of traversal start vertex
    */
@@ -33,7 +33,7 @@ public class DFSStep<L extends Comparable<L>> implements Serializable {
   /**
    * label of traversal start vertex
    */
-  private final L fromLabel;
+  private final Integer fromLabel;
   /**
    * true, if edge was traversed in direction
    */
@@ -41,7 +41,7 @@ public class DFSStep<L extends Comparable<L>> implements Serializable {
   /**
    * label of the traversed edge
    */
-  private final L edgeLabel;
+  private final Integer edgeLabel;
   /**
    * discovery time of traversal end vertex
    */
@@ -49,7 +49,7 @@ public class DFSStep<L extends Comparable<L>> implements Serializable {
   /**
    * label of traversal end vertex
    */
-  private final L toLabel;
+  private final Integer toLabel;
 
   /**
    * constructor
@@ -60,8 +60,8 @@ public class DFSStep<L extends Comparable<L>> implements Serializable {
    * @param toTime discovery time of traversal end vertex
    * @param toLabel label of traversal end vertex
    */
-  public DFSStep(int fromTime, L fromLabel, Boolean outgoing,
-    L edgeLabel, int toTime, L toLabel) {
+  public DFSStep(int fromTime, Integer fromLabel, Boolean outgoing,
+    Integer edgeLabel, int toTime, Integer toLabel) {
     this.fromTime = fromTime;
     this.fromLabel = fromLabel;
     this.outgoing = outgoing;
@@ -81,7 +81,7 @@ public class DFSStep<L extends Comparable<L>> implements Serializable {
     return fromTime;
   }
 
-  public L getFromLabel() {
+  public Integer getFromLabel() {
     return fromLabel;
   }
 
@@ -89,7 +89,7 @@ public class DFSStep<L extends Comparable<L>> implements Serializable {
     return outgoing;
   }
 
-  public L getEdgeLabel() {
+  public Integer getEdgeLabel() {
     return edgeLabel;
   }
 
@@ -97,7 +97,7 @@ public class DFSStep<L extends Comparable<L>> implements Serializable {
     return toTime;
   }
 
-  public L getToLabel() {
+  public Integer getToLabel() {
     return toLabel;
   }
 
@@ -107,7 +107,7 @@ public class DFSStep<L extends Comparable<L>> implements Serializable {
 
     if (!equals && obj != null && obj.getClass() == getClass()) {
 
-      DFSStep<L> other = (DFSStep<L>) obj;
+      DFSStep other = (DFSStep) obj;
 
       EqualsBuilder builder = new EqualsBuilder();
 

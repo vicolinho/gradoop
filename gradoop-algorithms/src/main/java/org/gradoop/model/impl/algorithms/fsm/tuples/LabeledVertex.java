@@ -49,6 +49,10 @@ public class LabeledVertex<L extends Comparable<L>> extends Tuple2<GradoopId, L>
     return this.f0;
   }
 
+  public void setId(GradoopId id) {
+    this.f0 = id;
+  }
+
   @Override
   public L getLabel() {
     return this.f1;
@@ -56,6 +60,7 @@ public class LabeledVertex<L extends Comparable<L>> extends Tuple2<GradoopId, L>
 
   @Override
   public void setLabel(L label) {
-
+    this.f1 = label;
   }
+
 }

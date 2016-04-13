@@ -29,15 +29,15 @@ import java.util.List;
  * [(CompressedDFSCode, Support),..] => CompressedDFSCode[]
  */
 public class ConcatFrequentDfsCodes<L extends Comparable<L>> implements
-  GroupReduceFunction<CompressedDFSCode<L>, Collection<CompressedDFSCode<L>>> {
+  GroupReduceFunction<CompressedDFSCode, Collection<CompressedDFSCode>> {
 
   @Override
-  public void reduce(Iterable<CompressedDFSCode<L>> iterable,
-    Collector<Collection<CompressedDFSCode<L>>> collector) throws Exception {
+  public void reduce(Iterable<CompressedDFSCode> iterable,
+    Collector<Collection<CompressedDFSCode>> collector) throws Exception {
 
-    List<CompressedDFSCode<L>> codes = new ArrayList<>();
+    List<CompressedDFSCode> codes = new ArrayList<>();
 
-    for (CompressedDFSCode<L> code : iterable) {
+    for (CompressedDFSCode code : iterable) {
       System.out.println(code);
       codes.add(code);
     }

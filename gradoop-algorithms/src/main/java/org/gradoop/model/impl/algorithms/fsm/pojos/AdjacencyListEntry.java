@@ -22,7 +22,7 @@ import org.gradoop.model.impl.id.GradoopId;
 /**
  * pojo representing an adjacency list entry
  */
-public class AdjacencyListEntry<L extends Comparable<L>> {
+public class AdjacencyListEntry{
   /**
    * true, if edge is outgoing
    */
@@ -34,7 +34,7 @@ public class AdjacencyListEntry<L extends Comparable<L>> {
   /**
    * edge label
    */
-  private final L edgeLabel;
+  private final Integer edgeLabel;
   /**
    * vertexId
    */
@@ -42,7 +42,7 @@ public class AdjacencyListEntry<L extends Comparable<L>> {
   /**
    * vertex label
    */
-  private final L vertexLabel;
+  private final Integer vertexLabel;
 
   /**
    * constructor
@@ -53,7 +53,7 @@ public class AdjacencyListEntry<L extends Comparable<L>> {
    * @param vertexLabel connected vertex label
    */
   public AdjacencyListEntry(boolean outgoing, GradoopId edgeId,
-    L edgeLabel, GradoopId vertexId, L vertexLabel) {
+    Integer edgeLabel, GradoopId vertexId, Integer vertexLabel) {
 
     this.outgoing = outgoing;
     this.edgeId = edgeId;
@@ -62,7 +62,7 @@ public class AdjacencyListEntry<L extends Comparable<L>> {
     this.vertexLabel = vertexLabel;
   }
 
-  public L getVertexLabel() {
+  public Integer getVertexLabel() {
     return vertexLabel;
   }
 
@@ -74,7 +74,7 @@ public class AdjacencyListEntry<L extends Comparable<L>> {
     return edgeId;
   }
 
-  public L getEdgeLabel() {
+  public Integer getEdgeLabel() {
     return edgeLabel;
   }
 
@@ -98,11 +98,11 @@ public class AdjacencyListEntry<L extends Comparable<L>> {
    * @param targetLabel target vertex label
    * @return entry
    */
-  public static <L extends Comparable<L>> AdjacencyListEntry newOutgoing
+  public static AdjacencyListEntry newOutgoing
     (GradoopId edgeId,
-    L edgeLabel, GradoopId targetId, L targetLabel) {
+    Integer edgeLabel, GradoopId targetId, Integer targetLabel) {
 
-    return new AdjacencyListEntry<>(
+    return new AdjacencyListEntry(
       true, edgeId, edgeLabel, targetId, targetLabel);
   }
 
@@ -114,10 +114,10 @@ public class AdjacencyListEntry<L extends Comparable<L>> {
    * @param sourceLabel source vertex label
    * @return entry
    */
-  public static <L extends Comparable<L>> AdjacencyListEntry newIncoming(
-    GradoopId edgeId, L edgeLabel,  GradoopId sourceId, L sourceLabel) {
+  public static AdjacencyListEntry newIncoming(
+    GradoopId edgeId, Integer edgeLabel,  GradoopId sourceId, Integer sourceLabel) {
 
-    return new AdjacencyListEntry<>(
+    return new AdjacencyListEntry(
       false, edgeId, edgeLabel, sourceId, sourceLabel);
   }
 }

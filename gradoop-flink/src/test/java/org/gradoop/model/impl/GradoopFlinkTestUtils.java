@@ -7,17 +7,14 @@ import org.apache.flink.api.java.io.LocalCollectionOutputFormat;
 import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
-import org.gradoop.model.impl.operators.tostring.CanonicalAdjacencyMatrixBuilder;
-
-import org.gradoop.model.impl.operators.tostring.MinDFSCodeBuilder;
+import org.gradoop.model.impl.operators.tostring
+  .CanonicalAdjacencyMatrixBuilder;
 import org.gradoop.model.impl.operators.tostring.functions
   .EPGMElementToDataString;
 import org.gradoop.model.impl.operators.tostring.functions.EdgeToDataString;
-import org.gradoop.model.impl.operators.tostring.functions.GraphHeadToDataString;
+import org.gradoop.model.impl.operators.tostring.functions
+  .GraphHeadToDataString;
 import org.gradoop.model.impl.operators.tostring.functions.VertexToDataString;
-import org.gradoop.model.impl.pojo.EdgePojo;
-import org.gradoop.model.impl.pojo.GraphHeadPojo;
-import org.gradoop.model.impl.pojo.VertexPojo;
 
 import java.util.Collection;
 
@@ -123,18 +120,4 @@ public class GradoopFlinkTestUtils {
       new EdgeToDataString<E>()
     ).execute(collection).print();
   }
-
-  public static <
-    G extends EPGMGraphHead,
-    V extends EPGMVertex,
-    E extends EPGMEdge> void printMinDFSCode(
-    GraphCollection<G, V, E> collection) throws Exception {
-
-    new MinDFSCodeBuilder<>(
-      new EPGMElementToDataString<G>(),
-      new EPGMElementToDataString<V>(),
-      new EPGMElementToDataString<E>()
-    ).execute(collection).print();
-  }
-
 }

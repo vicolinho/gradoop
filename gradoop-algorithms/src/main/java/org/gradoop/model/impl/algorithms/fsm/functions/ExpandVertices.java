@@ -18,26 +18,37 @@
 package org.gradoop.model.impl.algorithms.fsm.functions;
 
 import org.apache.flink.api.common.functions.FlatMapFunction;
+import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.util.Collector;
+import org.gradoop.model.api.EPGMGraphHead;
+import org.gradoop.model.impl.algorithms.fsm.tuples.IntegerLabeledEdge;
+import org.gradoop.model.impl.algorithms.fsm.tuples.IntegerLabeledVertex;
+import org.gradoop.model.impl.algorithms.fsm.tuples.LabeledEdge;
+import org.gradoop.model.impl.algorithms.fsm.tuples.LabeledVertex;
+import org.gradoop.model.impl.id.GradoopId;
 
-import java.util.Collection;
+import java.util.ArrayList;
 
 /**
  * (GraphId, [Vertex,..], [Edge,..]) => [Vertex,..]
  * @param <G> graph type
- * @param <V> vertex type
- * @param <E> edge type
  */
-public class ExpandVertices<G, V, E>
-  implements FlatMapFunction<Tuple3<G, Collection<V>, Collection<E>>, V> {
+public class ExpandVertices<G extends EPGMGraphHead>
+  implements FlatMapFunction
+  <Tuple3<G, ArrayList<IntegerLabeledVertex>, ArrayList<IntegerLabeledEdge>>,
+    Tuple2<GradoopId, IntegerLabeledVertex>> {
 
   @Override
-  public void flatMap(Tuple3<G, Collection<V>, Collection<E>> triple,
-    Collector<V> collector) throws Exception {
+  public void flatMap(
+    Tuple3<G, ArrayList<IntegerLabeledVertex>, ArrayList<IntegerLabeledEdge>>
+      triple,
+    Collector<Tuple2<GradoopId, IntegerLabeledVertex>> collector) throws Exception {
 
-    for (V vertex : triple.f1) {
-      collector.collect(vertex);
+    GradoopId graphId = triple.f0.getId();
+
+    for(IntegerLabeledVertex vertex : triple.f1) {
+      collector.collect(new Tuple2<>(graphId, vertex));
     }
   }
 }

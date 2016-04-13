@@ -17,9 +17,7 @@
 
 package org.gradoop.model.impl.algorithms.fsm.functions;
 
-import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import org.apache.commons.lang.ArrayUtils;
 import org.apache.flink.api.common.functions.CrossFunction;
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.configuration.Configuration;
@@ -47,10 +45,10 @@ import java.util.Map;
 /**
  * Core of gSpan implementation. Grows embeddings of Frequent DFS codes.
  */
-public class GrowEmbeddings<L extends Comparable<L>> extends 
-  RichMapFunction<SearchSpaceItem<L>, SearchSpaceItem<L>>
+public class GrowEmbeddings<L extends Comparable<Integer>> extends 
+  RichMapFunction<SearchSpaceItem<Integer>, SearchSpaceItem<Integer>>
   implements CrossFunction
-  <SearchSpaceItem<L>, Collection<CompressedDFSCode<L>>, SearchSpaceItem<L>> {
+  <SearchSpaceItem<Integer>, Collection<CompressedDFSCode>, SearchSpaceItem<Integer>> {
 
   public static String DS_NAME = "compressedDfsCodes";
   /**
@@ -60,8 +58,8 @@ public class GrowEmbeddings<L extends Comparable<L>> extends
   /**
    * edge pattern comparator
    */
-  private final EdgePatternComparator<L> edgePatternComparator;
-  private Collection<CompressedDFSCode<L>> frequentDfsCodes;
+  private final EdgePatternComparator<Integer> edgePatternComparator;
+  private Collection<CompressedDFSCode> frequentDfsCodes;
 
   /**
    * constructor
@@ -77,7 +75,7 @@ public class GrowEmbeddings<L extends Comparable<L>> extends
   @Override
   public void open(Configuration parameters) throws Exception {
     super.open(parameters);
-    List<Collection<CompressedDFSCode<L>>> broadcast = getRuntimeContext()
+    List<Collection<CompressedDFSCode>> broadcast = getRuntimeContext()
       .getBroadcastVariable(DS_NAME);
 
     if(broadcast.isEmpty()) {
@@ -88,8 +86,8 @@ public class GrowEmbeddings<L extends Comparable<L>> extends
   }
 
   @Override
-  public SearchSpaceItem<L> cross(SearchSpaceItem<L> searchSpaceItem,
-    Collection<CompressedDFSCode<L>> frequentDfsCodes) throws Exception {
+  public SearchSpaceItem<Integer> cross(SearchSpaceItem<Integer> searchSpaceItem,
+    Collection<CompressedDFSCode> frequentDfsCodes) throws Exception {
 
     if (searchSpaceItem.isCollector()) {
       searchSpaceItem = updateCollector(searchSpaceItem, frequentDfsCodes);
@@ -101,7 +99,7 @@ public class GrowEmbeddings<L extends Comparable<L>> extends
   }
 
   @Override
-  public SearchSpaceItem<L> map(SearchSpaceItem<L> searchSpaceItem) throws Exception {
+  public SearchSpaceItem<Integer> map(SearchSpaceItem<Integer> searchSpaceItem) throws Exception {
 
 //    System.out.println(searchSpaceItem.getGraphId() +
 //      " was triggered to grow / collect");
@@ -123,8 +121,8 @@ public class GrowEmbeddings<L extends Comparable<L>> extends
    * @param newFrequentDfsCodes new frequent DFS codes
    * @return updated collector
    */
-  private SearchSpaceItem<L> updateCollector(SearchSpaceItem<L> collector,
-    Collection<CompressedDFSCode<L>> newFrequentDfsCodes) {
+  private SearchSpaceItem<Integer> updateCollector(SearchSpaceItem<Integer> collector,
+    Collection<CompressedDFSCode> newFrequentDfsCodes) {
 
     collector.getFrequentDfsCodes().addAll(newFrequentDfsCodes);
 
@@ -137,24 +135,24 @@ public class GrowEmbeddings<L extends Comparable<L>> extends
    * @param frequentDfsCodes frequent DFS codes
    * @return graph with grown embeddings
    */
-  private SearchSpaceItem<L> growFrequentDfsCodeEmbeddings(SearchSpaceItem<L> graph,
-    Collection<CompressedDFSCode<L>> frequentDfsCodes) {
+  private SearchSpaceItem<Integer> growFrequentDfsCodeEmbeddings(SearchSpaceItem<Integer> graph,
+    Collection<CompressedDFSCode> frequentDfsCodes) {
 
     // min DFS code per subgraph (set of edge ids)
-    Map<Integer, HashSet<DFSCode<L>>> coverageDfsCodes = new HashMap<>();
-    Map<DFSCode<L>, HashSet<DFSEmbedding>> codeEmbeddings = new HashMap<>();
+    Map<Integer, HashSet<DFSCode>> coverageDfsCodes = new HashMap<>();
+    Map<DFSCode, HashSet<DFSEmbedding>> codeEmbeddings = new HashMap<>();
 
     // for each supported DFS code
-    for (Map.Entry<CompressedDFSCode<L>, HashSet<DFSEmbedding>> entry :
+    for (Map.Entry<CompressedDFSCode, HashSet<DFSEmbedding>> entry :
       graph.getCodeEmbeddings().entrySet()) {
 
-      CompressedDFSCode<L> compressedDfsCode = entry.getKey();
+      CompressedDFSCode compressedDfsCode = entry.getKey();
 
       // PRUNING : grow only embeddings of frequent DFS codes
       if (frequentDfsCodes.contains(compressedDfsCode)) {
 
-        DFSCode<L> parentDfsCode = compressedDfsCode.getDfsCode();
-        EdgePattern<L> minPattern = parentDfsCode.getMinEdgePattern();
+        DFSCode parentDfsCode = compressedDfsCode.getDfsCode();
+        EdgePattern<Integer> minPattern = parentDfsCode.getMinEdgePattern();
         List<Integer> rightmostPath = parentDfsCode
           .getRightMostPathVertexTimes();
 
@@ -169,19 +167,19 @@ public class GrowEmbeddings<L extends Comparable<L>> extends
           for (Integer fromVertexTime : rightmostPath) {
 
             // query fromVertex data
-            AdjacencyList<L> adjacencyList = graph.getAdjacencyLists()
+            AdjacencyList adjacencyList = graph.getAdjacencyLists()
               .get(vertexTimes.get(fromVertexTime));
-            L fromVertexLabel = adjacencyList.getVertexLabel();
+            Integer fromVertexLabel = adjacencyList.getVertexLabel();
 
             // for each incident edge
-            for (AdjacencyListEntry<L> adjacencyListEntry :
+            for (AdjacencyListEntry adjacencyListEntry :
               adjacencyList.getEntries()) {
 
               boolean outgoing = adjacencyListEntry.isOutgoing();
-              L edgeLabel = adjacencyListEntry.getEdgeLabel();
-              L toVertexLabel = adjacencyListEntry.getVertexLabel();
+              Integer edgeLabel = adjacencyListEntry.getEdgeLabel();
+              Integer toVertexLabel = adjacencyListEntry.getVertexLabel();
 
-              EdgePattern<L> candidatePattern = new EdgePattern<L>(
+              EdgePattern<Integer> candidatePattern = new EdgePattern<Integer>(
                 fromVertexLabel, outgoing, edgeLabel, toVertexLabel);
 
               // PRUNING : continue only if edge pattern is lexicographically
@@ -205,8 +203,8 @@ public class GrowEmbeddings<L extends Comparable<L>> extends
 
                     DFSEmbedding embedding = DFSEmbedding
                       .deepCopy(parentEmbedding);
-                    DFSCode<L> dfsCode = DFSCode
-                      .<L>deepCopy(parentDfsCode);
+                    DFSCode dfsCode = DFSCode
+                      .<Integer>deepCopy(parentDfsCode);
 
                     // add new vertex to embedding for forward steps
                     if (forward) {
@@ -214,7 +212,7 @@ public class GrowEmbeddings<L extends Comparable<L>> extends
                       toVertexTime = embedding.getVertexTimes().size() - 1;
                     }
 
-                    dfsCode.getSteps().add(new DFSStep<L>(
+                    dfsCode.getSteps().add(new DFSStep(
                       fromVertexTime,
                       fromVertexLabel,
                       outgoing,
@@ -229,7 +227,7 @@ public class GrowEmbeddings<L extends Comparable<L>> extends
                     Integer coverage = GradoopIdSet
                       .fromExisting(embedding.getEdgeTimes()).hashCode();
 
-                    HashSet<DFSCode<L>> dfsCodes =
+                    HashSet<DFSCode> dfsCodes =
                       coverageDfsCodes.get(coverage);
 
                     if (dfsCodes == null) {
@@ -264,7 +262,7 @@ public class GrowEmbeddings<L extends Comparable<L>> extends
       }
     }
 
-    HashMap<CompressedDFSCode<L>, HashSet<DFSEmbedding>> compressedCodeEmbeddings =
+    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> compressedCodeEmbeddings =
       getMinDfsCodesAndEmbeddings(coverageDfsCodes, codeEmbeddings);
 
     graph.setCodeEmbeddings(compressedCodeEmbeddings);
@@ -283,19 +281,19 @@ public class GrowEmbeddings<L extends Comparable<L>> extends
    * @param codeEmbeddings map : DFS code => embeddings
    * @return map : minimum DFS code per coverage => embeddings
    */
-  private HashMap<CompressedDFSCode<L>, HashSet<DFSEmbedding>>
+  private HashMap<CompressedDFSCode, HashSet<DFSEmbedding>>
   getMinDfsCodesAndEmbeddings(
 
-    Map<Integer, HashSet<DFSCode<L>>> coverageDfsCodes,
-    Map<DFSCode<L>, HashSet<DFSEmbedding>> codeEmbeddings) {
-    HashMap<CompressedDFSCode<L>, HashSet<DFSEmbedding>>
+    Map<Integer, HashSet<DFSCode>> coverageDfsCodes,
+    Map<DFSCode, HashSet<DFSEmbedding>> codeEmbeddings) {
+    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>>
       compressedCodeEmbeddings = new HashMap<>();
 
-    for (HashSet<DFSCode<L>> dfsCodes : coverageDfsCodes.values()) {
-      DFSCode<L> minDfsCode = null;
+    for (HashSet<DFSCode> dfsCodes : coverageDfsCodes.values()) {
+      DFSCode minDfsCode = null;
 
       if (dfsCodes.size() > 1) {
-        for (DFSCode<L> dfsCode : dfsCodes) {
+        for (DFSCode dfsCode : dfsCodes) {
           if (minDfsCode == null ||
             dfsCodeComparator.compare(dfsCode, minDfsCode) < 0) {
             minDfsCode = dfsCode;
@@ -305,8 +303,8 @@ public class GrowEmbeddings<L extends Comparable<L>> extends
         minDfsCode = dfsCodes.iterator().next();
       }
 
-      CompressedDFSCode<L> minCompressedDfsCode =
-        new CompressedDFSCode<L>(minDfsCode);
+      CompressedDFSCode minCompressedDfsCode =
+        new CompressedDFSCode(minDfsCode);
 
       HashSet<DFSEmbedding> minDfsCodeEmbeddings =
         compressedCodeEmbeddings.get(minCompressedDfsCode);
