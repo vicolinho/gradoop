@@ -22,7 +22,7 @@ import org.gradoop.model.impl.id.GradoopId;
 /**
  * pojo representing an adjacency list entry
  */
-public class AdjacencyListEntry {
+public class AdjacencyListEntry<L extends Comparable<L>> {
   /**
    * true, if edge is outgoing
    */
@@ -34,7 +34,7 @@ public class AdjacencyListEntry {
   /**
    * edge label
    */
-  private final String edgeLabel;
+  private final L edgeLabel;
   /**
    * vertexId
    */
@@ -42,7 +42,7 @@ public class AdjacencyListEntry {
   /**
    * vertex label
    */
-  private final String vertexLabel;
+  private final L vertexLabel;
 
   /**
    * constructor
@@ -53,7 +53,7 @@ public class AdjacencyListEntry {
    * @param vertexLabel connected vertex label
    */
   public AdjacencyListEntry(boolean outgoing, GradoopId edgeId,
-    String edgeLabel, GradoopId vertexId, String vertexLabel) {
+    L edgeLabel, GradoopId vertexId, L vertexLabel) {
 
     this.outgoing = outgoing;
     this.edgeId = edgeId;
@@ -62,7 +62,7 @@ public class AdjacencyListEntry {
     this.vertexLabel = vertexLabel;
   }
 
-  public String getVertexLabel() {
+  public L getVertexLabel() {
     return vertexLabel;
   }
 
@@ -74,7 +74,7 @@ public class AdjacencyListEntry {
     return edgeId;
   }
 
-  public String getEdgeLabel() {
+  public L getEdgeLabel() {
     return edgeLabel;
   }
 
@@ -98,10 +98,11 @@ public class AdjacencyListEntry {
    * @param targetLabel target vertex label
    * @return entry
    */
-  public static AdjacencyListEntry newOutgoing(GradoopId edgeId,
-    String edgeLabel, GradoopId targetId, String targetLabel) {
+  public static <L extends Comparable<L>> AdjacencyListEntry newOutgoing
+    (GradoopId edgeId,
+    L edgeLabel, GradoopId targetId, L targetLabel) {
 
-    return new AdjacencyListEntry(
+    return new AdjacencyListEntry<>(
       true, edgeId, edgeLabel, targetId, targetLabel);
   }
 
@@ -113,10 +114,10 @@ public class AdjacencyListEntry {
    * @param sourceLabel source vertex label
    * @return entry
    */
-  public static AdjacencyListEntry newIncoming(GradoopId edgeId,
-    String edgeLabel,  GradoopId sourceId, String sourceLabel) {
+  public static <L extends Comparable<L>> AdjacencyListEntry newIncoming(
+    GradoopId edgeId, L edgeLabel,  GradoopId sourceId, L sourceLabel) {
 
-    return new AdjacencyListEntry(
+    return new AdjacencyListEntry<>(
       false, edgeId, edgeLabel, sourceId, sourceLabel);
   }
 }

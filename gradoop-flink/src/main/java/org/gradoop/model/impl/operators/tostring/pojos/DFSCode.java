@@ -19,37 +19,35 @@ package org.gradoop.model.impl.operators.tostring.pojos;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.commons.lang3.StringUtils;
-import scala.collection.mutable.StringBuilder;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 
 /**
  * pojo representing a gSpan DFS code
  */
-public class DFSCode implements Serializable {
+public class DFSCode<L extends Comparable<L>> implements Serializable {
   /**
    * list of steps
    */
-  private final ArrayList<DFSStep> steps;
+  private final ArrayList<DFSStep<L>> steps;
 
   /**
    * constructor
    * @param step initial step
    */
-  public DFSCode(DFSStep step) {
-    this.steps = Lists.newArrayList(step);
+  public DFSCode(DFSStep<L> step) {
+    this.steps = new ArrayList<>();
+    this.steps.add(step);
   }
 
   /**
    * constructor
    * @param steps initial steps
    */
-  public DFSCode(ArrayList<DFSStep> steps) {
+  public DFSCode(ArrayList<DFSStep<L>> steps) {
     this.steps = steps;
   }
 
@@ -64,10 +62,10 @@ public class DFSCode implements Serializable {
    * returns the edge pattern of the first step
    * @return edge pattern
    */
-  public EdgePattern getMinEdgePattern() {
-    DFSStep firstStep = steps.get(0);
+  public EdgePattern<L> getMinEdgePattern() {
+    DFSStep<L> firstStep = steps.get(0);
 
-    return new EdgePattern(
+    return new EdgePattern<>(
       firstStep.getFromLabel(),
       firstStep.isOutgoing(),
       firstStep.getEdgeLabel(),
@@ -86,7 +84,7 @@ public class DFSCode implements Serializable {
 
     List<Integer> rightMostPath = null;
 
-    for (DFSStep step : Lists.reverse(steps)) {
+    for (DFSStep<L> step : Lists.reverse(steps)) {
 
       if (step.isForward() || lastToTime == null && step.isLoop()) {
         int fromTime = step.getFromTime();
@@ -114,7 +112,7 @@ public class DFSCode implements Serializable {
     return rightMostPath;
   }
 
-  public ArrayList<DFSStep> getSteps() {
+  public ArrayList<DFSStep<L>> getSteps() {
     return steps;
   }
 
@@ -153,7 +151,7 @@ public class DFSCode implements Serializable {
 
     HashCodeBuilder builder = new HashCodeBuilder();
 
-    for (DFSStep step : steps) {
+    for (DFSStep<L> step : steps) {
       builder.append(step.hashCode());
     }
 
@@ -171,8 +169,8 @@ public class DFSCode implements Serializable {
 
       if (this.getSteps().size() == otherCode.getSteps().size()) {
 
-        Iterator<DFSStep> ownSteps = this.getSteps().iterator();
-        Iterator<DFSStep> otherSteps = otherCode.getSteps().iterator();
+        Iterator<DFSStep<L>> ownSteps = this.getSteps().iterator();
+        Iterator<DFSStep<L>> otherSteps = otherCode.getSteps().iterator();
 
         equals = true;
 
@@ -190,7 +188,7 @@ public class DFSCode implements Serializable {
    * @param dfsCode input DFS code
    * @return deep copy of input
    */
-  public static DFSCode deepCopy(DFSCode dfsCode) {
-    return new DFSCode(Lists.newArrayList(dfsCode.getSteps()));
+  public static <L extends Comparable<L>> DFSCode deepCopy(DFSCode dfsCode) {
+    return new DFSCode<>(Lists.newArrayList(dfsCode.getSteps()));
   }
 }

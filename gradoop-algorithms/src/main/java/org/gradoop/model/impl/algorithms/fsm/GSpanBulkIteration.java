@@ -18,6 +18,7 @@
 package org.gradoop.model.impl.algorithms.fsm;
 
 import org.apache.flink.api.java.DataSet;
+import org.apache.flink.api.java.operators.DataSource;
 import org.apache.flink.api.java.operators.IterativeDataSet;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
@@ -46,9 +47,9 @@ import org.gradoop.model.impl.algorithms.fsm.functions.ReportDfsCodes;
 import org.gradoop.model.impl.algorithms.fsm.functions.SearchSpace;
 import org.gradoop.model.impl.algorithms.fsm.functions.VertexLabelGraphId;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.tuples.StringLabeledEdge;
+import org.gradoop.model.impl.algorithms.fsm.tuples.LabeledEdge;
+import org.gradoop.model.impl.algorithms.fsm.tuples.LabeledVertex;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
-import org.gradoop.model.impl.algorithms.fsm.tuples.StringLabeledVertex;
 import org.gradoop.model.impl.functions.tuple.Project0And2Of3;
 import org.gradoop.model.impl.functions.tuple.Value0Of3;
 import org.gradoop.model.impl.id.GradoopId;
@@ -83,6 +84,7 @@ public class GSpanBulkIteration
   /**
    * constructor
    * @param fsmConfig frequent subgraph mining configuration
+   * 
    */
   public GSpanBulkIteration(FSMConfig fsmConfig) {
     this.fsmConfig = fsmConfig;
@@ -95,36 +97,38 @@ public class GSpanBulkIteration
     setMinSupport(collection);
 
     // pre processing
-    IterativeDataSet<SearchSpaceItem> searchSpace = gradoopConfig
-      .getExecutionEnvironment()
-      .fromElements(SearchSpaceItem.createCollector())
-      .union(getSearchSpaceGraphs(collection))
+    DataSet<SearchSpaceItem<String>> searchSpaceGraphs =
+      getSearchSpaceGraphs(collection);
+
+    DataSource<SearchSpaceItem<String>> searchSpaceItemDataSource =
+      gradoopConfig.getExecutionEnvironment()
+        .fromElements(SearchSpaceItem.<String>createCollector());
+
+    IterativeDataSet<SearchSpaceItem<String>> searchSpace =
+      searchSpaceItemDataSource
+      .union(searchSpaceGraphs)
       .iterate(fsmConfig.getMaxEdgeCount());
 
-    // report DFS codes initially created or grown in last iteration
-    DataSet<CompressedDFSCode[]> currentFrequentDfsCodes = searchSpace
-      .flatMap(new ReportDfsCodes())  // report codes
+    DataSet<Collection<CompressedDFSCode<String>>> currentFrequentDfsCodes = 
+      searchSpace
+      .flatMap(new ReportDfsCodes<String>())  // report codes
       .groupBy(0)                     // group by code
       .sum(1)                         // count support
-      .filter(new Frequent())         // filter by min support
+      .filter(new Frequent<String>())         // filter by min support
       .withBroadcastSet(minSupport, Frequent.DS_NAME)
-      .reduceGroup(new ConcatFrequentDfsCodes());
-    // concat frequent DFS codes
+      .reduceGroup(new ConcatFrequentDfsCodes<String>());
 
-    // grow child embeddings of frequent DFS codes
-    DataSet<SearchSpaceItem> growableSearchSpace = searchSpace
-      .filter(new IsActive())
-//      .cross(currentFrequentDfsCodes)
-//      .with(new GrowEmbeddings(fsmConfig));
-      .map(new GrowEmbeddings(fsmConfig))
+    DataSet<SearchSpaceItem<String>> growableSearchSpace = searchSpace
+      .filter(new IsActive<String>())
+      .map(new GrowEmbeddings<String>(fsmConfig))
       .withBroadcastSet(currentFrequentDfsCodes, GrowEmbeddings.DS_NAME);
 
-    DataSet<SearchSpaceItem> collector = searchSpace
+    DataSet<SearchSpaceItem<String>> collector = searchSpace
       .closeWith(growableSearchSpace, currentFrequentDfsCodes);
 
-    DataSet<CompressedDFSCode> allFrequentDfsCodes = collector
-      .filter(new IsCollector())              // get only collector
-      .flatMap(new ExpandFrequentDfsCodes()); // expand array to data set
+    DataSet<CompressedDFSCode<String>> allFrequentDfsCodes = collector
+      .filter(new IsCollector<String>())              // get only collector
+      .flatMap(new ExpandFrequentDfsCodes<String>()); // expand array to data set
 
     // post processing
     return decodeDfsCodes(allFrequentDfsCodes);
@@ -145,12 +149,12 @@ public class GSpanBulkIteration
    * @param collection input collection
    * @return search space
    */
-  private DataSet<SearchSpaceItem> getSearchSpaceGraphs(
+  private DataSet<SearchSpaceItem<String>> getSearchSpaceGraphs(
     GraphCollection<G, V, E> collection) {
 
     // vertices
 
-    DataSet<Tuple2<GradoopId, StringLabeledVertex>> graphIdVertex = collection
+    DataSet<Tuple2<GradoopId, LabeledVertex<String>>> graphIdVertex = collection
       .getVertices()
       .flatMap(new GraphIdStringLabeledVertex<V>());
 
@@ -165,14 +169,15 @@ public class GSpanBulkIteration
         .withBroadcastSet(minSupport, Frequent.DS_NAME)
         .reduceGroup(new LabelTranslation());
 
-    DataSet<Tuple2<GradoopId, Collection<StringLabeledVertex>>> graphVertices =
+    DataSet<Tuple2<GradoopId, Collection<LabeledVertex<String>>>>
+      graphVertices =
       graphIdVertex
         .groupBy(0)
-        .reduceGroup(new GraphElements<StringLabeledVertex>());
+        .reduceGroup(new GraphElements<LabeledVertex<String>>());
 
     // edges
 
-    DataSet<Tuple2<GradoopId, StringLabeledEdge>> graphIdEdge = collection
+    DataSet<Tuple2<GradoopId, LabeledEdge<String>>> graphIdEdge = collection
       .getEdges()
       .flatMap(new GraphIdStringLabeledEdge<E>());
 
@@ -187,15 +192,15 @@ public class GSpanBulkIteration
         .withBroadcastSet(minSupport, Frequent.DS_NAME)
         .reduceGroup(new LabelTranslation());
 
-    DataSet<Tuple2<GradoopId, Collection<StringLabeledEdge>>> graphEdges =
+    DataSet<Tuple2<GradoopId, Collection<LabeledEdge<String>>>> graphEdges =
       graphIdEdge
         .groupBy(0)
-        .reduceGroup(new GraphElements<StringLabeledEdge>());
+        .reduceGroup(new GraphElements<LabeledEdge<String>>());
 
     return graphVertices
       .join(graphEdges)
       .where(0).equalTo(0)
-      .with(new SearchSpace());
+      .with(new SearchSpace<String>());
   }
 
   /**
@@ -204,11 +209,11 @@ public class GSpanBulkIteration
    * @return graph collection
    */
   protected GraphCollection<G, V, E> decodeDfsCodes(
-    DataSet<CompressedDFSCode> dfsCodes) {
+    DataSet<CompressedDFSCode<String>> dfsCodes) {
 
     DataSet<Tuple3<G, Collection<V>, Collection<E>>> frequentSubgraphs =
       dfsCodes
-        .map(new DfsDecoder<>(
+        .map(new DfsDecoder<G, V ,E , String>(
           gradoopConfig.getGraphHeadFactory(),
           gradoopConfig.getVertexFactory(),
           gradoopConfig.getEdgeFactory()

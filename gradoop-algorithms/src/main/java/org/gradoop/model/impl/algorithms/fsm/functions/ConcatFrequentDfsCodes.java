@@ -22,25 +22,26 @@ import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
  * [(CompressedDFSCode, Support),..] => CompressedDFSCode[]
  */
-public class ConcatFrequentDfsCodes implements
-  GroupReduceFunction<CompressedDFSCode, CompressedDFSCode[]> {
+public class ConcatFrequentDfsCodes<L extends Comparable<L>> implements
+  GroupReduceFunction<CompressedDFSCode<L>, Collection<CompressedDFSCode<L>>> {
 
   @Override
-  public void reduce(Iterable<CompressedDFSCode> iterable,
-    Collector<CompressedDFSCode[]> collector) throws Exception {
+  public void reduce(Iterable<CompressedDFSCode<L>> iterable,
+    Collector<Collection<CompressedDFSCode<L>>> collector) throws Exception {
 
-    List<CompressedDFSCode> codes = new ArrayList<>();
+    List<CompressedDFSCode<L>> codes = new ArrayList<>();
 
-    for (CompressedDFSCode code : iterable) {
+    for (CompressedDFSCode<L> code : iterable) {
       System.out.println(code);
       codes.add(code);
     }
 
-    collector.collect(codes.toArray(new CompressedDFSCode[codes.size()]));
+    collector.collect(codes);
   }
 }

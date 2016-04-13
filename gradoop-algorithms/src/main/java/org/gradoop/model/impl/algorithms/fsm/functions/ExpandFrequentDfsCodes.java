@@ -25,14 +25,14 @@ import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
 /**
  * Collector => [CompressedDFSCode,..]
  */
-public class ExpandFrequentDfsCodes implements
-  FlatMapFunction<SearchSpaceItem, CompressedDFSCode> {
+public class ExpandFrequentDfsCodes<L extends Comparable<L>> implements
+  FlatMapFunction<SearchSpaceItem<L>, CompressedDFSCode<L>> {
 
   @Override
-  public void flatMap(SearchSpaceItem searchSpaceItem,
-    Collector<CompressedDFSCode> collector) throws Exception {
+  public void flatMap(SearchSpaceItem<L> searchSpaceItem,
+    Collector<CompressedDFSCode<L>> collector) throws Exception {
 
-    for (CompressedDFSCode compressedDfsCode :
+    for (CompressedDFSCode<L> compressedDfsCode :
       searchSpaceItem.getFrequentDfsCodes()) {
 
       collector.collect(compressedDfsCode);

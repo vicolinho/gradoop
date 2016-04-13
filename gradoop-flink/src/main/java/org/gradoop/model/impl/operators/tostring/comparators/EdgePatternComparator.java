@@ -26,8 +26,8 @@ import java.util.Comparator;
  * Comparator for edge patterns considering vertex labels, edge label and
  * direction (if directed == true).
  */
-public class EdgePatternComparator
-  implements Comparator<EdgePattern>, Serializable {
+public class EdgePatternComparator<L extends Comparable<L>>
+  implements Comparator<EdgePattern<L>>, Serializable {
 
   /**
    * true for comparing directed edge patterns, false for undirected
@@ -43,7 +43,7 @@ public class EdgePatternComparator
   }
 
   @Override
-  public int compare(EdgePattern ep1, EdgePattern ep2) {
+  public int compare(EdgePattern<L> ep1, EdgePattern<L> ep2) {
 
     int comparison = ep1.getMinVertexLabel().compareTo(ep2.getMinVertexLabel());
 

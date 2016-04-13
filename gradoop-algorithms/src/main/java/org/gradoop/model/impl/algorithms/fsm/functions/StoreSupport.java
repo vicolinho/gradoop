@@ -24,12 +24,12 @@ import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
 /**
  * (CompressedDFSCode, Support) => (CompressedDFSCode+Support, 0)
  */
-public class StoreSupport implements MapFunction
-  <Tuple2<CompressedDFSCode, Integer>, Tuple2<CompressedDFSCode, Integer>> {
+public class StoreSupport<L extends Comparable<L>> implements MapFunction
+  <Tuple2<CompressedDFSCode<L>, Integer>, Tuple2<CompressedDFSCode<L>, Integer>> {
 
   @Override
-  public Tuple2<CompressedDFSCode, Integer> map(
-    Tuple2<CompressedDFSCode, Integer> pair) throws
+  public Tuple2<CompressedDFSCode<L>, Integer> map(
+    Tuple2<CompressedDFSCode<L>, Integer> pair) throws
     Exception {
 
     pair.f0.setSupport(pair.f1);
