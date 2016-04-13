@@ -28,7 +28,7 @@ import java.util.Iterator;
  * Step-wise comparator for DFS codes.
  */
 public class DfsCodeComparator<L extends Comparable<L>>
-  implements Comparator<DFSCode<L>>, Serializable {
+  implements Comparator<DFSCode>, Serializable {
 
   /**
    * step comparator
@@ -44,16 +44,16 @@ public class DfsCodeComparator<L extends Comparable<L>>
   }
 
   @Override
-  public int compare(DFSCode<L> c1, DFSCode<L> c2) {
+  public int compare(DFSCode c1, DFSCode c2) {
     int comparison = 0;
 
-    Iterator<DFSStep<L>> i1 = c1.getSteps().iterator();
-    Iterator<DFSStep<L>> i2 = c2.getSteps().iterator();
+    Iterator<DFSStep> i1 = c1.getSteps().iterator();
+    Iterator<DFSStep> i2 = c2.getSteps().iterator();
 
     // compare steps until there is a difference
     while (comparison == 0 && i1.hasNext() && i2.hasNext()) {
-      DFSStep<L> s1 = i1.next();
-      DFSStep<L> s2 = i2.next();
+      DFSStep s1 = i1.next();
+      DFSStep s2 = i2.next();
 
       comparison = dfsStepComparator.compare(s1, s2);
     }

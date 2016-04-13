@@ -23,21 +23,21 @@ import java.util.Collection;
 /**
  * pojo representing an adjacency list
  */
-public class AdjacencyList<L extends Comparable<L>> {
+public class AdjacencyList {
   /**
    * label of the associated vertex
    */
-  private final L vertexLabel;
+  private final Integer vertexLabel;
   /**
    * adjacency list entries
    */
-  private final Collection<AdjacencyListEntry<L>> entries;
+  private final Collection<AdjacencyListEntry> entries;
 
   /**
    * constructor
    * @param vertexLabel vertex label
    */
-  public AdjacencyList(L vertexLabel) {
+  public AdjacencyList(Integer vertexLabel) {
     this.vertexLabel = vertexLabel;
     entries = new ArrayList<>();
   }
@@ -47,11 +47,11 @@ public class AdjacencyList<L extends Comparable<L>> {
     return vertexLabel + ":" + entries;
   }
 
-  public L getVertexLabel() {
+  public Integer getVertexLabel() {
     return vertexLabel;
   }
 
-  public Collection<AdjacencyListEntry<L>> getEntries() {
+  public Collection<AdjacencyListEntry> getEntries() {
     return entries;
   }
 }

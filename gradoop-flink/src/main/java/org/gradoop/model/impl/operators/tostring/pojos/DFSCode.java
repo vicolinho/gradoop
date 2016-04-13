@@ -28,17 +28,17 @@ import java.util.List;
 /**
  * pojo representing a gSpan DFS code
  */
-public class DFSCode<L extends Comparable<L>> implements Serializable {
+public class DFSCode implements Serializable {
   /**
    * list of steps
    */
-  private final ArrayList<DFSStep<L>> steps;
+  private final ArrayList<DFSStep> steps;
 
   /**
    * constructor
    * @param step initial step
    */
-  public DFSCode(DFSStep<L> step) {
+  public DFSCode(DFSStep step) {
     this.steps = new ArrayList<>();
     this.steps.add(step);
   }
@@ -47,7 +47,7 @@ public class DFSCode<L extends Comparable<L>> implements Serializable {
    * constructor
    * @param steps initial steps
    */
-  public DFSCode(ArrayList<DFSStep<L>> steps) {
+  public DFSCode(ArrayList<DFSStep> steps) {
     this.steps = steps;
   }
 
@@ -62,8 +62,8 @@ public class DFSCode<L extends Comparable<L>> implements Serializable {
    * returns the edge pattern of the first step
    * @return edge pattern
    */
-  public EdgePattern<L> getMinEdgePattern() {
-    DFSStep<L> firstStep = steps.get(0);
+  public EdgePattern<Integer> getMinEdgePattern() {
+    DFSStep firstStep = steps.get(0);
 
     return new EdgePattern<>(
       firstStep.getFromLabel(),
@@ -84,7 +84,7 @@ public class DFSCode<L extends Comparable<L>> implements Serializable {
 
     List<Integer> rightMostPath = null;
 
-    for (DFSStep<L> step : Lists.reverse(steps)) {
+    for (DFSStep step : Lists.reverse(steps)) {
 
       if (step.isForward() || lastToTime == null && step.isLoop()) {
         int fromTime = step.getFromTime();
@@ -112,7 +112,7 @@ public class DFSCode<L extends Comparable<L>> implements Serializable {
     return rightMostPath;
   }
 
-  public ArrayList<DFSStep<L>> getSteps() {
+  public ArrayList<DFSStep> getSteps() {
     return steps;
   }
 
@@ -151,7 +151,7 @@ public class DFSCode<L extends Comparable<L>> implements Serializable {
 
     HashCodeBuilder builder = new HashCodeBuilder();
 
-    for (DFSStep<L> step : steps) {
+    for (DFSStep step : steps) {
       builder.append(step.hashCode());
     }
 
@@ -169,8 +169,8 @@ public class DFSCode<L extends Comparable<L>> implements Serializable {
 
       if (this.getSteps().size() == otherCode.getSteps().size()) {
 
-        Iterator<DFSStep<L>> ownSteps = this.getSteps().iterator();
-        Iterator<DFSStep<L>> otherSteps = otherCode.getSteps().iterator();
+        Iterator<DFSStep> ownSteps = this.getSteps().iterator();
+        Iterator<DFSStep> otherSteps = otherCode.getSteps().iterator();
 
         equals = true;
 
@@ -188,7 +188,7 @@ public class DFSCode<L extends Comparable<L>> implements Serializable {
    * @param dfsCode input DFS code
    * @return deep copy of input
    */
-  public static <L extends Comparable<L>> DFSCode deepCopy(DFSCode dfsCode) {
-    return new DFSCode<>(Lists.newArrayList(dfsCode.getSteps()));
+  public static DFSCode deepCopy(DFSCode dfsCode) {
+    return new DFSCode(Lists.newArrayList(dfsCode.getSteps()));
   }
 }

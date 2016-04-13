@@ -29,33 +29,48 @@ import org.gradoop.model.api.operators.UnaryCollectionToCollectionOperator;
 import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.algorithms.fsm.functions.ConcatFrequentDfsCodes;
 import org.gradoop.model.impl.algorithms.fsm.functions.DfsDecoder;
+import org.gradoop.model.impl.algorithms.fsm.functions.Dictionary;
+import org.gradoop.model.impl.algorithms.fsm.functions.EdgeLabelDecoder;
+import org.gradoop.model.impl.algorithms.fsm.functions.EdgeLabelEncoder;
 import org.gradoop.model.impl.algorithms.fsm.functions.EdgeLabelGraphId;
 import org.gradoop.model.impl.algorithms.fsm.functions.ExpandEdges;
 import org.gradoop.model.impl.algorithms.fsm.functions.ExpandFrequentDfsCodes;
 import org.gradoop.model.impl.algorithms.fsm.functions.ExpandVertices;
 import org.gradoop.model.impl.algorithms.fsm.functions.Frequent;
 import org.gradoop.model.impl.algorithms.fsm.functions.FrequentLabel;
+import org.gradoop.model.impl.algorithms.fsm.functions.FullEdge;
+import org.gradoop.model.impl.algorithms.fsm.functions.FullVertex;
 import org.gradoop.model.impl.algorithms.fsm.functions.GraphElements;
 import org.gradoop.model.impl.algorithms.fsm.functions.GraphIdStringLabeledEdge;
-import org.gradoop.model.impl.algorithms.fsm.functions.GraphIdStringLabeledVertex;
+import org.gradoop.model.impl.algorithms.fsm.functions
+  .GraphIdStringLabeledVertex;
 import org.gradoop.model.impl.algorithms.fsm.functions.GrowEmbeddings;
+import org.gradoop.model.impl.algorithms.fsm.functions.IntegerEdgeLabel;
+import org.gradoop.model.impl.algorithms.fsm.functions.IntegerVertexLabel;
 import org.gradoop.model.impl.algorithms.fsm.functions.IsActive;
 import org.gradoop.model.impl.algorithms.fsm.functions.IsCollector;
-import org.gradoop.model.impl.algorithms.fsm.functions.LabelTranslation;
 import org.gradoop.model.impl.algorithms.fsm.functions.MinSupport;
 import org.gradoop.model.impl.algorithms.fsm.functions.ReportDfsCodes;
 import org.gradoop.model.impl.algorithms.fsm.functions.SearchSpace;
+import org.gradoop.model.impl.algorithms.fsm.functions.StringEdgeLabel;
+import org.gradoop.model.impl.algorithms.fsm.functions.StringVertexLabel;
+import org.gradoop.model.impl.algorithms.fsm.functions.VertexLabelDecoder;
+import org.gradoop.model.impl.algorithms.fsm.functions.VertexLabelEncoder;
 import org.gradoop.model.impl.algorithms.fsm.functions.VertexLabelGraphId;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.tuples.LabeledEdge;
-import org.gradoop.model.impl.algorithms.fsm.tuples.LabeledVertex;
+import org.gradoop.model.impl.algorithms.fsm.tuples.IntegerLabeledEdge;
+import org.gradoop.model.impl.algorithms.fsm.tuples.IntegerLabeledVertex;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
+import org.gradoop.model.impl.algorithms.fsm.tuples.StringLabeledEdge;
+import org.gradoop.model.impl.algorithms.fsm.tuples.StringLabeledVertex;
 import org.gradoop.model.impl.functions.tuple.Project0And2Of3;
+import org.gradoop.model.impl.functions.tuple.SwitchPair;
 import org.gradoop.model.impl.functions.tuple.Value0Of3;
 import org.gradoop.model.impl.id.GradoopId;
 import org.gradoop.model.impl.operators.count.Count;
 import org.gradoop.util.GradoopFlinkConfig;
 
+import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -80,6 +95,8 @@ public class GSpanBulkIteration
    * Gradoop configuration
    */
   private GradoopFlinkConfig<G, V, E> gradoopConfig;
+  private DataSet<Tuple2<String, Integer>> edgeLabelDictionary;
+  private DataSet<Tuple2<String, Integer>> vertexLabelDictionary;
 
   /**
    * constructor
@@ -97,38 +114,38 @@ public class GSpanBulkIteration
     setMinSupport(collection);
 
     // pre processing
-    DataSet<SearchSpaceItem<String>> searchSpaceGraphs =
+    DataSet<SearchSpaceItem<Integer>> searchSpaceGraphs =
       getSearchSpaceGraphs(collection);
 
-    DataSource<SearchSpaceItem<String>> searchSpaceItemDataSource =
+    DataSource<SearchSpaceItem<Integer>> searchSpaceItemDataSource =
       gradoopConfig.getExecutionEnvironment()
-        .fromElements(SearchSpaceItem.<String>createCollector());
+        .fromElements(SearchSpaceItem.<Integer>createCollector());
 
-    IterativeDataSet<SearchSpaceItem<String>> searchSpace =
+    IterativeDataSet<SearchSpaceItem<Integer>> searchSpace =
       searchSpaceItemDataSource
       .union(searchSpaceGraphs)
       .iterate(fsmConfig.getMaxEdgeCount());
 
-    DataSet<Collection<CompressedDFSCode<String>>> currentFrequentDfsCodes = 
+    DataSet<Collection<CompressedDFSCode>> currentFrequentDfsCodes =
       searchSpace
-      .flatMap(new ReportDfsCodes<String>())  // report codes
+      .flatMap(new ReportDfsCodes<Integer>())  // report codes
       .groupBy(0)                     // group by code
       .sum(1)                         // count support
-      .filter(new Frequent<String>())         // filter by min support
+      .filter(new Frequent<Integer>())         // filter by min support
       .withBroadcastSet(minSupport, Frequent.DS_NAME)
-      .reduceGroup(new ConcatFrequentDfsCodes<String>());
+      .reduceGroup(new ConcatFrequentDfsCodes<Integer>());
 
-    DataSet<SearchSpaceItem<String>> growableSearchSpace = searchSpace
-      .filter(new IsActive<String>())
-      .map(new GrowEmbeddings<String>(fsmConfig))
+    DataSet<SearchSpaceItem<Integer>> growableSearchSpace = searchSpace
+      .filter(new IsActive<Integer>())
+      .map(new GrowEmbeddings<Integer>(fsmConfig))
       .withBroadcastSet(currentFrequentDfsCodes, GrowEmbeddings.DS_NAME);
 
-    DataSet<SearchSpaceItem<String>> collector = searchSpace
+    DataSet<SearchSpaceItem<Integer>> collector = searchSpace
       .closeWith(growableSearchSpace, currentFrequentDfsCodes);
 
-    DataSet<CompressedDFSCode<String>> allFrequentDfsCodes = collector
-      .filter(new IsCollector<String>())              // get only collector
-      .flatMap(new ExpandFrequentDfsCodes<String>()); // expand array to data set
+    DataSet<CompressedDFSCode> allFrequentDfsCodes = collector
+      .filter(new IsCollector<Integer>())              // get only collector
+      .flatMap(new ExpandFrequentDfsCodes<Integer>()); // expand array to data set
 
     // post processing
     return decodeDfsCodes(allFrequentDfsCodes);
@@ -149,16 +166,16 @@ public class GSpanBulkIteration
    * @param collection input collection
    * @return search space
    */
-  private DataSet<SearchSpaceItem<String>> getSearchSpaceGraphs(
+  private DataSet<SearchSpaceItem<Integer>> getSearchSpaceGraphs(
     GraphCollection<G, V, E> collection) {
 
     // vertices
 
-    DataSet<Tuple2<GradoopId, LabeledVertex<String>>> graphIdVertex = collection
+    DataSet<Tuple2<GradoopId, StringLabeledVertex>> graphIdVertex = collection
       .getVertices()
       .flatMap(new GraphIdStringLabeledVertex<V>());
 
-    DataSet<Tuple2<String, Integer>> vertexLabelDictionary =
+    vertexLabelDictionary =
       graphIdVertex
         .map(new VertexLabelGraphId())
         .distinct()
@@ -167,21 +184,23 @@ public class GSpanBulkIteration
         .sum(1)
         .filter(new FrequentLabel())
         .withBroadcastSet(minSupport, Frequent.DS_NAME)
-        .reduceGroup(new LabelTranslation());
+        .reduceGroup(new Dictionary());
 
-    DataSet<Tuple2<GradoopId, Collection<LabeledVertex<String>>>>
-      graphVertices =
-      graphIdVertex
-        .groupBy(0)
-        .reduceGroup(new GraphElements<LabeledVertex<String>>());
+    DataSet<Tuple2<GradoopId, ArrayList<IntegerLabeledVertex>>>
+      graphVertices = graphIdVertex
+      .join(vertexLabelDictionary)
+      .where(new StringVertexLabel()).equalTo(0)
+      .with(new VertexLabelEncoder())
+      .groupBy(0)
+      .reduceGroup(new GraphElements<IntegerLabeledVertex>());
 
     // edges
 
-    DataSet<Tuple2<GradoopId, LabeledEdge<String>>> graphIdEdge = collection
+    DataSet<Tuple2<GradoopId, StringLabeledEdge>> graphIdEdge = collection
       .getEdges()
       .flatMap(new GraphIdStringLabeledEdge<E>());
 
-    DataSet<Tuple2<String, Integer>> edgeLabelDictionary =
+    edgeLabelDictionary =
       graphIdEdge
         .map(new EdgeLabelGraphId())
         .distinct()
@@ -190,17 +209,20 @@ public class GSpanBulkIteration
         .sum(1)
         .filter(new FrequentLabel())
         .withBroadcastSet(minSupport, Frequent.DS_NAME)
-        .reduceGroup(new LabelTranslation());
+        .reduceGroup(new Dictionary());
 
-    DataSet<Tuple2<GradoopId, Collection<LabeledEdge<String>>>> graphEdges =
+    DataSet<Tuple2<GradoopId, ArrayList<IntegerLabeledEdge>>> graphEdges =
       graphIdEdge
+        .join(edgeLabelDictionary)
+        .where(new StringEdgeLabel()).equalTo(0)
+        .with(new EdgeLabelEncoder())
         .groupBy(0)
-        .reduceGroup(new GraphElements<LabeledEdge<String>>());
+        .reduceGroup(new GraphElements<IntegerLabeledEdge>());
 
     return graphVertices
       .join(graphEdges)
       .where(0).equalTo(0)
-      .with(new SearchSpace<String>());
+      .with(new SearchSpace());
   }
 
   /**
@@ -209,25 +231,34 @@ public class GSpanBulkIteration
    * @return graph collection
    */
   protected GraphCollection<G, V, E> decodeDfsCodes(
-    DataSet<CompressedDFSCode<String>> dfsCodes) {
+    DataSet<CompressedDFSCode> dfsCodes) {
 
-    DataSet<Tuple3<G, Collection<V>, Collection<E>>> frequentSubgraphs =
+    DataSet
+      <Tuple3<G, ArrayList<IntegerLabeledVertex>, ArrayList<IntegerLabeledEdge>>>
+      frequentSubgraphs =
       dfsCodes
-        .map(new DfsDecoder<G, V ,E , String>(
-          gradoopConfig.getGraphHeadFactory(),
-          gradoopConfig.getVertexFactory(),
-          gradoopConfig.getEdgeFactory()
-        ));
+        .map(new DfsDecoder<>(gradoopConfig.getGraphHeadFactory()));
 
-    DataSet<G> graphHeads = frequentSubgraphs
-      .map(new Value0Of3<G, Collection<V>, Collection<E>>());
+    DataSet<G> graphHeads = frequentSubgraphs.map(new Value0Of3<G,
+        ArrayList<IntegerLabeledVertex>,
+        ArrayList<IntegerLabeledEdge>>());
 
     DataSet<V> vertices = frequentSubgraphs
-      .flatMap(new ExpandVertices<G, V, E>())
+      .flatMap(new ExpandVertices<G>())
+      .join(vertexLabelDictionary
+        .map(new SwitchPair<String, Integer>()))
+      .where(new IntegerVertexLabel()).equalTo(0)
+      .with(new VertexLabelDecoder())
+      .map(new FullVertex<>(gradoopConfig.getVertexFactory()))
       .returns(gradoopConfig.getVertexFactory().getType());
 
     DataSet<E> edges = frequentSubgraphs
-      .flatMap(new ExpandEdges<G, V, E>())
+      .flatMap(new ExpandEdges<G>())
+      .join(edgeLabelDictionary
+        .map(new SwitchPair<String, Integer>()))
+      .where(new IntegerEdgeLabel()).equalTo(0)
+      .with(new EdgeLabelDecoder())
+      .map(new FullEdge<>(gradoopConfig.getEdgeFactory()))
       .returns(gradoopConfig.getEdgeFactory().getType());
 
     return GraphCollection.fromDataSets(

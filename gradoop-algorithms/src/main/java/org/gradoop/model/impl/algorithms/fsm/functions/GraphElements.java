@@ -23,22 +23,22 @@ import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.id.GradoopId;
 
 import java.util.ArrayList;
-import java.util.Collection;
+import java.util.ArrayList;
 
 /**
  * [(GraphId, GraphElement),..] => (GraphId, [GraphElement,..])
  * @param <EL>
  */
 public class GraphElements<EL> implements GroupReduceFunction
-  <Tuple2<GradoopId, EL>, Tuple2<GradoopId, Collection<EL>>> {
+  <Tuple2<GradoopId, EL>, Tuple2<GradoopId, ArrayList<EL>>> {
 
   @Override
   public void reduce(Iterable<Tuple2<GradoopId, EL>> iterable,
-    Collector<Tuple2<GradoopId, Collection<EL>>> collector) throws Exception {
+    Collector<Tuple2<GradoopId, ArrayList<EL>>> collector) throws Exception {
 
     Boolean first = true;
     GradoopId graphId = null;
-    Collection<EL> elements = new ArrayList<>();
+    ArrayList<EL> elements = new ArrayList<>();
 
     for (Tuple2<GradoopId, EL> pair : iterable) {
       if (first) {

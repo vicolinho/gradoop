@@ -23,65 +23,65 @@ import org.apache.flink.api.common.functions.JoinFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.gradoop.model.impl.algorithms.fsm.pojos.AdjacencyListEntry;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.tuples.LabeledEdge;
+import org.gradoop.model.impl.algorithms.fsm.tuples.IntegerLabeledEdge;
+import org.gradoop.model.impl.algorithms.fsm.tuples.IntegerLabeledVertex;
 import org.gradoop.model.impl.operators.tostring.pojos.DFSCode;
 import org.gradoop.model.impl.operators.tostring.pojos.DFSEmbedding;
 import org.gradoop.model.impl.operators.tostring.pojos.DFSStep;
 import org.gradoop.model.impl.algorithms.fsm.pojos.AdjacencyList;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
-import org.gradoop.model.impl.algorithms.fsm.tuples.LabeledVertex;
 import org.gradoop.model.impl.id.GradoopId;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Set;
 
 /**
  * (GraphId, [Vertex,..]) |><| (GraphId, [Edge,..]) => Graph
  */
-public class SearchSpace<L extends Comparable<L>>
+public class SearchSpace
   implements JoinFunction<
-  Tuple2<GradoopId, Collection<LabeledVertex<L>>>,
-  Tuple2<GradoopId, Collection<LabeledEdge<L>>>,
-  SearchSpaceItem<L>
+  Tuple2<GradoopId, ArrayList<IntegerLabeledVertex>>,
+  Tuple2<GradoopId, ArrayList<IntegerLabeledEdge>>,
+  SearchSpaceItem<Integer>
   > {
 
   @Override
-  public SearchSpaceItem<L> join(
-    Tuple2<GradoopId, Collection<LabeledVertex<L>>> graphVertices,
-    Tuple2<GradoopId, Collection<LabeledEdge<L>>> graphEdges) throws
+  public SearchSpaceItem<Integer> join(
+    Tuple2<GradoopId, ArrayList<IntegerLabeledVertex>> graphVertices,
+    Tuple2<GradoopId, ArrayList<IntegerLabeledEdge>> graphEdges) throws
     Exception {
 
-    GradoopId graphId = graphVertices.f0;
-    HashMap<GradoopId, L> vertexLabels = new HashMap<>();
-    HashMap<GradoopId, AdjacencyList<L>> adjacencyLists = new HashMap<>();
-    HashMap<CompressedDFSCode<L>, HashSet<DFSEmbedding>> codeEmbeddingsMap = new
+    HashMap<GradoopId, Integer> vertexLabels = new HashMap<>();
+    HashMap<GradoopId, AdjacencyList> adjacencyLists = new HashMap<>();
+    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddingsMap = new
       HashMap<>();
 
-    SearchSpaceItem<L> graph = SearchSpaceItem.createForGraph(adjacencyLists, codeEmbeddingsMap);
+    SearchSpaceItem<Integer> graph = SearchSpaceItem
+      .createForGraph(adjacencyLists, codeEmbeddingsMap);
 
-    for (LabeledVertex<L> vertex : graphVertices.f1) {
+    for (IntegerLabeledVertex vertex : graphVertices.f1) {
       vertexLabels.put(vertex.getId(), vertex.getLabel());
       adjacencyLists.put(
-        vertex.getId(), new AdjacencyList<L>(vertex.getLabel()));
+        vertex.getId(), new AdjacencyList(vertex.getLabel()));
     }
 
-    for (LabeledEdge<L> edge : graphEdges.f1) {
+    for (IntegerLabeledEdge edge : graphEdges.f1) {
 
       GradoopId edgeId = edge.getId();
-      L edgeLabel = edge.getLabel();
+      Integer edgeLabel = edge.getLabel();
 
       GradoopId sourceId = edge.getSourceId();
-      L sourceLabel = vertexLabels.get(sourceId);
+      Integer sourceLabel = vertexLabels.get(sourceId);
 
       GradoopId targetId = edge.getTargetId();
-      L targetLabel = vertexLabels.get(targetId);
+      Integer targetLabel = vertexLabels.get(targetId);
 
       // update adjacency lists
 
       adjacencyLists.get(sourceId).getEntries().add(AdjacencyListEntry
-        .<L>newOutgoing(edgeId, edgeLabel, targetId, targetLabel));
+        .newOutgoing(edgeId, edgeLabel, targetId, targetLabel));
 
       if (!sourceId.equals(targetId)) {
         adjacencyLists.get(targetId).getEntries().add(AdjacencyListEntry
@@ -93,10 +93,10 @@ public class SearchSpace<L extends Comparable<L>>
       ArrayList<GradoopId> vertexTimes;
 
       Integer fromTime = 0;
-      L fromLabel;
+      Integer fromLabel;
       Boolean outgoing;
       Integer toTime;
-      L toLabel;
+      Integer toLabel;
 
       // loop
       if (sourceId.equals(targetId)) {
@@ -127,13 +127,13 @@ public class SearchSpace<L extends Comparable<L>>
         }
       }
 
-      DFSStep<L> step = new DFSStep<>(
+      DFSStep step = new DFSStep(
         fromTime, fromLabel, outgoing, edgeLabel, toTime, toLabel);
 
-      CompressedDFSCode<L> code = new CompressedDFSCode<L>(new DFSCode(step));
+      CompressedDFSCode code = new CompressedDFSCode(new DFSCode(step));
       DFSEmbedding embedding = new DFSEmbedding(vertexTimes, edgeId);
 
-      Collection<DFSEmbedding> embeddings = codeEmbeddingsMap.get(code);
+      Set<DFSEmbedding> embeddings = codeEmbeddingsMap.get(code);
 
       if (embeddings == null) {
         codeEmbeddingsMap.put(code, Sets.newHashSet(embedding));

@@ -24,62 +24,58 @@ import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.api.java.typeutils.ResultTypeQueryable;
 import org.apache.flink.api.java.typeutils.TupleTypeInfo;
 import org.apache.flink.api.java.typeutils.TypeExtractor;
-import org.gradoop.model.api.EPGMEdge;
-import org.gradoop.model.api.EPGMEdgeFactory;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMGraphHeadFactory;
-import org.gradoop.model.api.EPGMVertex;
-import org.gradoop.model.api.EPGMVertexFactory;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
+import org.gradoop.model.impl.algorithms.fsm.tuples.IntegerLabeledEdge;
+import org.gradoop.model.impl.algorithms.fsm.tuples.IntegerLabeledVertex;
+import org.gradoop.model.impl.algorithms.fsm.tuples.LabeledEdge;
+import org.gradoop.model.impl.algorithms.fsm.tuples.LabeledVertex;
 import org.gradoop.model.impl.operators.tostring.pojos.DFSCode;
 import org.gradoop.model.impl.operators.tostring.pojos.DFSStep;
 import org.gradoop.model.impl.id.GradoopId;
 import org.gradoop.model.impl.id.GradoopIdSet;
 
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * CompressedDFSCode => (Graph, Vertex, Edge)
  * @param <G> graph type
- * @param <V> vertex type
- * @param <E> edge type
  */
 public class DfsDecoder
-  <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge, L
-    extends Comparable<L>>
-  implements ResultTypeQueryable<Tuple3<G, Collection<V>, Collection<E>>>,
-  MapFunction<CompressedDFSCode<L>, Tuple3<G, Collection<V>, Collection<E>>> {
+  <G extends EPGMGraphHead>
+  implements ResultTypeQueryable 
+  <Tuple3<G, ArrayList<IntegerLabeledVertex>, ArrayList<IntegerLabeledEdge>>>,
+  MapFunction<CompressedDFSCode, 
+    Tuple3<G, ArrayList<IntegerLabeledVertex>, ArrayList<IntegerLabeledEdge>>> {
 
   /**
    * graph head factory
    */
   private final EPGMGraphHeadFactory<G> graphHeadFactory;
-  /**
-   * vertex factory
-   */
-  private final EPGMVertexFactory<V> vertexFactory;
-  /**
-   * edge factory
-   */
-  private final EPGMEdgeFactory<E> edgeFactory;
+//  /**
+//   * vertex factory
+//   */
+//  private final EPGMVertexFactory<IntegerLabeledVertex> vertexFactory;
+//  /**
+//   * edge factory
+//   */
+//  private final EPGMEdgeFactory<IntegerLabeledEdge> edgeFactory;
 
   /**
    * constructor
    * @param graphHeadFactory graph head factory
-   * @param vertexFactory vertex factory
-   * @param edgeFactory edge factory
    */
-  public DfsDecoder(
-    EPGMGraphHeadFactory<G> graphHeadFactory,
-    EPGMVertexFactory<V> vertexFactory,
-    EPGMEdgeFactory<E> edgeFactory) {
+  public DfsDecoder(EPGMGraphHeadFactory<G> graphHeadFactory) {
 
     this.graphHeadFactory = graphHeadFactory;
-    this.vertexFactory = vertexFactory;
-    this.edgeFactory = edgeFactory;
+
+//    this.vertexFactory = vertexFactory;
+//    this.edgeFactory = edgeFactory;
   }
+
 
   /**
    * returns the vertex id of a given time
@@ -93,8 +89,8 @@ public class DfsDecoder
    */
   protected GradoopId getOrCreateVertex(
     Integer time,
-    L label,
-    Collection<V> vertices,
+    Integer label,
+    ArrayList<IntegerLabeledVertex> vertices,
     Map<Integer, GradoopId> timeIdMap,
     GradoopIdSet graphIds
   ) {
@@ -102,8 +98,10 @@ public class DfsDecoder
     GradoopId id = timeIdMap.get(time);
 
     if (id == null) {
-      V vertex = vertexFactory
-        .createVertex(label.toString(), graphIds);
+      IntegerLabeledVertex vertex = new IntegerLabeledVertex();
+
+      vertex.setId(GradoopId.get());
+      vertex.setLabel(label);
 
       id = vertex.getId();
       vertices.add(vertex);
@@ -114,12 +112,12 @@ public class DfsDecoder
 
 
   @Override
-  public Tuple3<G, Collection<V>, Collection<E>> map(
-    CompressedDFSCode<L> compressedDfsCode) throws  Exception {
+  public Tuple3<G, ArrayList<IntegerLabeledVertex>, ArrayList<IntegerLabeledEdge>> map(
+    CompressedDFSCode compressedDfsCode) throws  Exception {
 
 //    System.out.println("decode " + compressedDfsCode);
 
-    DFSCode<L> dfsCode = compressedDfsCode.getDfsCode();
+    DFSCode dfsCode = compressedDfsCode.getDfsCode();
 
     G graphHead = graphHeadFactory.createGraphHead();
 
@@ -128,20 +126,20 @@ public class DfsDecoder
 
     GradoopIdSet graphIds = GradoopIdSet.fromExisting(graphHead.getId());
 
-    Collection<V> vertices = Lists.newArrayList();
+    ArrayList<IntegerLabeledVertex> vertices = Lists.newArrayList();
 
-    Collection<E> edges = Lists
+    ArrayList<IntegerLabeledEdge> edges = Lists
       .newArrayListWithCapacity(dfsCode.getSteps().size());
 
     Map<Integer, GradoopId> vertexTimeId = new HashMap<>();
 
-    for (DFSStep<L> step : dfsCode.getSteps()) {
+    for (DFSStep step : dfsCode.getSteps()) {
 
       Integer fromTime = step.getFromTime();
-      L fromLabel = step.getFromLabel();
+      Integer fromLabel = step.getFromLabel();
 
       Integer toTime = step.getToTime();
-      L toLabel = step.getToLabel();
+      Integer toLabel = step.getToLabel();
 
       GradoopId targetId;
       GradoopId sourceId;
@@ -165,19 +163,26 @@ public class DfsDecoder
         }
       }
 
-      edges.add(edgeFactory.createEdge(
-        step.getEdgeLabel().toString(), sourceId, targetId, graphIds));
+      IntegerLabeledEdge integerLabeledEdge = new IntegerLabeledEdge();
+
+      integerLabeledEdge.setId(GradoopId.get());
+      integerLabeledEdge.setSourceId(sourceId);
+      integerLabeledEdge.setTargetId(targetId);
+      integerLabeledEdge.setLabel(step.getEdgeLabel());
+
+      edges.add(integerLabeledEdge);
     }
 
     return new Tuple3<>(graphHead, vertices, edges);
   }
 
   @Override
-  public TypeInformation<Tuple3<G, Collection<V>, Collection<E>>>
+  public TypeInformation<Tuple3<G, ArrayList<IntegerLabeledVertex>, ArrayList<IntegerLabeledEdge>>>
   getProducedType() {
     return new TupleTypeInfo<>(
       TypeExtractor.getForClass(graphHeadFactory.getType()),
-      TypeExtractor.getForClass(Collection.class),
-      TypeExtractor.getForClass(Collection.class));
+      TypeExtractor.getForClass(ArrayList.class),
+      TypeExtractor.getForClass(ArrayList.class)
+    );
   }
 }

@@ -28,7 +28,8 @@ import org.gradoop.model.impl.id.GradoopId;
  * f4 : edge label
  */
 public class LabeledEdge<L extends Comparable<L>>
-  extends Tuple4<GradoopId, GradoopId, GradoopId, L> {
+  extends Tuple4<GradoopId, GradoopId, GradoopId, L>
+  implements GenericLabeled<L>{
 
   /**
    * default constructor
@@ -65,5 +66,22 @@ public class LabeledEdge<L extends Comparable<L>>
 
   public L getLabel() {
     return this.f3;
+  }
+
+  @Override
+  public void setLabel(L label) {
+    this.f3 = label;
+  }
+
+  public void setId(GradoopId id) {
+    this.f0 = id;
+  }
+
+  public void setSourceId(GradoopId sourceId) {
+    this.f1 = sourceId;
+  }
+
+  public void setTargetId(GradoopId targetId) {
+    this.f2 = targetId;
   }
 }
