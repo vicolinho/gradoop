@@ -17,26 +17,23 @@
 
 package org.gradoop.model.impl.algorithms.fsm.functions;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.common.functions.FlatMapFunction;
-import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.util.Collector;
-import org.apache.hadoop.util.Time;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
 
 /**
  * Graph => [(CompressedDFSCode, 1),..]
  */
-public class ReportDfsCodes implements
-  FlatMapFunction<SearchSpaceItem, CompressedDFSCode> {
+public class ReportDfsCodes<L extends Comparable<L>> implements
+  FlatMapFunction<SearchSpaceItem<L>, CompressedDFSCode<L>> {
 
   @Override
-  public void flatMap(SearchSpaceItem searchSpaceItem,
-    Collector<CompressedDFSCode> collector) throws Exception {
+  public void flatMap(SearchSpaceItem<L> searchSpaceItem,
+    Collector<CompressedDFSCode<L>> collector) throws Exception {
       if(! searchSpaceItem.isCollector()) {
 
-      for (CompressedDFSCode code :
+      for (CompressedDFSCode<L> code :
         searchSpaceItem.getCodeEmbeddings().keySet()) {
 
         collector.collect(code);

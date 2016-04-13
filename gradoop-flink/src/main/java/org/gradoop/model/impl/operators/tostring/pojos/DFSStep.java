@@ -25,7 +25,7 @@ import java.io.Serializable;
 /**
  * pojo representing an DFS traversal step
  */
-public class DFSStep implements Serializable {
+public class DFSStep<L extends Comparable<L>> implements Serializable {
   /**
    * discovery time of traversal start vertex
    */
@@ -33,7 +33,7 @@ public class DFSStep implements Serializable {
   /**
    * label of traversal start vertex
    */
-  private final String fromLabel;
+  private final L fromLabel;
   /**
    * true, if edge was traversed in direction
    */
@@ -41,7 +41,7 @@ public class DFSStep implements Serializable {
   /**
    * label of the traversed edge
    */
-  private final String edgeLabel;
+  private final L edgeLabel;
   /**
    * discovery time of traversal end vertex
    */
@@ -49,7 +49,7 @@ public class DFSStep implements Serializable {
   /**
    * label of traversal end vertex
    */
-  private final String toLabel;
+  private final L toLabel;
 
   /**
    * constructor
@@ -60,8 +60,8 @@ public class DFSStep implements Serializable {
    * @param toTime discovery time of traversal end vertex
    * @param toLabel label of traversal end vertex
    */
-  public DFSStep(int fromTime, String fromLabel, Boolean outgoing,
-    String edgeLabel, int toTime, String toLabel) {
+  public DFSStep(int fromTime, L fromLabel, Boolean outgoing,
+    L edgeLabel, int toTime, L toLabel) {
     this.fromTime = fromTime;
     this.fromLabel = fromLabel;
     this.outgoing = outgoing;
@@ -81,7 +81,7 @@ public class DFSStep implements Serializable {
     return fromTime;
   }
 
-  public String getFromLabel() {
+  public L getFromLabel() {
     return fromLabel;
   }
 
@@ -89,7 +89,7 @@ public class DFSStep implements Serializable {
     return outgoing;
   }
 
-  public String getEdgeLabel() {
+  public L getEdgeLabel() {
     return edgeLabel;
   }
 
@@ -97,7 +97,7 @@ public class DFSStep implements Serializable {
     return toTime;
   }
 
-  public String getToLabel() {
+  public L getToLabel() {
     return toLabel;
   }
 
@@ -107,7 +107,7 @@ public class DFSStep implements Serializable {
 
     if (!equals && obj != null && obj.getClass() == getClass()) {
 
-      DFSStep other = (DFSStep) obj;
+      DFSStep<L> other = (DFSStep<L>) obj;
 
       EqualsBuilder builder = new EqualsBuilder();
 

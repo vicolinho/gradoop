@@ -47,9 +47,10 @@ import java.util.Map;
  * @param <E> edge type
  */
 public class DfsDecoder
-  <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge>
+  <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge, L
+    extends Comparable<L>>
   implements ResultTypeQueryable<Tuple3<G, Collection<V>, Collection<E>>>,
-  MapFunction<CompressedDFSCode, Tuple3<G, Collection<V>, Collection<E>>> {
+  MapFunction<CompressedDFSCode<L>, Tuple3<G, Collection<V>, Collection<E>>> {
 
   /**
    * graph head factory
@@ -92,7 +93,7 @@ public class DfsDecoder
    */
   protected GradoopId getOrCreateVertex(
     Integer time,
-    String label,
+    L label,
     Collection<V> vertices,
     Map<Integer, GradoopId> timeIdMap,
     GradoopIdSet graphIds
@@ -102,7 +103,7 @@ public class DfsDecoder
 
     if (id == null) {
       V vertex = vertexFactory
-        .createVertex(label, graphIds);
+        .createVertex(label.toString(), graphIds);
 
       id = vertex.getId();
       vertices.add(vertex);
@@ -114,11 +115,11 @@ public class DfsDecoder
 
   @Override
   public Tuple3<G, Collection<V>, Collection<E>> map(
-    CompressedDFSCode compressedDfsCode) throws  Exception {
+    CompressedDFSCode<L> compressedDfsCode) throws  Exception {
 
 //    System.out.println("decode " + compressedDfsCode);
 
-    DFSCode dfsCode = compressedDfsCode.getDfsCode();
+    DFSCode<L> dfsCode = compressedDfsCode.getDfsCode();
 
     G graphHead = graphHeadFactory.createGraphHead();
 
@@ -134,13 +135,13 @@ public class DfsDecoder
 
     Map<Integer, GradoopId> vertexTimeId = new HashMap<>();
 
-    for (DFSStep step : dfsCode.getSteps()) {
+    for (DFSStep<L> step : dfsCode.getSteps()) {
 
       Integer fromTime = step.getFromTime();
-      String fromLabel = step.getFromLabel();
+      L fromLabel = step.getFromLabel();
 
       Integer toTime = step.getToTime();
-      String toLabel = step.getToLabel();
+      L toLabel = step.getToLabel();
 
       GradoopId targetId;
       GradoopId sourceId;
@@ -165,7 +166,7 @@ public class DfsDecoder
       }
 
       edges.add(edgeFactory.createEdge(
-        step.getEdgeLabel(), sourceId, targetId, graphIds));
+        step.getEdgeLabel().toString(), sourceId, targetId, graphIds));
     }
 
     return new Tuple3<>(graphHead, vertices, edges);

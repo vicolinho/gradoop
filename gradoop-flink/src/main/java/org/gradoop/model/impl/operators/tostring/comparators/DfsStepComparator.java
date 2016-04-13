@@ -25,7 +25,8 @@ import java.util.Comparator;
 /**
  * Comparator of DFS code steps based on gSpan lexicographical order.
  */
-public class DfsStepComparator implements Comparator<DFSStep>, Serializable {
+public class DfsStepComparator<L extends Comparable<L>>
+  implements Comparator<DFSStep<L>>, Serializable {
 
   /**
    * true for comparing DFS steps of directed graphs,
@@ -42,7 +43,7 @@ public class DfsStepComparator implements Comparator<DFSStep>, Serializable {
   }
 
   @Override
-  public int compare(DFSStep s1, DFSStep s2) {
+  public int compare(DFSStep<L> s1, DFSStep<L> s2) {
     int comparison;
 
     // same direction
@@ -104,7 +105,7 @@ public class DfsStepComparator implements Comparator<DFSStep>, Serializable {
    * @param s2 second DFS step
    * @return comparison result
    */
-  private int compareLabels(DFSStep s1, DFSStep s2) {
+  private int compareLabels(DFSStep<L> s1, DFSStep<L> s2) {
     int comparison;
 
     if (s1.getFromLabel().compareTo(s2.getFromLabel()) < 0) {
@@ -127,7 +128,7 @@ public class DfsStepComparator implements Comparator<DFSStep>, Serializable {
    * @param s2 second DFS step
    * @return  comparison result
    */
-  private int compareDirectedLabels(DFSStep s1, DFSStep s2) {
+  private int compareDirectedLabels(DFSStep<L> s1, DFSStep<L> s2) {
     int comparison;
 
     if (s1.isOutgoing() && !s2.isOutgoing()) {
@@ -146,7 +147,7 @@ public class DfsStepComparator implements Comparator<DFSStep>, Serializable {
    * @param s2 second DFS step
    * @return  comparison result
    */
-  private int compareUndirectedLabels(DFSStep s1, DFSStep s2) {
+  private int compareUndirectedLabels(DFSStep<L> s1, DFSStep<L> s2) {
     int comparison;
     if (s1.getEdgeLabel().compareTo(s2.getEdgeLabel()) < 0) {
       comparison = -1;

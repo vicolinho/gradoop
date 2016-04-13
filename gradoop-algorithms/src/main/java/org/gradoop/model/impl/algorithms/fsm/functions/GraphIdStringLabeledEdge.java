@@ -21,19 +21,19 @@ import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.util.Collector;
 import org.gradoop.model.api.EPGMEdge;
-import org.gradoop.model.impl.algorithms.fsm.tuples.StringLabeledEdge;
+import org.gradoop.model.impl.algorithms.fsm.tuples.LabeledEdge;
 import org.gradoop.model.impl.id.GradoopId;
 
 /**
- * EPGMEdge => [(GraphId, StringLabeledEdge),..]
+ * EPGMEdge => [(GraphId, LabeledEdge),..]
  * @param <E> edge type
  */
 public class GraphIdStringLabeledEdge<E extends EPGMEdge>
-  implements FlatMapFunction<E, Tuple2<GradoopId, StringLabeledEdge>> {
+  implements FlatMapFunction<E, Tuple2<GradoopId, LabeledEdge<String>>> {
 
   @Override
   public void flatMap(E edge,
-    Collector<Tuple2<GradoopId, StringLabeledEdge>> collector) throws  Exception {
+    Collector<Tuple2<GradoopId, LabeledEdge<String>>> collector) throws  Exception {
 
     GradoopId vertexId = edge.getId();
     GradoopId sourceId = edge.getSourceId();
@@ -42,7 +42,7 @@ public class GraphIdStringLabeledEdge<E extends EPGMEdge>
 
     for (GradoopId graphId : edge.getGraphIds()) {
       collector.collect(new Tuple2<>(graphId,
-        new StringLabeledEdge(vertexId, sourceId, targetId, label)));
+        new LabeledEdge<>(vertexId, sourceId, targetId, label)));
     }
   }
 }

@@ -17,53 +17,45 @@
 
 package org.gradoop.model.impl.algorithms.fsm.tuples;
 
-import org.apache.flink.api.java.tuple.Tuple4;
+import org.apache.flink.api.java.tuple.Tuple2;
+import org.gradoop.model.api.EPGMLabeled;
 import org.gradoop.model.impl.id.GradoopId;
 
 /**
- * Minimal tuple-representation of an labeled edge
- * f0 : edge id
- * f1 : source vertex id
- * f2 : target vertex id
- * f4 : edge label
+ *  Minimal tuple-representation of an labeled vertex
+ *  f0 : vertex id
+ *  f1 : vertex label
  */
-public class StringLabeledEdge
-  extends Tuple4<GradoopId, GradoopId, GradoopId, String> {
+public class LabeledVertex<L extends Comparable<L>> extends Tuple2<GradoopId, L>
+  implements GenericLabeled<L> {
 
   /**
    * default constructor
    */
-  public StringLabeledEdge() {
+  public LabeledVertex() {
   }
 
   /**
-   *
-   * @param id edge id
-   * @param sourceId source vertex id
-   * @param targetId target vertex id
-   * @param label edge label
+   * valued constructor
+   * @param id vertex id
+   * @param label vertex label
    */
-  public StringLabeledEdge(
-    GradoopId id, GradoopId sourceId, GradoopId targetId, String label) {
+  public LabeledVertex(GradoopId id, L label) {
     this.f0 = id;
-    this.f1 = sourceId;
-    this.f2 = targetId;
-    this.f3 = label;
+    this.f1 = label;
   }
 
   public GradoopId getId() {
     return this.f0;
   }
 
-  public GradoopId getSourceId() {
+  @Override
+  public L getLabel() {
     return this.f1;
   }
 
-  public GradoopId getTargetId() {
-    return this.f2;
-  }
+  @Override
+  public void setLabel(L label) {
 
-  public String getLabel() {
-    return this.f3;
   }
 }

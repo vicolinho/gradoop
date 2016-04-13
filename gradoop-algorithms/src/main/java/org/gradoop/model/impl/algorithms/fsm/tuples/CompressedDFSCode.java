@@ -33,7 +33,8 @@ import java.util.zip.GZIPOutputStream;
  * tuple-representation fo a compressed DFS code including its support.
  * (bytes,support)
  */
-public class CompressedDFSCode extends Tuple2<byte[], Integer> {
+public class CompressedDFSCode<L extends Comparable<L>>
+  extends Tuple2<byte[], Integer> {
 
   /**
    * default constructor
@@ -63,17 +64,17 @@ public class CompressedDFSCode extends Tuple2<byte[], Integer> {
    * uncompressing the store DFS code
    * @return uncompressed DFS code
    */
-  public DFSCode getDfsCode() {
-    DFSCode dfsCode;
+  public DFSCode<L> getDfsCode() {
+    DFSCode<L> dfsCode;
 
     try {
       ByteArrayInputStream byteArrayIS = new ByteArrayInputStream(this.f0);
       GZIPInputStream gzipIn = new GZIPInputStream(byteArrayIS);
       ObjectInputStream objectIn = new ObjectInputStream(gzipIn);
-      dfsCode = (DFSCode) objectIn.readObject();
+      dfsCode = (DFSCode<L>) objectIn.readObject();
       objectIn.close();
     } catch (IOException | ClassNotFoundException e) {
-      dfsCode = new DFSCode();
+      dfsCode = new DFSCode<>();
     }
 
     return dfsCode;
@@ -103,7 +104,7 @@ public class CompressedDFSCode extends Tuple2<byte[], Integer> {
 
     if (equals) {
       byte[] ownBytes = this.getBytes();
-      byte[] otherBytes = ((CompressedDFSCode) o).getBytes();
+      byte[] otherBytes = ((CompressedDFSCode<L>) o).getBytes();
 
       equals = ownBytes.length == otherBytes.length;
 

@@ -20,12 +20,12 @@ package org.gradoop.model.impl.operators.tostring.pojos;
 /**
  * pojo representing an edge pattern
  */
-public class EdgePattern {
+public class EdgePattern<L extends Comparable<L>> {
 
   /**
    * smaller of both vertex labels
    */
-  private final String minVertexLabel;
+  private final L minVertexLabel;
   /**
    * true, smaller label is source label and edge represent edge in direction,
    * false, otherwise
@@ -34,11 +34,11 @@ public class EdgePattern {
   /**
    * edge label
    */
-  private final String edgeLabel;
+  private final L edgeLabel;
   /**
    * larger of both vertes labels
    */
-  private final String maxVertexLabel;
+  private final L maxVertexLabel;
 
   /**
    * constructor
@@ -47,8 +47,8 @@ public class EdgePattern {
    * @param edgeLabel edge label
    * @param maxVertexLabel traversal end vertex label
    */
-  public EdgePattern(String fromVertexLabel,
-    boolean outgoing, String edgeLabel, String maxVertexLabel) {
+  public EdgePattern(L fromVertexLabel,
+    boolean outgoing, L edgeLabel, L maxVertexLabel) {
 
     Boolean minToMax = fromVertexLabel.compareTo(maxVertexLabel) <= 0;
 
@@ -58,7 +58,7 @@ public class EdgePattern {
     this.maxVertexLabel = minToMax ? maxVertexLabel : fromVertexLabel;
   }
 
-  public String getMinVertexLabel() {
+  public L getMinVertexLabel() {
     return minVertexLabel;
   }
 
@@ -66,11 +66,11 @@ public class EdgePattern {
     return minToMaxInDirection;
   }
 
-  public String getEdgeLabel() {
+  public L getEdgeLabel() {
     return edgeLabel;
   }
 
-  public String getMaxVertexLabel() {
+  public L getMaxVertexLabel() {
     return maxVertexLabel;
   }
 }
