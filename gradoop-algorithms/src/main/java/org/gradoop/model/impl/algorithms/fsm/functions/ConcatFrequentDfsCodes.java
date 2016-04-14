@@ -28,7 +28,7 @@ import java.util.List;
 /**
  * [(CompressedDFSCode, Support),..] => CompressedDFSCode[]
  */
-public class ConcatFrequentDfsCodes<L extends Comparable<L>> implements
+public class ConcatFrequentDfsCodes implements
   GroupReduceFunction<CompressedDFSCode, Collection<CompressedDFSCode>> {
 
   @Override

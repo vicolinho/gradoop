@@ -45,7 +45,7 @@ import java.util.Set;
 /**
  * Core of gSpan implementation. Grows embeddings of Frequent DFS codes.
  */
-public class GrowEmbeddings<L extends Comparable<Integer>> extends 
+public class GrowEmbeddings extends
   RichMapFunction<SearchSpaceItem, SearchSpaceItem>
   implements CrossFunction
   <SearchSpaceItem, Collection<CompressedDFSCode>, SearchSpaceItem> {

@@ -2,25 +2,22 @@ package org.gradoop.model.impl.algorithms.fsm.functions;
 
 import org.apache.flink.api.common.functions.JoinFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.tuple.Tuple3;
 import org.gradoop.model.impl.algorithms.fsm.tuples.IntegerLabeledVertex;
 import org.gradoop.model.impl.algorithms.fsm.tuples.StringLabeledVertex;
 import org.gradoop.model.impl.id.GradoopId;
 
 public class VertexLabelEncoder
-  implements JoinFunction<Tuple2<GradoopId, StringLabeledVertex>,
-  Tuple2<String, Integer>, Tuple2<GradoopId, IntegerLabeledVertex>> {
+  implements JoinFunction<Tuple3<GradoopId, GradoopId, String>,
+  Tuple2<String, Integer>, Tuple3<GradoopId, GradoopId, Integer>> {
 
 
   @Override
-  public Tuple2<GradoopId, IntegerLabeledVertex> join(Tuple2<GradoopId,
-    StringLabeledVertex> graphIdStringLabeledVertex,
-    Tuple2<String, Integer> dictionaryEntry) throws Exception {
+  public Tuple3<GradoopId, GradoopId, Integer> join(
+    Tuple3<GradoopId, GradoopId, String> gidVidLabel,
+    Tuple2<String, Integer> dictionaryEntry
+  ) throws Exception {
 
-    IntegerLabeledVertex integerLabeledVertex = new IntegerLabeledVertex();
-
-    integerLabeledVertex.setId(graphIdStringLabeledVertex.f1.getId());
-    integerLabeledVertex.setLabel(dictionaryEntry.f1);
-
-    return new Tuple2<>(graphIdStringLabeledVertex.f0, integerLabeledVertex);
+    return new Tuple3<>(gidVidLabel.f0, gidVidLabel.f1, dictionaryEntry.f1);
   }
 }

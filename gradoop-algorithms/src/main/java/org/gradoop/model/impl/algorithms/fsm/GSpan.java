@@ -22,17 +22,18 @@ import org.apache.flink.api.java.operators.DataSource;
 import org.apache.flink.api.java.operators.IterativeDataSet;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
+import org.apache.flink.api.java.tuple.Tuple4;
 import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
 import org.gradoop.model.api.operators.UnaryCollectionToCollectionOperator;
 import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.algorithms.fsm.functions.ConcatFrequentDfsCodes;
+import org.gradoop.model.impl.algorithms.fsm.functions.CountableLabel;
 import org.gradoop.model.impl.algorithms.fsm.functions.DfsDecoder;
 import org.gradoop.model.impl.algorithms.fsm.functions.Dictionary;
 import org.gradoop.model.impl.algorithms.fsm.functions.EdgeLabelDecoder;
 import org.gradoop.model.impl.algorithms.fsm.functions.EdgeLabelEncoder;
-import org.gradoop.model.impl.algorithms.fsm.functions.EdgeLabelGraphId;
 import org.gradoop.model.impl.algorithms.fsm.functions.ExpandEdges;
 import org.gradoop.model.impl.algorithms.fsm.functions.ExpandFrequentDfsCodes;
 import org.gradoop.model.impl.algorithms.fsm.functions.ExpandVertices;
@@ -40,30 +41,23 @@ import org.gradoop.model.impl.algorithms.fsm.functions.Frequent;
 import org.gradoop.model.impl.algorithms.fsm.functions.FrequentLabel;
 import org.gradoop.model.impl.algorithms.fsm.functions.FullEdge;
 import org.gradoop.model.impl.algorithms.fsm.functions.FullVertex;
-import org.gradoop.model.impl.algorithms.fsm.functions.GraphElements;
-import org.gradoop.model.impl.algorithms.fsm.functions.GraphIdStringLabeledEdge;
+import org.gradoop.model.impl.algorithms.fsm.functions.GraphEdges;
 import org.gradoop.model.impl.algorithms.fsm.functions
-  .GraphIdStringLabeledVertex;
+  .GraphIdSourceIdTargetIdLabel;
+import org.gradoop.model.impl.algorithms.fsm.functions.GraphIdVertexIdLabel;
+import org.gradoop.model.impl.algorithms.fsm.functions.GraphVertices;
 import org.gradoop.model.impl.algorithms.fsm.functions.GrowEmbeddings;
-import org.gradoop.model.impl.algorithms.fsm.functions.EdgeIntegerLabel;
-import org.gradoop.model.impl.algorithms.fsm.functions.VertexIntegerLabel;
 import org.gradoop.model.impl.algorithms.fsm.functions.IsActive;
 import org.gradoop.model.impl.algorithms.fsm.functions.IsCollector;
 import org.gradoop.model.impl.algorithms.fsm.functions.MinSupport;
 import org.gradoop.model.impl.algorithms.fsm.functions.ReportDfsCodes;
 import org.gradoop.model.impl.algorithms.fsm.functions.SearchSpace;
-import org.gradoop.model.impl.algorithms.fsm.functions.EdgeStringLabel;
-import org.gradoop.model.impl.algorithms.fsm.functions.VertexStringLabel;
 import org.gradoop.model.impl.algorithms.fsm.functions.VertexLabelDecoder;
 import org.gradoop.model.impl.algorithms.fsm.functions.VertexLabelEncoder;
-import org.gradoop.model.impl.algorithms.fsm.functions.VertexLabelGraphId;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.tuples.IntegerLabeledEdge;
-import org.gradoop.model.impl.algorithms.fsm.tuples.IntegerLabeledVertex;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
-import org.gradoop.model.impl.algorithms.fsm.tuples.StringLabeledEdge;
-import org.gradoop.model.impl.algorithms.fsm.tuples.StringLabeledVertex;
 import org.gradoop.model.impl.functions.tuple.Project0And2Of3;
+import org.gradoop.model.impl.functions.tuple.Project0And3Of4;
 import org.gradoop.model.impl.functions.tuple.SwitchPair;
 import org.gradoop.model.impl.functions.tuple.Value0Of3;
 import org.gradoop.model.impl.id.GradoopId;
@@ -171,53 +165,53 @@ public class GSpan
 
     // vertices
 
-    DataSet<Tuple2<GradoopId, StringLabeledVertex>> graphIdVertex = collection
+    DataSet<Tuple3<GradoopId, GradoopId, String>> gidVidLabel = collection
       .getVertices()
-      .flatMap(new GraphIdStringLabeledVertex<V>());
+      .flatMap(new GraphIdVertexIdLabel<V>());
 
     vertexLabelDictionary =
-      graphIdVertex
-        .map(new VertexLabelGraphId())
+      gidVidLabel
+        .map(new Project0And2Of3<GradoopId, GradoopId, String>())
         .distinct()
-        .map(new Project0And2Of3<String, GradoopId, Integer>())
+        .map(new CountableLabel())
         .groupBy(0)
         .sum(1)
         .filter(new FrequentLabel())
         .withBroadcastSet(minSupport, Frequent.DS_NAME)
         .reduceGroup(new Dictionary());
 
-    DataSet<Tuple2<GradoopId, ArrayList<IntegerLabeledVertex>>>
-      graphVertices = graphIdVertex
+    DataSet<Tuple2<GradoopId, ArrayList<Tuple2<GradoopId, Integer>>>>
+      graphVertices = gidVidLabel
       .join(vertexLabelDictionary)
-      .where(new VertexStringLabel()).equalTo(0)
+      .where(2).equalTo(0)
       .with(new VertexLabelEncoder())
       .groupBy(0)
-      .reduceGroup(new GraphElements<IntegerLabeledVertex>());
+      .reduceGroup(new GraphVertices());
 
     // edges
 
-    DataSet<Tuple2<GradoopId, StringLabeledEdge>> graphIdEdge = collection
-      .getEdges()
-      .flatMap(new GraphIdStringLabeledEdge<E>());
+    DataSet<Tuple4<GradoopId, GradoopId, GradoopId, String>> gidSidTidLabel =
+      collection
+        .getEdges()
+        .flatMap(new GraphIdSourceIdTargetIdLabel<E>());
 
-    edgeLabelDictionary =
-      graphIdEdge
-        .map(new EdgeLabelGraphId())
-        .distinct()
-        .map(new Project0And2Of3<String, GradoopId, Integer>())
-        .groupBy(0)
-        .sum(1)
-        .filter(new FrequentLabel())
-        .withBroadcastSet(minSupport, Frequent.DS_NAME)
-        .reduceGroup(new Dictionary());
+    edgeLabelDictionary = gidSidTidLabel
+      .map(new Project0And3Of4<GradoopId, GradoopId, GradoopId, String>())
+      .distinct()
+      .map(new CountableLabel())
+      .groupBy(0)
+      .sum(1)
+      .filter(new FrequentLabel())
+      .withBroadcastSet(minSupport, Frequent.DS_NAME)
+      .reduceGroup(new Dictionary());
 
-    DataSet<Tuple2<GradoopId, ArrayList<IntegerLabeledEdge>>> graphEdges =
-      graphIdEdge
-        .join(edgeLabelDictionary)
-        .where(new EdgeStringLabel()).equalTo(0)
-        .with(new EdgeLabelEncoder())
-        .groupBy(0)
-        .reduceGroup(new GraphElements<IntegerLabeledEdge>());
+    DataSet<Tuple2<GradoopId, ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>>
+      graphEdges = gidSidTidLabel
+      .join(edgeLabelDictionary)
+      .where(3).equalTo(0)
+      .with(new EdgeLabelEncoder())
+      .groupBy(0)
+      .reduceGroup(new GraphEdges());
 
     return graphVertices
       .join(graphEdges)
@@ -234,20 +228,20 @@ public class GSpan
     DataSet<CompressedDFSCode> dfsCodes) {
 
     DataSet
-      <Tuple3<G, ArrayList<IntegerLabeledVertex>, ArrayList<IntegerLabeledEdge>>>
+      <Tuple3<G, ArrayList<Tuple2<GradoopId, Integer>>, ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>>
       frequentSubgraphs =
       dfsCodes
         .map(new DfsDecoder<>(gradoopConfig.getGraphHeadFactory()));
 
-    DataSet<G> graphHeads = frequentSubgraphs.map(new Value0Of3<G,
-        ArrayList<IntegerLabeledVertex>,
-        ArrayList<IntegerLabeledEdge>>());
+    DataSet<G> graphHeads = frequentSubgraphs
+      .map(new Value0Of3<G, 
+        ArrayList<Tuple2<GradoopId, Integer>>, ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>());
 
     DataSet<V> vertices = frequentSubgraphs
       .flatMap(new ExpandVertices<G>())
       .join(vertexLabelDictionary
         .map(new SwitchPair<String, Integer>()))
-      .where(new VertexIntegerLabel()).equalTo(0)
+      .where(2).equalTo(0)
       .with(new VertexLabelDecoder())
       .map(new FullVertex<>(gradoopConfig.getVertexFactory()))
       .returns(gradoopConfig.getVertexFactory().getType());
@@ -256,7 +250,7 @@ public class GSpan
       .flatMap(new ExpandEdges<G>())
       .join(edgeLabelDictionary
         .map(new SwitchPair<String, Integer>()))
-      .where(new EdgeIntegerLabel()).equalTo(0)
+      .where(3).equalTo(0)
       .with(new EdgeLabelDecoder())
       .map(new FullEdge<>(gradoopConfig.getEdgeFactory()))
       .returns(gradoopConfig.getEdgeFactory().getType());
