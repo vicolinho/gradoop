@@ -15,10 +15,9 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.impl.operators.tostring.pojos;
+package org.gradoop.model.impl.algorithms.fsm.pojos;
 
 import com.google.common.collect.Lists;
-import org.gradoop.model.impl.id.GradoopId;
 
 import java.util.ArrayList;
 
@@ -30,18 +29,18 @@ public class DFSEmbedding {
   /**
    * discovery times of vertices (index is time)
    */
-  private final ArrayList<GradoopId> vertexTimes;
+  private final ArrayList<Integer> vertexTimes;
   /**
    * discovery times of edges (index is time)
    */
-  private final ArrayList<GradoopId> edgeTimes;
+  private final ArrayList<Integer> edgeTimes;
 
   /**
    * constructor
    * @param vertexTimes initial vertex discovery times
    * @param edgeId initial edge
    */
-  public DFSEmbedding(ArrayList<GradoopId> vertexTimes, GradoopId edgeId) {
+  public DFSEmbedding(ArrayList<Integer> vertexTimes, Integer edgeId) {
     this.vertexTimes = vertexTimes;
     this.edgeTimes = Lists.newArrayList(edgeId);
   }
@@ -51,8 +50,8 @@ public class DFSEmbedding {
    * @param vertexTimes initial vertex discovery times
    * @param edgeTimes initial edge discovery times
    */
-  public DFSEmbedding(ArrayList<GradoopId> vertexTimes,
-    ArrayList<GradoopId> edgeTimes) {
+  public DFSEmbedding(ArrayList<Integer> vertexTimes,
+    ArrayList<Integer> edgeTimes) {
     this.vertexTimes = vertexTimes;
     this.edgeTimes = edgeTimes;
   }
@@ -62,11 +61,11 @@ public class DFSEmbedding {
     return "\n\t\t\tVt : " + vertexTimes + "\n\t\t\t" + "Et : " + edgeTimes;
   }
 
-  public ArrayList<GradoopId> getVertexTimes() {
+  public ArrayList<Integer> getVertexTimes() {
     return vertexTimes;
   }
 
-  public ArrayList<GradoopId> getEdgeTimes() {
+  public ArrayList<Integer> getEdgeTimes() {
     return edgeTimes;
   }
 

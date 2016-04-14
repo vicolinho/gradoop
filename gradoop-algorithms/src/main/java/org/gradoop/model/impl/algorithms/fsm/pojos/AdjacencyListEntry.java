@@ -17,8 +17,6 @@
 
 package org.gradoop.model.impl.algorithms.fsm.pojos;
 
-import org.gradoop.model.impl.id.GradoopId;
-
 /**
  * pojo representing an adjacency list entry
  */
@@ -30,7 +28,7 @@ public class AdjacencyListEntry{
   /**
    * edge id
    */
-  private final GradoopId edgeId;
+  private final Integer edgeId;
   /**
    * edge label
    */
@@ -38,7 +36,7 @@ public class AdjacencyListEntry{
   /**
    * vertexId
    */
-  private final GradoopId vertexId;
+  private final Integer vertexId;
   /**
    * vertex label
    */
@@ -52,8 +50,8 @@ public class AdjacencyListEntry{
    * @param vertexId connected vertex id
    * @param vertexLabel connected vertex label
    */
-  public AdjacencyListEntry(boolean outgoing, GradoopId edgeId,
-    Integer edgeLabel, GradoopId vertexId, Integer vertexLabel) {
+  public AdjacencyListEntry(boolean outgoing, Integer edgeId,
+    Integer edgeLabel, Integer vertexId, Integer vertexLabel) {
 
     this.outgoing = outgoing;
     this.edgeId = edgeId;
@@ -70,7 +68,7 @@ public class AdjacencyListEntry{
     return outgoing;
   }
 
-  public GradoopId getEdgeId() {
+  public Integer getEdgeId() {
     return edgeId;
   }
 
@@ -78,7 +76,7 @@ public class AdjacencyListEntry{
     return edgeLabel;
   }
 
-  public GradoopId getVertexId() {
+  public Integer getVertexId() {
     return vertexId;
   }
 
@@ -99,8 +97,8 @@ public class AdjacencyListEntry{
    * @return entry
    */
   public static AdjacencyListEntry newOutgoing
-    (GradoopId edgeId,
-    Integer edgeLabel, GradoopId targetId, Integer targetLabel) {
+    (Integer edgeId,
+    Integer edgeLabel, Integer targetId, Integer targetLabel) {
 
     return new AdjacencyListEntry(
       true, edgeId, edgeLabel, targetId, targetLabel);
@@ -115,7 +113,7 @@ public class AdjacencyListEntry{
    * @return entry
    */
   public static AdjacencyListEntry newIncoming(
-    GradoopId edgeId, Integer edgeLabel,  GradoopId sourceId, Integer sourceLabel) {
+    Integer edgeId, Integer edgeLabel,  Integer sourceId, Integer sourceLabel) {
 
     return new AdjacencyListEntry(
       false, edgeId, edgeLabel, sourceId, sourceLabel);

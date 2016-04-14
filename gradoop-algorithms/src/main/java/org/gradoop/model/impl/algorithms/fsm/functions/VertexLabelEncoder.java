@@ -6,9 +6,6 @@ import org.gradoop.model.impl.algorithms.fsm.tuples.IntegerLabeledVertex;
 import org.gradoop.model.impl.algorithms.fsm.tuples.StringLabeledVertex;
 import org.gradoop.model.impl.id.GradoopId;
 
-/**
- * Created by peet on 13.04.16.
- */
 public class VertexLabelEncoder
   implements JoinFunction<Tuple2<GradoopId, StringLabeledVertex>,
   Tuple2<String, Integer>, Tuple2<GradoopId, IntegerLabeledVertex>> {

@@ -6,9 +6,6 @@ import org.gradoop.model.impl.algorithms.fsm.tuples.IntegerLabeledEdge;
 import org.gradoop.model.impl.algorithms.fsm.tuples.StringLabeledEdge;
 import org.gradoop.model.impl.id.GradoopId;
 
-/**
- * Created by peet on 13.04.16.
- */
 public class EdgeLabelDecoder implements JoinFunction<
   Tuple2<GradoopId, IntegerLabeledEdge>,
   Tuple2<Integer, String>,

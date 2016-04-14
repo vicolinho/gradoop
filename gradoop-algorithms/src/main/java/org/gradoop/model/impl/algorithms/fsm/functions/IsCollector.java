@@ -23,11 +23,11 @@ import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
 /**
  * Filters the frequent DFS code collector
  */
-public class IsCollector<L extends Comparable<L>>
-  implements FilterFunction<SearchSpaceItem<L>> {
+public class IsCollector
+  implements FilterFunction<SearchSpaceItem> {
 
   @Override
-  public boolean filter(SearchSpaceItem<L> searchSpaceItem) throws Exception {
+  public boolean filter(SearchSpaceItem searchSpaceItem) throws Exception {
     return searchSpaceItem.isCollector();
   }
 }

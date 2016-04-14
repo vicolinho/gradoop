@@ -9,9 +9,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-/**
- * Created by peet on 12.04.16.
- */
 public class Dictionary implements
   GroupReduceFunction<Tuple2<String, Integer>, Tuple2<String, Integer>> {
 

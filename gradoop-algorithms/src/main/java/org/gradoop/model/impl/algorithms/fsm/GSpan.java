@@ -45,15 +45,15 @@ import org.gradoop.model.impl.algorithms.fsm.functions.GraphIdStringLabeledEdge;
 import org.gradoop.model.impl.algorithms.fsm.functions
   .GraphIdStringLabeledVertex;
 import org.gradoop.model.impl.algorithms.fsm.functions.GrowEmbeddings;
-import org.gradoop.model.impl.algorithms.fsm.functions.IntegerEdgeLabel;
-import org.gradoop.model.impl.algorithms.fsm.functions.IntegerVertexLabel;
+import org.gradoop.model.impl.algorithms.fsm.functions.EdgeIntegerLabel;
+import org.gradoop.model.impl.algorithms.fsm.functions.VertexIntegerLabel;
 import org.gradoop.model.impl.algorithms.fsm.functions.IsActive;
 import org.gradoop.model.impl.algorithms.fsm.functions.IsCollector;
 import org.gradoop.model.impl.algorithms.fsm.functions.MinSupport;
 import org.gradoop.model.impl.algorithms.fsm.functions.ReportDfsCodes;
 import org.gradoop.model.impl.algorithms.fsm.functions.SearchSpace;
-import org.gradoop.model.impl.algorithms.fsm.functions.StringEdgeLabel;
-import org.gradoop.model.impl.algorithms.fsm.functions.StringVertexLabel;
+import org.gradoop.model.impl.algorithms.fsm.functions.EdgeStringLabel;
+import org.gradoop.model.impl.algorithms.fsm.functions.VertexStringLabel;
 import org.gradoop.model.impl.algorithms.fsm.functions.VertexLabelDecoder;
 import org.gradoop.model.impl.algorithms.fsm.functions.VertexLabelEncoder;
 import org.gradoop.model.impl.algorithms.fsm.functions.VertexLabelGraphId;
@@ -79,14 +79,14 @@ import java.util.Collection;
  * @param <V> vertex type
  * @param <E> edge type
  */
-public class GSpanBulkIteration
+public class GSpan
   <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge>
   implements UnaryCollectionToCollectionOperator<G, V, E> {
 
   /**
    * minimum support
    */
-  protected DataSet<Integer> minSupport;
+  protected DataSet minSupport;
   /**
    * frequent subgraph mining configuration
    */
@@ -103,7 +103,7 @@ public class GSpanBulkIteration
    * @param fsmConfig frequent subgraph mining configuration
    * 
    */
-  public GSpanBulkIteration(FSMConfig fsmConfig) {
+  public GSpan(FSMConfig fsmConfig) {
     this.fsmConfig = fsmConfig;
   }
 
@@ -114,38 +114,38 @@ public class GSpanBulkIteration
     setMinSupport(collection);
 
     // pre processing
-    DataSet<SearchSpaceItem<Integer>> searchSpaceGraphs =
+    DataSet<SearchSpaceItem> searchSpaceGraphs =
       getSearchSpaceGraphs(collection);
 
-    DataSource<SearchSpaceItem<Integer>> searchSpaceItemDataSource =
+    DataSource<SearchSpaceItem> searchSpaceItemDataSource =
       gradoopConfig.getExecutionEnvironment()
-        .fromElements(SearchSpaceItem.<Integer>createCollector());
+        .fromElements(SearchSpaceItem.createCollector());
 
-    IterativeDataSet<SearchSpaceItem<Integer>> searchSpace =
+    IterativeDataSet<SearchSpaceItem> searchSpace =
       searchSpaceItemDataSource
       .union(searchSpaceGraphs)
       .iterate(fsmConfig.getMaxEdgeCount());
 
     DataSet<Collection<CompressedDFSCode>> currentFrequentDfsCodes =
       searchSpace
-      .flatMap(new ReportDfsCodes<Integer>())  // report codes
+      .flatMap(new ReportDfsCodes())  // report codes
       .groupBy(0)                     // group by code
       .sum(1)                         // count support
-      .filter(new Frequent<Integer>())         // filter by min support
+      .filter(new Frequent())         // filter by min support
       .withBroadcastSet(minSupport, Frequent.DS_NAME)
-      .reduceGroup(new ConcatFrequentDfsCodes<Integer>());
+      .reduceGroup(new ConcatFrequentDfsCodes());
 
-    DataSet<SearchSpaceItem<Integer>> growableSearchSpace = searchSpace
-      .filter(new IsActive<Integer>())
-      .map(new GrowEmbeddings<Integer>(fsmConfig))
+    DataSet<SearchSpaceItem> growableSearchSpace = searchSpace
+      .filter(new IsActive())
+      .map(new GrowEmbeddings(fsmConfig))
       .withBroadcastSet(currentFrequentDfsCodes, GrowEmbeddings.DS_NAME);
 
-    DataSet<SearchSpaceItem<Integer>> collector = searchSpace
+    DataSet<SearchSpaceItem> collector = searchSpace
       .closeWith(growableSearchSpace, currentFrequentDfsCodes);
 
     DataSet<CompressedDFSCode> allFrequentDfsCodes = collector
-      .filter(new IsCollector<Integer>())              // get only collector
-      .flatMap(new ExpandFrequentDfsCodes<Integer>()); // expand array to data set
+      .filter(new IsCollector())              // get only collector
+      .flatMap(new ExpandFrequentDfsCodes()); // expand array to data set
 
     // post processing
     return decodeDfsCodes(allFrequentDfsCodes);
@@ -166,7 +166,7 @@ public class GSpanBulkIteration
    * @param collection input collection
    * @return search space
    */
-  private DataSet<SearchSpaceItem<Integer>> getSearchSpaceGraphs(
+  private DataSet<SearchSpaceItem> getSearchSpaceGraphs(
     GraphCollection<G, V, E> collection) {
 
     // vertices
@@ -189,7 +189,7 @@ public class GSpanBulkIteration
     DataSet<Tuple2<GradoopId, ArrayList<IntegerLabeledVertex>>>
       graphVertices = graphIdVertex
       .join(vertexLabelDictionary)
-      .where(new StringVertexLabel()).equalTo(0)
+      .where(new VertexStringLabel()).equalTo(0)
       .with(new VertexLabelEncoder())
       .groupBy(0)
       .reduceGroup(new GraphElements<IntegerLabeledVertex>());
@@ -214,7 +214,7 @@ public class GSpanBulkIteration
     DataSet<Tuple2<GradoopId, ArrayList<IntegerLabeledEdge>>> graphEdges =
       graphIdEdge
         .join(edgeLabelDictionary)
-        .where(new StringEdgeLabel()).equalTo(0)
+        .where(new EdgeStringLabel()).equalTo(0)
         .with(new EdgeLabelEncoder())
         .groupBy(0)
         .reduceGroup(new GraphElements<IntegerLabeledEdge>());
@@ -247,7 +247,7 @@ public class GSpanBulkIteration
       .flatMap(new ExpandVertices<G>())
       .join(vertexLabelDictionary
         .map(new SwitchPair<String, Integer>()))
-      .where(new IntegerVertexLabel()).equalTo(0)
+      .where(new VertexIntegerLabel()).equalTo(0)
       .with(new VertexLabelDecoder())
       .map(new FullVertex<>(gradoopConfig.getVertexFactory()))
       .returns(gradoopConfig.getVertexFactory().getType());
@@ -256,7 +256,7 @@ public class GSpanBulkIteration
       .flatMap(new ExpandEdges<G>())
       .join(edgeLabelDictionary
         .map(new SwitchPair<String, Integer>()))
-      .where(new IntegerEdgeLabel()).equalTo(0)
+      .where(new EdgeIntegerLabel()).equalTo(0)
       .with(new EdgeLabelDecoder())
       .map(new FullEdge<>(gradoopConfig.getEdgeFactory()))
       .returns(gradoopConfig.getEdgeFactory().getType());

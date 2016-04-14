@@ -23,11 +23,11 @@ import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
 /**
  * Filters active search space items
  */
-public class IsActive<L extends Comparable<L>>
-  implements FilterFunction<SearchSpaceItem<L>> {
+public class IsActive
+  implements FilterFunction<SearchSpaceItem> {
 
   @Override
-  public boolean filter(SearchSpaceItem<L> searchSpaceItem) throws Exception {
+  public boolean filter(SearchSpaceItem searchSpaceItem) throws Exception {
 
     return searchSpaceItem.isActive();
   }

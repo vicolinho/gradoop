@@ -15,9 +15,9 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.impl.operators.tostring.comparators;
+package org.gradoop.model.impl.algorithms.fsm.comparators;
 
-import org.gradoop.model.impl.operators.tostring.pojos.DFSStep;
+import org.gradoop.model.impl.algorithms.fsm.pojos.DFSStep;
 
 import java.io.Serializable;
 import java.util.Comparator;
@@ -25,8 +25,7 @@ import java.util.Comparator;
 /**
  * Comparator of DFS code steps based on gSpan lexicographical order.
  */
-public class DfsStepComparator<L extends Comparable<L>>
-  implements Comparator<DFSStep>, Serializable {
+public class DfsStepComparator implements Comparator<DFSStep>, Serializable {
 
   /**
    * true for comparing DFS steps of directed graphs,
