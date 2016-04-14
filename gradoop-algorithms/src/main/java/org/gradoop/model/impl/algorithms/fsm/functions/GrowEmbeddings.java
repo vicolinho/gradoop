@@ -18,22 +18,21 @@
 package org.gradoop.model.impl.algorithms.fsm.functions;
 
 import com.google.common.collect.Sets;
+import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.apache.flink.api.common.functions.CrossFunction;
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.configuration.Configuration;
 import org.gradoop.model.impl.algorithms.fsm.FSMConfig;
-import org.gradoop.model.impl.operators.tostring.comparators.DfsCodeComparator;
-import org.gradoop.model.impl.operators.tostring.comparators.EdgePatternComparator;
+import org.gradoop.model.impl.algorithms.fsm.comparators.DfsCodeComparator;
+import org.gradoop.model.impl.algorithms.fsm.comparators.EdgePatternComparator;
 import org.gradoop.model.impl.algorithms.fsm.pojos.AdjacencyListEntry;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.operators.tostring.pojos.DFSCode;
-import org.gradoop.model.impl.operators.tostring.pojos.DFSEmbedding;
-import org.gradoop.model.impl.operators.tostring.pojos.DFSStep;
-import org.gradoop.model.impl.operators.tostring.pojos.EdgePattern;
+import org.gradoop.model.impl.algorithms.fsm.pojos.DFSCode;
+import org.gradoop.model.impl.algorithms.fsm.pojos.DFSEmbedding;
+import org.gradoop.model.impl.algorithms.fsm.pojos.DFSStep;
+import org.gradoop.model.impl.algorithms.fsm.pojos.EdgePattern;
 import org.gradoop.model.impl.algorithms.fsm.pojos.AdjacencyList;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
-import org.gradoop.model.impl.id.GradoopId;
-import org.gradoop.model.impl.id.GradoopIdSet;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,14 +40,15 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Core of gSpan implementation. Grows embeddings of Frequent DFS codes.
  */
 public class GrowEmbeddings<L extends Comparable<Integer>> extends 
-  RichMapFunction<SearchSpaceItem<Integer>, SearchSpaceItem<Integer>>
+  RichMapFunction<SearchSpaceItem, SearchSpaceItem>
   implements CrossFunction
-  <SearchSpaceItem<Integer>, Collection<CompressedDFSCode>, SearchSpaceItem<Integer>> {
+  <SearchSpaceItem, Collection<CompressedDFSCode>, SearchSpaceItem> {
 
   public static String DS_NAME = "compressedDfsCodes";
   /**
@@ -86,7 +86,7 @@ public class GrowEmbeddings<L extends Comparable<Integer>> extends
   }
 
   @Override
-  public SearchSpaceItem<Integer> cross(SearchSpaceItem<Integer> searchSpaceItem,
+  public SearchSpaceItem cross(SearchSpaceItem searchSpaceItem,
     Collection<CompressedDFSCode> frequentDfsCodes) throws Exception {
 
     if (searchSpaceItem.isCollector()) {
@@ -99,7 +99,7 @@ public class GrowEmbeddings<L extends Comparable<Integer>> extends
   }
 
   @Override
-  public SearchSpaceItem<Integer> map(SearchSpaceItem<Integer> searchSpaceItem) throws Exception {
+  public SearchSpaceItem map(SearchSpaceItem searchSpaceItem) throws Exception {
 
 //    System.out.println(searchSpaceItem.getGraphId() +
 //      " was triggered to grow / collect");
@@ -121,7 +121,7 @@ public class GrowEmbeddings<L extends Comparable<Integer>> extends
    * @param newFrequentDfsCodes new frequent DFS codes
    * @return updated collector
    */
-  private SearchSpaceItem<Integer> updateCollector(SearchSpaceItem<Integer> collector,
+  private SearchSpaceItem updateCollector(SearchSpaceItem collector,
     Collection<CompressedDFSCode> newFrequentDfsCodes) {
 
     collector.getFrequentDfsCodes().addAll(newFrequentDfsCodes);
@@ -135,7 +135,7 @@ public class GrowEmbeddings<L extends Comparable<Integer>> extends
    * @param frequentDfsCodes frequent DFS codes
    * @return graph with grown embeddings
    */
-  private SearchSpaceItem<Integer> growFrequentDfsCodeEmbeddings(SearchSpaceItem<Integer> graph,
+  private SearchSpaceItem growFrequentDfsCodeEmbeddings(SearchSpaceItem graph,
     Collection<CompressedDFSCode> frequentDfsCodes) {
 
     // min DFS code per subgraph (set of edge ids)
@@ -161,7 +161,7 @@ public class GrowEmbeddings<L extends Comparable<Integer>> extends
 
           // rightmost path is inverse, so first element is rightmost vertex
           Boolean rightMostVertex = true;
-          ArrayList<GradoopId> vertexTimes = parentEmbedding.getVertexTimes();
+          ArrayList<Integer> vertexTimes = parentEmbedding.getVertexTimes();
 
           // for each time on rightmost path
           for (Integer fromVertexTime : rightmostPath) {
@@ -187,13 +187,13 @@ public class GrowEmbeddings<L extends Comparable<Integer>> extends
               if (edgePatternComparator
                 .compare(minPattern, candidatePattern) <= 0) {
 
-                GradoopId edgeId = adjacencyListEntry.getEdgeId();
+                Integer edgeIndex = adjacencyListEntry.getEdgeId();
 
                 // allow only edges not already contained
-                if (!parentEmbedding.getEdgeTimes().contains(edgeId)) {
+                if (!parentEmbedding.getEdgeTimes().contains(edgeIndex)) {
 
                   // query toVertexData
-                  GradoopId toVertexId = adjacencyListEntry.getVertexId();
+                  Integer toVertexId = adjacencyListEntry.getVertexId();
                   Integer toVertexTime = vertexTimes.indexOf(toVertexId);
                   boolean forward = toVertexTime < 0;
 
@@ -221,11 +221,17 @@ public class GrowEmbeddings<L extends Comparable<Integer>> extends
                       toVertexLabel
                     ));
 
-                    embedding.getEdgeTimes().add(edgeId);
+                    embedding.getEdgeTimes().add(edgeIndex);
 
                     // check if subgraph already discovered
-                    Integer coverage = GradoopIdSet
-                      .fromExisting(embedding.getEdgeTimes()).hashCode();
+                    HashCodeBuilder builder = new HashCodeBuilder();
+                    Set<Integer> mappedEdgeIndices = Sets
+                      .newHashSet(embedding.getEdgeTimes());
+
+                    for(Integer mappedEdgeIndex : mappedEdgeIndices) {
+                      builder.append(mappedEdgeIndex);
+                    }
+                    Integer coverage = builder.hashCode();
 
                     HashSet<DFSCode> dfsCodes =
                       coverageDfsCodes.get(coverage);

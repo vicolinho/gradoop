@@ -25,9 +25,9 @@ import org.gradoop.model.impl.algorithms.fsm.pojos.AdjacencyListEntry;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.tuples.IntegerLabeledEdge;
 import org.gradoop.model.impl.algorithms.fsm.tuples.IntegerLabeledVertex;
-import org.gradoop.model.impl.operators.tostring.pojos.DFSCode;
-import org.gradoop.model.impl.operators.tostring.pojos.DFSEmbedding;
-import org.gradoop.model.impl.operators.tostring.pojos.DFSStep;
+import org.gradoop.model.impl.algorithms.fsm.pojos.DFSCode;
+import org.gradoop.model.impl.algorithms.fsm.pojos.DFSEmbedding;
+import org.gradoop.model.impl.algorithms.fsm.pojos.DFSStep;
 import org.gradoop.model.impl.algorithms.fsm.pojos.AdjacencyList;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
 import org.gradoop.model.impl.id.GradoopId;
@@ -44,102 +44,113 @@ public class SearchSpace
   implements JoinFunction<
   Tuple2<GradoopId, ArrayList<IntegerLabeledVertex>>,
   Tuple2<GradoopId, ArrayList<IntegerLabeledEdge>>,
-  SearchSpaceItem<Integer>
+  SearchSpaceItem
   > {
 
   @Override
-  public SearchSpaceItem<Integer> join(
+  public SearchSpaceItem join(
     Tuple2<GradoopId, ArrayList<IntegerLabeledVertex>> graphVertices,
     Tuple2<GradoopId, ArrayList<IntegerLabeledEdge>> graphEdges) throws
     Exception {
 
-    HashMap<GradoopId, Integer> vertexLabels = new HashMap<>();
-    HashMap<GradoopId, AdjacencyList> adjacencyLists = new HashMap<>();
+    HashMap<GradoopId, Integer> vertexIndexMap = new HashMap<>();
+    ArrayList<AdjacencyList> adjacencyLists = new ArrayList<>();
     HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddingsMap = new
       HashMap<>();
 
-    SearchSpaceItem<Integer> graph = SearchSpaceItem
+    SearchSpaceItem graph = SearchSpaceItem
       .createForGraph(adjacencyLists, codeEmbeddingsMap);
 
+    int vertexIndex = 0;
     for (IntegerLabeledVertex vertex : graphVertices.f1) {
-      vertexLabels.put(vertex.getId(), vertex.getLabel());
-      adjacencyLists.put(
-        vertex.getId(), new AdjacencyList(vertex.getLabel()));
+      vertexIndexMap.put(vertex.getId(), vertexIndex);
+      adjacencyLists.add(new AdjacencyList(vertex.getLabel()));
+      vertexIndex++;
     }
 
+    int edgeIndex = 0;
     for (IntegerLabeledEdge edge : graphEdges.f1) {
 
-      GradoopId edgeId = edge.getId();
-      Integer edgeLabel = edge.getLabel();
+      Integer sourceIndex = vertexIndexMap.get(edge.getSourceId());
+      
+      // source vertex has frequent label
+      if(sourceIndex != null) {
 
-      GradoopId sourceId = edge.getSourceId();
-      Integer sourceLabel = vertexLabels.get(sourceId);
+        Integer targetIndex = vertexIndexMap.get(edge.getTargetId());
 
-      GradoopId targetId = edge.getTargetId();
-      Integer targetLabel = vertexLabels.get(targetId);
+        // target vertex has frequent label
+        if(targetIndex != null) {
+          
+          Integer sourceLabel = adjacencyLists.get(sourceIndex).getVertexLabel();
+          Integer targetLabel = adjacencyLists.get(targetIndex).getVertexLabel();
 
-      // update adjacency lists
+          Integer edgeLabel = edge.getLabel();
+          
+          // update adjacency lists
 
-      adjacencyLists.get(sourceId).getEntries().add(AdjacencyListEntry
-        .newOutgoing(edgeId, edgeLabel, targetId, targetLabel));
+          adjacencyLists.get(sourceIndex).getEntries().add(AdjacencyListEntry
+            .newOutgoing(edgeIndex, edgeLabel, targetIndex, targetLabel));
 
-      if (!sourceId.equals(targetId)) {
-        adjacencyLists.get(targetId).getEntries().add(AdjacencyListEntry
-          .newIncoming(edgeId, edgeLabel, sourceId, sourceLabel));
-      }
+          if (!sourceIndex.equals(targetIndex)) {
+            adjacencyLists.get(targetIndex).getEntries().add(AdjacencyListEntry
+              .newIncoming(edgeIndex, edgeLabel, sourceIndex, sourceLabel));
+          }
 
-      // update code embeddings
+          // update code embeddings
 
-      ArrayList<GradoopId> vertexTimes;
+          ArrayList<Integer> vertexTimes;
 
-      Integer fromTime = 0;
-      Integer fromLabel;
-      Boolean outgoing;
-      Integer toTime;
-      Integer toLabel;
+          Integer fromTime = 0;
+          Integer fromLabel;
+          Boolean outgoing;
+          Integer toTime;
+          Integer toLabel;
 
-      // loop
-      if (sourceId.equals(targetId)) {
-        toTime = 0;
+          // loop
+          if (sourceIndex.equals(targetIndex)) {
+            toTime = 0;
 
-        vertexTimes = Lists.newArrayList(sourceId);
+            vertexTimes = Lists.newArrayList(sourceIndex);
 
-        fromLabel = sourceLabel;
-        outgoing = true;
-        toLabel = targetLabel;
+            fromLabel = sourceLabel;
+            outgoing = true;
+            toLabel = targetLabel;
 
-      } else {
-        toTime = 1;
+          } else {
+            toTime = 1;
 
-        // in direction
-        if (sourceLabel.compareTo(targetLabel) <= 0) {
-          vertexTimes = Lists.newArrayList(sourceId, targetId);
+            // in direction
+            if (sourceLabel.compareTo(targetLabel) <= 0) {
+              vertexTimes = Lists.newArrayList(sourceIndex, targetIndex);
 
-          fromLabel = sourceLabel;
-          outgoing = true;
-          toLabel = targetLabel;
-        } else {
-          vertexTimes = Lists.newArrayList(targetId, sourceId);
+              fromLabel = sourceLabel;
+              outgoing = true;
+              toLabel = targetLabel;
+            } else {
+              vertexTimes = Lists.newArrayList(targetIndex, sourceIndex);
 
-          fromLabel = targetLabel;
-          outgoing = false;
-          toLabel = sourceLabel;
+              fromLabel = targetLabel;
+              outgoing = false;
+              toLabel = sourceLabel;
+            }
+          }
+
+          DFSStep step = new DFSStep(
+            fromTime, fromLabel, outgoing, edgeLabel, toTime, toLabel);
+
+          CompressedDFSCode code = new CompressedDFSCode(new DFSCode(step));
+          DFSEmbedding embedding = new DFSEmbedding(vertexTimes, edgeIndex);
+
+          Set<DFSEmbedding> embeddings = codeEmbeddingsMap.get(code);
+
+          if (embeddings == null) {
+            codeEmbeddingsMap.put(code, Sets.newHashSet(embedding));
+          } else {
+            embeddings.add(embedding);
+          }
         }
       }
-
-      DFSStep step = new DFSStep(
-        fromTime, fromLabel, outgoing, edgeLabel, toTime, toLabel);
-
-      CompressedDFSCode code = new CompressedDFSCode(new DFSCode(step));
-      DFSEmbedding embedding = new DFSEmbedding(vertexTimes, edgeId);
-
-      Set<DFSEmbedding> embeddings = codeEmbeddingsMap.get(code);
-
-      if (embeddings == null) {
-        codeEmbeddingsMap.put(code, Sets.newHashSet(embedding));
-      } else {
-        embeddings.add(embedding);
-      }
+      edgeIndex++;
     }
 
     return graph;

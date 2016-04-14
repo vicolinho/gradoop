@@ -24,7 +24,7 @@ import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
 /**
  * filters frequent (CompressedDfsCodes, Support), i.e., Support > minSupport
  */
-public class Frequent<L extends Comparable<L>>
+public class Frequent
   extends RichFilterFunction<CompressedDFSCode> {
 
   /**

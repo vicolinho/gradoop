@@ -29,10 +29,8 @@ import org.gradoop.model.api.EPGMGraphHeadFactory;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.tuples.IntegerLabeledEdge;
 import org.gradoop.model.impl.algorithms.fsm.tuples.IntegerLabeledVertex;
-import org.gradoop.model.impl.algorithms.fsm.tuples.LabeledEdge;
-import org.gradoop.model.impl.algorithms.fsm.tuples.LabeledVertex;
-import org.gradoop.model.impl.operators.tostring.pojos.DFSCode;
-import org.gradoop.model.impl.operators.tostring.pojos.DFSStep;
+import org.gradoop.model.impl.algorithms.fsm.pojos.DFSCode;
+import org.gradoop.model.impl.algorithms.fsm.pojos.DFSStep;
 import org.gradoop.model.impl.id.GradoopId;
 import org.gradoop.model.impl.id.GradoopIdSet;
 
@@ -44,9 +42,8 @@ import java.util.Map;
  * CompressedDFSCode => (Graph, Vertex, Edge)
  * @param <G> graph type
  */
-public class DfsDecoder
-  <G extends EPGMGraphHead>
-  implements ResultTypeQueryable 
+public class DfsDecoder<G extends EPGMGraphHead> implements
+  ResultTypeQueryable
   <Tuple3<G, ArrayList<IntegerLabeledVertex>, ArrayList<IntegerLabeledEdge>>>,
   MapFunction<CompressedDFSCode, 
     Tuple3<G, ArrayList<IntegerLabeledVertex>, ArrayList<IntegerLabeledEdge>>> {

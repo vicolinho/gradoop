@@ -15,7 +15,7 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.impl.operators.tostring.pojos;
+package org.gradoop.model.impl.algorithms.fsm.pojos;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang.builder.HashCodeBuilder;

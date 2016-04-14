@@ -20,8 +20,7 @@ package org.gradoop.model.impl.algorithms.fsm.tuples;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.flink.api.java.tuple.Tuple5;
 import org.gradoop.model.impl.algorithms.fsm.pojos.AdjacencyList;
-import org.gradoop.model.impl.operators.tostring.pojos.DFSEmbedding;
-import org.gradoop.model.impl.id.GradoopId;
+import org.gradoop.model.impl.algorithms.fsm.pojos.DFSEmbedding;
 import scala.collection.mutable.StringBuilder;
 
 import java.util.ArrayList;
@@ -39,10 +38,10 @@ import java.util.Map;
  * f3 : map DFS code - embeddings         empty map
  * f4 : empty array                       frequent DFS codes
  */
-public class SearchSpaceItem<L extends Comparable<L>> extends Tuple5<
+public class SearchSpaceItem extends Tuple5<
     Boolean,
     Boolean,
-    HashMap<GradoopId, AdjacencyList>,
+    ArrayList<AdjacencyList>,
     HashMap<CompressedDFSCode, HashSet<DFSEmbedding>>,
     ArrayList<CompressedDFSCode>
   > {
@@ -62,7 +61,7 @@ public class SearchSpaceItem<L extends Comparable<L>> extends Tuple5<
    * @param frequentDfsCodes frequent DFS codes (empty for graph)
    */
   public SearchSpaceItem(boolean collector, boolean active,
-    HashMap<GradoopId, AdjacencyList> adjacencyLists,
+    ArrayList<AdjacencyList> adjacencyLists,
     HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings,
     ArrayList<CompressedDFSCode> frequentDfsCodes) {
 
@@ -99,12 +98,12 @@ public class SearchSpaceItem<L extends Comparable<L>> extends Tuple5<
     return this.f1;
   }
 
-  public Map<GradoopId, AdjacencyList> getAdjacencyLists() {
+  public ArrayList<AdjacencyList> getAdjacencyLists() {
     return f2;
   }
 
   public void setAdjacencyLists(
-    HashMap<GradoopId, AdjacencyList> adjacencyLists) {
+    ArrayList<AdjacencyList> adjacencyLists) {
 
     this.f2 = adjacencyLists;
   }
@@ -145,12 +144,14 @@ public class SearchSpaceItem<L extends Comparable<L>> extends Tuple5<
     } else {
       builder.append(" (Graph)\n\tAdjacency lists");
 
-      for (Map.Entry<GradoopId, AdjacencyList> entry :
-        getAdjacencyLists().entrySet()) {
+      int vertexIndex = 0;
+      for (AdjacencyList entry : getAdjacencyLists()) {
 
-        builder.append("\n\t\t(" + entry.getValue().getVertexLabel() + ":" +
-          entry.getKey() + ") : " +
-          StringUtils.join(entry.getValue().getEntries(), " | "));
+        builder.append("\n\t\t(" + entry.getVertexLabel() + ":" +
+          vertexIndex + ") : " +
+          StringUtils.join(entry.getEntries(), " | "));
+
+        vertexIndex++;
       }
 
       builder.append("\n\tDFS codes and embeddings");
@@ -175,11 +176,11 @@ public class SearchSpaceItem<L extends Comparable<L>> extends Tuple5<
    * @param codeEmbeddings embeddings of DFS codes
    * @return a search space item representing a graph transaction
    */
-  public static <L extends Comparable<L>> SearchSpaceItem<L> createForGraph(
-    HashMap<GradoopId, AdjacencyList> adjacencyLists,
+  public static <L extends Comparable<L>> SearchSpaceItem createForGraph(
+    ArrayList<AdjacencyList> adjacencyLists,
     HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings) {
 
-    return new SearchSpaceItem<>(false, true, adjacencyLists, codeEmbeddings,
+    return new SearchSpaceItem(false, true, adjacencyLists, codeEmbeddings,
       new ArrayList<CompressedDFSCode>());
   }
 
@@ -187,12 +188,12 @@ public class SearchSpaceItem<L extends Comparable<L>> extends Tuple5<
    * factory method
    * @return a search space item representing the collector
    */
-  public static <L extends Comparable<L>> SearchSpaceItem<L> createCollector() {
-    HashMap<GradoopId, AdjacencyList> adjacencyLists = new HashMap<>();
+  public static <L extends Comparable<L>> SearchSpaceItem createCollector() {
+    ArrayList<AdjacencyList> adjacencyLists = new ArrayList<>();
     HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings = new
       HashMap<>();
 
-    return new SearchSpaceItem<>(true, true, adjacencyLists, codeEmbeddings,
+    return new SearchSpaceItem(true, true, adjacencyLists, codeEmbeddings,
       new ArrayList<CompressedDFSCode>());
   }
 }

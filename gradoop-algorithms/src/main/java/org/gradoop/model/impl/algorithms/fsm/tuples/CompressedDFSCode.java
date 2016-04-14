@@ -19,7 +19,7 @@ package org.gradoop.model.impl.algorithms.fsm.tuples;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.gradoop.model.impl.operators.tostring.pojos.DFSCode;
+import org.gradoop.model.impl.algorithms.fsm.pojos.DFSCode;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

@@ -15,10 +15,12 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.impl.operators.tostring.comparators;
+package org.gradoop.model.impl.algorithms.fsm.comparators;
 
-import org.gradoop.model.impl.operators.tostring.pojos.DFSCode;
-import org.gradoop.model.impl.operators.tostring.pojos.DFSStep;
+
+
+import org.gradoop.model.impl.algorithms.fsm.pojos.DFSCode;
+import org.gradoop.model.impl.algorithms.fsm.pojos.DFSStep;
 
 import java.io.Serializable;
 import java.util.Comparator;
@@ -27,8 +29,7 @@ import java.util.Iterator;
 /**
  * Step-wise comparator for DFS codes.
  */
-public class DfsCodeComparator<L extends Comparable<L>>
-  implements Comparator<DFSCode>, Serializable {
+public class DfsCodeComparator implements Comparator<DFSCode>, Serializable {
 
   /**
    * step comparator

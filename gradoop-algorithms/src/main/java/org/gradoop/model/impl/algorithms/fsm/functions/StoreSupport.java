@@ -24,7 +24,7 @@ import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
 /**
  * (CompressedDFSCode, Support) => (CompressedDFSCode+Support, 0)
  */
-public class StoreSupport<L extends Comparable<L>> implements MapFunction
+public class StoreSupport implements MapFunction
   <Tuple2<CompressedDFSCode, Integer>, Tuple2<CompressedDFSCode, Integer>> {
 
   @Override

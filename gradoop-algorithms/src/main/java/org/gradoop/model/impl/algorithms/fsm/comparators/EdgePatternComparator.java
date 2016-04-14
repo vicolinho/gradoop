@@ -15,9 +15,10 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.impl.operators.tostring.comparators;
+package org.gradoop.model.impl.algorithms.fsm.comparators;
 
-import org.gradoop.model.impl.operators.tostring.pojos.EdgePattern;
+
+import org.gradoop.model.impl.algorithms.fsm.pojos.EdgePattern;
 
 import java.io.Serializable;
 import java.util.Comparator;
