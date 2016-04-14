@@ -21,14 +21,13 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.flink.api.common.functions.JoinFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.tuple.Tuple3;
+import org.gradoop.model.impl.algorithms.fsm.pojos.AdjacencyList;
 import org.gradoop.model.impl.algorithms.fsm.pojos.AdjacencyListEntry;
-import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.tuples.IntegerLabeledEdge;
-import org.gradoop.model.impl.algorithms.fsm.tuples.IntegerLabeledVertex;
 import org.gradoop.model.impl.algorithms.fsm.pojos.DFSCode;
 import org.gradoop.model.impl.algorithms.fsm.pojos.DFSEmbedding;
 import org.gradoop.model.impl.algorithms.fsm.pojos.DFSStep;
-import org.gradoop.model.impl.algorithms.fsm.pojos.AdjacencyList;
+import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
 import org.gradoop.model.impl.id.GradoopId;
 
@@ -42,15 +41,15 @@ import java.util.Set;
  */
 public class SearchSpace
   implements JoinFunction<
-  Tuple2<GradoopId, ArrayList<IntegerLabeledVertex>>,
-  Tuple2<GradoopId, ArrayList<IntegerLabeledEdge>>,
+  Tuple2<GradoopId, ArrayList<Tuple2<GradoopId, Integer>>>,
+  Tuple2<GradoopId, ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>,
   SearchSpaceItem
   > {
 
   @Override
   public SearchSpaceItem join(
-    Tuple2<GradoopId, ArrayList<IntegerLabeledVertex>> graphVertices,
-    Tuple2<GradoopId, ArrayList<IntegerLabeledEdge>> graphEdges) throws
+    Tuple2<GradoopId, ArrayList<Tuple2<GradoopId, Integer>>> graphVertices,
+    Tuple2<GradoopId, ArrayList<Tuple3<GradoopId, GradoopId, Integer>>> graphEdges) throws
     Exception {
 
     HashMap<GradoopId, Integer> vertexIndexMap = new HashMap<>();
@@ -62,29 +61,31 @@ public class SearchSpace
       .createForGraph(adjacencyLists, codeEmbeddingsMap);
 
     int vertexIndex = 0;
-    for (IntegerLabeledVertex vertex : graphVertices.f1) {
-      vertexIndexMap.put(vertex.getId(), vertexIndex);
-      adjacencyLists.add(new AdjacencyList(vertex.getLabel()));
+    for (Tuple2<GradoopId, Integer> vertex : graphVertices.f1) {
+      vertexIndexMap.put(vertex.f0, vertexIndex);
+      adjacencyLists.add(new AdjacencyList(vertex.f1));
       vertexIndex++;
     }
 
     int edgeIndex = 0;
-    for (IntegerLabeledEdge edge : graphEdges.f1) {
+    for (Tuple3<GradoopId, GradoopId, Integer> edge : graphEdges.f1) {
 
-      Integer sourceIndex = vertexIndexMap.get(edge.getSourceId());
+      Integer sourceIndex = vertexIndexMap.get(edge.f0);
       
       // source vertex has frequent label
       if(sourceIndex != null) {
 
-        Integer targetIndex = vertexIndexMap.get(edge.getTargetId());
+        Integer targetIndex = vertexIndexMap.get(edge.f1);
 
         // target vertex has frequent label
         if(targetIndex != null) {
           
-          Integer sourceLabel = adjacencyLists.get(sourceIndex).getVertexLabel();
-          Integer targetLabel = adjacencyLists.get(targetIndex).getVertexLabel();
+          Integer sourceLabel = adjacencyLists
+            .get(sourceIndex).getVertexLabel();
+          Integer targetLabel = adjacencyLists
+            .get(targetIndex).getVertexLabel();
 
-          Integer edgeLabel = edge.getLabel();
+          Integer edgeLabel = edge.f2;
           
           // update adjacency lists
 

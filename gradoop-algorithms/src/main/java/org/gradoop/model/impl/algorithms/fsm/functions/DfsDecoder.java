@@ -20,6 +20,7 @@ package org.gradoop.model.impl.algorithms.fsm.functions;
 import com.google.common.collect.Lists;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
+import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.api.java.typeutils.ResultTypeQueryable;
 import org.apache.flink.api.java.typeutils.TupleTypeInfo;
@@ -27,8 +28,6 @@ import org.apache.flink.api.java.typeutils.TypeExtractor;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMGraphHeadFactory;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.tuples.IntegerLabeledEdge;
-import org.gradoop.model.impl.algorithms.fsm.tuples.IntegerLabeledVertex;
 import org.gradoop.model.impl.algorithms.fsm.pojos.DFSCode;
 import org.gradoop.model.impl.algorithms.fsm.pojos.DFSStep;
 import org.gradoop.model.impl.id.GradoopId;
@@ -44,22 +43,14 @@ import java.util.Map;
  */
 public class DfsDecoder<G extends EPGMGraphHead> implements
   ResultTypeQueryable
-  <Tuple3<G, ArrayList<IntegerLabeledVertex>, ArrayList<IntegerLabeledEdge>>>,
+  <Tuple3<G, ArrayList<Tuple2<GradoopId, Integer>>, ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>>,
   MapFunction<CompressedDFSCode, 
-    Tuple3<G, ArrayList<IntegerLabeledVertex>, ArrayList<IntegerLabeledEdge>>> {
+    Tuple3<G, ArrayList<Tuple2<GradoopId, Integer>>, ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>> {
 
   /**
    * graph head factory
    */
   private final EPGMGraphHeadFactory<G> graphHeadFactory;
-//  /**
-//   * vertex factory
-//   */
-//  private final EPGMVertexFactory<IntegerLabeledVertex> vertexFactory;
-//  /**
-//   * edge factory
-//   */
-//  private final EPGMEdgeFactory<IntegerLabeledEdge> edgeFactory;
 
   /**
    * constructor
@@ -81,35 +72,26 @@ public class DfsDecoder<G extends EPGMGraphHead> implements
    * @param label vertex label
    * @param vertices vertices
    * @param timeIdMap mapping : vertex time => vertex id
-   * @param graphIds set with one graph id
    * @return vertex id
    */
-  protected GradoopId getOrCreateVertex(
-    Integer time,
-    Integer label,
-    ArrayList<IntegerLabeledVertex> vertices,
-    Map<Integer, GradoopId> timeIdMap,
-    GradoopIdSet graphIds
-  ) {
+  protected GradoopId getOrCreateVertex(Integer time, Integer label,
+    ArrayList<Tuple2<GradoopId, Integer>> vertices,
+    Map<Integer, GradoopId> timeIdMap) {
 
     GradoopId id = timeIdMap.get(time);
 
     if (id == null) {
-      IntegerLabeledVertex vertex = new IntegerLabeledVertex();
-
-      vertex.setId(GradoopId.get());
-      vertex.setLabel(label);
-
-      id = vertex.getId();
-      vertices.add(vertex);
+      id = GradoopId.get();
+      vertices.add(new Tuple2<>(id, label));
       timeIdMap.put(time, id);
     }
+    
     return id;
   }
 
 
   @Override
-  public Tuple3<G, ArrayList<IntegerLabeledVertex>, ArrayList<IntegerLabeledEdge>> map(
+  public Tuple3<G, ArrayList<Tuple2<GradoopId, Integer>>, ArrayList<Tuple3<GradoopId, GradoopId, Integer>>> map(
     CompressedDFSCode compressedDfsCode) throws  Exception {
 
 //    System.out.println("decode " + compressedDfsCode);
@@ -123,9 +105,9 @@ public class DfsDecoder<G extends EPGMGraphHead> implements
 
     GradoopIdSet graphIds = GradoopIdSet.fromExisting(graphHead.getId());
 
-    ArrayList<IntegerLabeledVertex> vertices = Lists.newArrayList();
+    ArrayList<Tuple2<GradoopId, Integer>> vertices = Lists.newArrayList();
 
-    ArrayList<IntegerLabeledEdge> edges = Lists
+    ArrayList<Tuple3<GradoopId, GradoopId, Integer>> edges = Lists
       .newArrayListWithCapacity(dfsCode.getSteps().size());
 
     Map<Integer, GradoopId> vertexTimeId = new HashMap<>();
@@ -143,38 +125,31 @@ public class DfsDecoder<G extends EPGMGraphHead> implements
 
       if (step.isOutgoing()) {
         sourceId = getOrCreateVertex(
-          fromTime, fromLabel, vertices, vertexTimeId, graphIds);
+          fromTime, fromLabel, vertices, vertexTimeId);
 
         targetId = getOrCreateVertex(
-          toTime, toLabel, vertices, vertexTimeId, graphIds);
+          toTime, toLabel, vertices, vertexTimeId);
 
       } else {
         sourceId = getOrCreateVertex(
-          toTime, toLabel, vertices, vertexTimeId, graphIds);
+          toTime, toLabel, vertices, vertexTimeId);
 
         if (step.isLoop()) {
           targetId = sourceId;
         } else {
           targetId = getOrCreateVertex(
-            fromTime, fromLabel, vertices, vertexTimeId, graphIds);
+            fromTime, fromLabel, vertices, vertexTimeId);
         }
       }
 
-      IntegerLabeledEdge integerLabeledEdge = new IntegerLabeledEdge();
-
-      integerLabeledEdge.setId(GradoopId.get());
-      integerLabeledEdge.setSourceId(sourceId);
-      integerLabeledEdge.setTargetId(targetId);
-      integerLabeledEdge.setLabel(step.getEdgeLabel());
-
-      edges.add(integerLabeledEdge);
+      edges.add(new Tuple3<>(sourceId, targetId, step.getEdgeLabel()));
     }
 
     return new Tuple3<>(graphHead, vertices, edges);
   }
 
   @Override
-  public TypeInformation<Tuple3<G, ArrayList<IntegerLabeledVertex>, ArrayList<IntegerLabeledEdge>>>
+  public TypeInformation<Tuple3<G, ArrayList<Tuple2<GradoopId, Integer>>, ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>>
   getProducedType() {
     return new TupleTypeInfo<>(
       TypeExtractor.getForClass(graphHeadFactory.getType()),
