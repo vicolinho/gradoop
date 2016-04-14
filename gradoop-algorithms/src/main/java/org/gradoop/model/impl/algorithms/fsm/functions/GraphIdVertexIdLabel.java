@@ -18,16 +18,13 @@
 package org.gradoop.model.impl.algorithms.fsm.functions;
 
 import org.apache.flink.api.common.functions.FlatMapFunction;
-import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.util.Collector;
 import org.gradoop.model.api.EPGMVertex;
-import org.gradoop.model.impl.algorithms.fsm.tuples.LabeledVertex;
-import org.gradoop.model.impl.algorithms.fsm.tuples.StringLabeledVertex;
 import org.gradoop.model.impl.id.GradoopId;
 
 /**
- * EPGMVertex => [(GraphId, LabeledVertex),..]
+ * EPGMVertex => (graphId, vertexId, vertexLabel),..
  * @param <V> vertex type
  */
 public class GraphIdVertexIdLabel<V extends EPGMVertex>
@@ -35,7 +32,8 @@ public class GraphIdVertexIdLabel<V extends EPGMVertex>
 
   @Override
   public void flatMap(V vertex,
-    Collector<Tuple3<GradoopId, GradoopId, String>> collector) throws Exception {
+    Collector<Tuple3<GradoopId, GradoopId, String>> collector) throws
+    Exception {
 
     GradoopId vertexId = vertex.getId();
     String label = vertex.getLabel();

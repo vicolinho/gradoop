@@ -31,17 +31,12 @@ public class ReportDfsCodes implements
   @Override
   public void flatMap(SearchSpaceItem searchSpaceItem,
     Collector<CompressedDFSCode> collector) throws Exception {
-      if(! searchSpaceItem.isCollector()) {
 
+    if (! searchSpaceItem.isCollector()) {
       for (CompressedDFSCode code :
         searchSpaceItem.getCodeEmbeddings().keySet()) {
-
         collector.collect(code);
       }
-
-//      System.out.println(searchSpaceItem.getGraphId() +
-//        " reports " + StringUtils.join(
-//        searchSpaceItem.getCodeEmbeddings().keySet(), ","));
     }
   }
 }

@@ -15,38 +15,41 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.impl.algorithms.fsm.functions;
+package org.gradoop.model.impl.functions.epgm;
 
+import com.google.common.collect.Sets;
 import org.apache.flink.api.common.functions.GroupReduceFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.util.Collector;
+import org.gradoop.model.api.EPGMGraphElement;
 import org.gradoop.model.impl.id.GradoopId;
 
-import java.util.ArrayList;
-import java.util.ArrayList;
+import java.util.Set;
 
 /**
- * [(GraphId, GraphElement),..] => (GraphId, [GraphElement,..])
- * @param <EL>
+ * (graphId, element),.. => (graphId, {element,..})
+ * @param <EL> graph element type
  */
-public class GraphElements<EL> implements GroupReduceFunction
-  <Tuple2<GradoopId, EL>, Tuple2<GradoopId, ArrayList<EL>>> {
+public class GraphElementSet<EL extends EPGMGraphElement> implements
+  GroupReduceFunction<Tuple2<GradoopId, EL>, Tuple2<GradoopId, Set<EL>>> {
 
   @Override
   public void reduce(Iterable<Tuple2<GradoopId, EL>> iterable,
-    Collector<Tuple2<GradoopId, ArrayList<EL>>> collector) throws Exception {
+    Collector<Tuple2<GradoopId, Set<EL>>> collector) throws Exception {
 
-    Boolean first = true;
+    boolean first = true;
     GradoopId graphId = null;
-    ArrayList<EL> elements = new ArrayList<>();
 
-    for (Tuple2<GradoopId, EL> pair : iterable) {
+    Set<EL> elements = Sets.newHashSet();
+
+    for (Tuple2<GradoopId, EL> elementPair : iterable) {
+
       if (first) {
+        graphId = elementPair.f0;
         first = false;
-        graphId = pair.f0;
       }
 
-      elements.add(pair.f1);
+      elements.add(elementPair.f1);
     }
 
     collector.collect(new Tuple2<>(graphId, elements));

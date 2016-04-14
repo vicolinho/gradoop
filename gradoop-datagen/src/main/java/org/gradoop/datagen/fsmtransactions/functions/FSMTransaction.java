@@ -1,14 +1,31 @@
+/*
+ * This file is part of Gradoop.
+ *
+ * Gradoop is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Gradoop is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.gradoop.datagen.fsmtransactions.functions;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
 import org.apache.flink.api.common.functions.CrossFunction;
-import org.gradoop.datagen.fsmtransactions.FSMTransactionGeneratorConfig;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.typeutils.ResultTypeQueryable;
 import org.apache.flink.api.java.typeutils.TupleTypeInfo;
 import org.apache.flink.api.java.typeutils.TypeExtractor;
+import org.gradoop.datagen.fsmtransactions.FSMTransactionGeneratorConfig;
 import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.api.EPGMEdgeFactory;
 import org.gradoop.model.api.EPGMGraphHead;
@@ -21,24 +38,55 @@ import org.gradoop.model.impl.id.GradoopIdSet;
 import org.gradoop.util.GradoopFlinkConfig;
 
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
 
+/**
+ * graphIndex >< graphCount => graphTransaction
+ *
+ * @param <G> graph head type
+ * @param <V> vertex type
+ * @param <E> edge type
+ */
 public class FSMTransaction
   <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge>
-  implements ResultTypeQueryable<GraphTransaction<G, V, E>>,
-  CrossFunction<Long, Long, GraphTransaction<G, V, E>> {
+  implements CrossFunction<Long, Long, GraphTransaction<G, V, E>>,
+  ResultTypeQueryable<GraphTransaction<G, V, E>> {
 
-  private final EPGMGraphHeadFactory<G> graphHeadFactory;
+  /**
+   * configuration
+   */
   private final FSMTransactionGeneratorConfig config;
+  /**
+   * graph head factory
+   */
+  private final EPGMGraphHeadFactory<G> graphHeadFactory;
+  /**
+   * vertex factory
+   */
   private final EPGMVertexFactory<V> vertexFactory;
+  /**
+   * edge factory
+   */
   private final EPGMEdgeFactory<E> edgeFactory;
+  /**
+   * vertex labels
+   */
   private final List<String> vertexLabels;
+  /**
+   * edge labels
+   */
   private final List<String> edgeLabels;
 
+  /**
+   * constructor
+   * @param gradoopFlinkConfig Gradoop configuration
+   * @param generatorConfig generator configuration
+   * @param vertexLabels vertex labels
+   * @param edgeLabels edge labels
+   */
   public FSMTransaction(
     GradoopFlinkConfig<G, V, E> gradoopFlinkConfig,
     FSMTransactionGeneratorConfig generatorConfig,
@@ -83,6 +131,14 @@ public class FSMTransaction
     return new GraphTransaction<>(graphHead, vertices, edges);
   }
 
+  /**
+   * creates edges
+   * @param vertexCount number of vertices
+   * @param edgeCount number of edges
+   * @param graphIds graph ids for the created vertices
+   * @param vertexIds vertex ids
+   * @param edges empty set of edges
+   */
   public void createEdges(int vertexCount, int edgeCount, GradoopIdSet graphIds,
     List<GradoopId> vertexIds, Set<E> edges) {
     Map<Integer, Collection<Integer>> sourceTargets =
@@ -91,7 +147,7 @@ public class FSMTransaction
     int edgeIndex = 0;
     int edgeLabelCount = edgeLabels.size();
 
-    for(Map.Entry<Integer, Collection<Integer>> entry :
+    for (Map.Entry<Integer, Collection<Integer>> entry :
       sourceTargets.entrySet()) {
 
       int sourceIndex = entry.getKey();
@@ -99,7 +155,7 @@ public class FSMTransaction
 
       Collection<Integer> targetIndices = entry.getValue();
 
-      for(int targetIndex : targetIndices) {
+      for (int targetIndex : targetIndices) {
         GradoopId targetId = vertexIds.get(targetIndex);
 
         String label = edgeLabels.get(edgeIndex % edgeLabelCount);
@@ -110,22 +166,35 @@ public class FSMTransaction
     }
   }
 
+  /**
+   * creates vertices
+   * @param vertexCount number of vertices to create
+   * @param graphIds graph ids for the created vertices
+   * @param vertexIds list of vertex ids
+   * @param vertices empty set of vertices
+   */
   public void createVertices(int vertexCount, GradoopIdSet graphIds,
     List<GradoopId> vertexIds, Set<V> vertices) {
-    for(int i = 0; i < vertexCount; i++) {
+    for (int i = 0; i < vertexCount; i++) {
       vertexIds.add(GradoopId.get());
     }
 
     int vertexIndex = 0;
     int vertexLabelCount = vertexLabels.size();
 
-    for(GradoopId vertexId : vertexIds) {
+    for (GradoopId vertexId : vertexIds) {
       String label = vertexLabels.get(vertexIndex % vertexLabelCount);
       vertices.add(vertexFactory.initVertex(vertexId, label, graphIds));
       vertexIndex++;
     }
   }
 
+  /**
+   * links source and target vertices by numeric index
+   * @param vertexCount number of vertices
+   * @param edgeCount number of edges
+   * @return index adjacency lists
+   */
   public Map<Integer, Collection<Integer>> getSourceTargetIndices(
     int vertexCount, int edgeCount) {
     Map<Integer, Collection<Integer>> sourceTargets =
@@ -138,12 +207,12 @@ public class FSMTransaction
     int maxIndex = vertexCount - 1;
     int maxConnectedIndex = 1;
 
-    for(int i = 1; i < edgeCount; i++) {
+    for (int i = 1; i < edgeCount; i++) {
 
       int sourceIndex;
       int targetIndex;
 
-      if(maxConnectedIndex < vertexCount) {
+      if (maxConnectedIndex < vertexCount) {
         sourceIndex = maxConnectedIndex;
         targetIndex = random.nextInt(maxConnectedIndex);
         maxConnectedIndex++;

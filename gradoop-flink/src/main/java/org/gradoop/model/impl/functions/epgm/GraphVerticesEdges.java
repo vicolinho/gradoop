@@ -15,42 +15,32 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.impl.algorithms.fsm.functions;
+package org.gradoop.model.impl.functions.epgm;
 
-import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.functions.JoinFunction;
+import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
+import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.api.EPGMVertex;
-import org.gradoop.model.api.EPGMVertexFactory;
 import org.gradoop.model.impl.id.GradoopId;
-import org.gradoop.model.impl.id.GradoopIdSet;
+
+import java.util.Set;
 
 /**
- * (graphId, vertexId, vertexLabel) => vertex
+ * (graphId, {vertex,..}) |><| (graphID, {edge,..})
+ * => (graphId, {vertex,..}, {edge,..})
  *
  * @param <V> vertex type
+ * @param <E> edge type
  */
-public class FullVertex<V extends EPGMVertex> implements
-  MapFunction<Tuple3<GradoopId, GradoopId, String>, V> {
-
-  /**
-   * vertex factory
-   */
-  private final EPGMVertexFactory<V> vertexFactory;
-
-  /**
-   * constructor
-   *
-   * @param vertexFactory vertex factory
-   */
-  public FullVertex(EPGMVertexFactory<V> vertexFactory) {
-    this.vertexFactory = vertexFactory;
-  }
+public class GraphVerticesEdges<V extends EPGMVertex, E extends EPGMEdge>
+  implements JoinFunction<Tuple2<GradoopId, Set<V>>, Tuple2<GradoopId, Set<E>>,
+  Tuple3<GradoopId, Set<V>, Set<E>>> {
 
   @Override
-  public V map(
-    Tuple3<GradoopId, GradoopId, String> gidVidLabel) throws Exception {
-    return vertexFactory.initVertex(
-      gidVidLabel.f1, gidVidLabel.f2,
-      GradoopIdSet.fromExisting(gidVidLabel.f0));
+  public Tuple3<GradoopId, Set<V>, Set<E>> join(
+    Tuple2<GradoopId, Set<V>> vertices, Tuple2<GradoopId, Set<E>> edges) throws
+    Exception {
+    return new Tuple3<>(vertices.f0, vertices.f1, edges.f1);
   }
 }

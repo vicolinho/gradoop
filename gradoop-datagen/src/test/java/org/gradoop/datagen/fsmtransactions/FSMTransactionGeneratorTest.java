@@ -9,19 +9,21 @@ import org.gradoop.model.impl.pojo.GraphHeadPojo;
 import org.gradoop.model.impl.pojo.VertexPojo;
 import org.junit.Test;
 
+import static org.junit.Assert.assertTrue;
+
 public class FSMTransactionGeneratorTest  extends GradoopFlinkTestBase {
 
   @Test
   public void testExecute() throws Exception {
     FSMTransactionGeneratorConfig generatorConfig =
       new FSMTransactionGeneratorConfig(
-        2000, // graph count
+        100, // graph count
         10,  // min vertex count
         20,  // max vertex count
-        20,  // min edge count
+        5, 1, 20,  // min edge count
         50, // max edge count
-        5,  // vertex label count
-        1,  // vertex label size
+        // vertex label count
+        // vertex label size
         5,  // edgeLabelCount,
         1   // edgeLabelSize
       );
@@ -44,10 +46,7 @@ public class FSMTransactionGeneratorTest  extends GradoopFlinkTestBase {
 
     System.out.println("FSM finished");
 
-    System.out.println(frequentSubgraphs.getGraphHeads().count());
-
-
-    //GradoopFlinkTestUtils.printCanonicalAdjacencyMatrix(frequentSubgraphs);
+    assertTrue(frequentSubgraphs.getGraphHeads().count() > 0);
   }
 
 }

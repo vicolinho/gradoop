@@ -19,6 +19,8 @@ package org.gradoop.model.impl.algorithms.fsm.pojos;
 
 /**
  * pojo representing an edge pattern
+ *
+ * @param <L> label type
  */
 public class EdgePattern<L extends Comparable<L>> {
 

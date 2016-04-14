@@ -1,3 +1,20 @@
+/*
+ * This file is part of Gradoop.
+ *
+ * Gradoop is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Gradoop is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.gradoop.datagen.fsmtransactions;
 
 import com.google.common.collect.Lists;
@@ -16,15 +33,30 @@ import scala.collection.mutable.StringBuilder;
 import java.util.List;
 import java.util.Random;
 
-
+/**
+ * creates a collection of random but connected graphs.
+ * @param <G> graph type
+ * @param <V> vertex type
+ * @param <E> edge type
+ */
 public class FSMTransactionGenerator
   <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge>
   implements CollectionGenerator<G, V, E> {
 
+  /**
+   * Gradoop configuration
+   */
+  private final GradoopFlinkConfig<G, V, E> gradoopConfig;
+  /**
+   * generator configuration
+   */
   private final FSMTransactionGeneratorConfig generatorConfig;
-  private final GradoopFlinkConfig<G, V, E>
-    gradoopConfig;
 
+  /**
+   * constructor
+   * @param gradoopConfig Gradoop configuration
+   * @param generatorConfig generator configuration
+   */
   public FSMTransactionGenerator(GradoopFlinkConfig<G, V, E> gradoopConfig,
     FSMTransactionGeneratorConfig generatorConfig) {
     this.gradoopConfig = gradoopConfig;
@@ -48,6 +80,10 @@ public class FSMTransactionGenerator
       .fromTransactions(transactions, gradoopConfig);
   }
 
+  /**
+   * creates a list of vertex labels
+   * @return list of labels
+   */
   private List<String> getVertexLabels() {
     int labelCount = generatorConfig.getVertexLabelCount();
     int startCharIndex = 65;
@@ -56,6 +92,10 @@ public class FSMTransactionGenerator
     return getLabels(labelCount, labelSize, startCharIndex);
   }
 
+  /**
+   * creates a list of edge labels
+   * @return list of labels
+   */
   private List<String> getEdgeLabels() {
     int labelCount = generatorConfig.getEdgeLabelCount();
     int startCharIndex = 97;
@@ -64,17 +104,24 @@ public class FSMTransactionGenerator
     return getLabels(labelCount, labelSize, startCharIndex);
   }
 
-  private List<String> getLabels(int labelCount, int labelSize,
-    int startCharIndex) {
-    List<String> labels =
-      Lists.newArrayListWithCapacity(labelCount);
+  /**
+   * creates a list of labels
+   * @param labelCount number of labels
+   * @param labelSize label length
+   * @param startCharIndex start character ASCII index
+   * @return list of labels
+   */
+  private List<String> getLabels(
+    int labelCount, int labelSize, int startCharIndex) {
+
+    List<String> labels = Lists.newArrayListWithCapacity(labelCount);
 
     Random random = new Random();
 
-    for(int i = 0; i < labelCount; i++) {
+    for (int i = 0; i < labelCount; i++) {
       StringBuilder builder = new StringBuilder();
 
-      for(int j = 0; j < labelSize; j++) {
+      for (int j = 0; j < labelSize; j++) {
         char c = (char) (startCharIndex + random.nextInt(26));
         builder.append(c);
       }

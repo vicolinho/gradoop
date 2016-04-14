@@ -56,8 +56,8 @@ import org.gradoop.model.impl.algorithms.fsm.functions.VertexLabelDecoder;
 import org.gradoop.model.impl.algorithms.fsm.functions.VertexLabelEncoder;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
-import org.gradoop.model.impl.functions.tuple.Project0And2Of3;
-import org.gradoop.model.impl.functions.tuple.Project0And3Of4;
+import org.gradoop.model.impl.functions.tuple.Project3To0And2;
+import org.gradoop.model.impl.functions.tuple.Project4To0And3;
 import org.gradoop.model.impl.functions.tuple.SwitchPair;
 import org.gradoop.model.impl.functions.tuple.Value0Of3;
 import org.gradoop.model.impl.id.GradoopId;
@@ -89,13 +89,18 @@ public class GSpan
    * Gradoop configuration
    */
   private GradoopFlinkConfig<G, V, E> gradoopConfig;
+  /**
+   * edge label dictionary
+   */
   private DataSet<Tuple2<String, Integer>> edgeLabelDictionary;
+  /**
+   * vertex label dictionary
+   */
   private DataSet<Tuple2<String, Integer>> vertexLabelDictionary;
 
   /**
    * constructor
    * @param fsmConfig frequent subgraph mining configuration
-   * 
    */
   public GSpan(FSMConfig fsmConfig) {
     this.fsmConfig = fsmConfig;
@@ -115,19 +120,18 @@ public class GSpan
       gradoopConfig.getExecutionEnvironment()
         .fromElements(SearchSpaceItem.createCollector());
 
-    IterativeDataSet<SearchSpaceItem> searchSpace =
-      searchSpaceItemDataSource
+    IterativeDataSet<SearchSpaceItem> searchSpace = searchSpaceItemDataSource
       .union(searchSpaceGraphs)
       .iterate(fsmConfig.getMaxEdgeCount());
 
     DataSet<Collection<CompressedDFSCode>> currentFrequentDfsCodes =
       searchSpace
       .flatMap(new ReportDfsCodes())  // report codes
-      .groupBy(0)                     // group by code
-      .sum(1)                         // count support
-      .filter(new Frequent())         // filter by min support
-      .withBroadcastSet(minSupport, Frequent.DS_NAME)
-      .reduceGroup(new ConcatFrequentDfsCodes());
+        .groupBy(0)                     // group by code
+        .sum(1)                         // count support
+        .filter(new Frequent())         // filter by min support
+        .withBroadcastSet(minSupport, Frequent.DS_NAME)
+        .reduceGroup(new ConcatFrequentDfsCodes());
 
     DataSet<SearchSpaceItem> growableSearchSpace = searchSpace
       .filter(new IsActive())
@@ -171,7 +175,7 @@ public class GSpan
 
     vertexLabelDictionary =
       gidVidLabel
-        .map(new Project0And2Of3<GradoopId, GradoopId, String>())
+        .map(new Project3To0And2<GradoopId, GradoopId, String>())
         .distinct()
         .map(new CountableLabel())
         .groupBy(0)
@@ -183,10 +187,10 @@ public class GSpan
     DataSet<Tuple2<GradoopId, ArrayList<Tuple2<GradoopId, Integer>>>>
       graphVertices = gidVidLabel
       .join(vertexLabelDictionary)
-      .where(2).equalTo(0)
-      .with(new VertexLabelEncoder())
-      .groupBy(0)
-      .reduceGroup(new GraphVertices());
+        .where(2).equalTo(0)
+        .with(new VertexLabelEncoder())
+        .groupBy(0)
+        .reduceGroup(new GraphVertices());
 
     // edges
 
@@ -196,7 +200,7 @@ public class GSpan
         .flatMap(new GraphIdSourceIdTargetIdLabel<E>());
 
     edgeLabelDictionary = gidSidTidLabel
-      .map(new Project0And3Of4<GradoopId, GradoopId, GradoopId, String>())
+      .map(new Project4To0And3<GradoopId, GradoopId, GradoopId, String>())
       .distinct()
       .map(new CountableLabel())
       .groupBy(0)
@@ -208,10 +212,10 @@ public class GSpan
     DataSet<Tuple2<GradoopId, ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>>
       graphEdges = gidSidTidLabel
       .join(edgeLabelDictionary)
-      .where(3).equalTo(0)
-      .with(new EdgeLabelEncoder())
-      .groupBy(0)
-      .reduceGroup(new GraphEdges());
+        .where(3).equalTo(0)
+        .with(new EdgeLabelEncoder())
+        .groupBy(0)
+        .reduceGroup(new GraphEdges());
 
     return graphVertices
       .join(graphEdges)
@@ -227,15 +231,14 @@ public class GSpan
   protected GraphCollection<G, V, E> decodeDfsCodes(
     DataSet<CompressedDFSCode> dfsCodes) {
 
-    DataSet
-      <Tuple3<G, ArrayList<Tuple2<GradoopId, Integer>>, ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>>
-      frequentSubgraphs =
+    DataSet<Tuple3<G, ArrayList<Tuple2<GradoopId, Integer>>,
+        ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>> frequentSubgraphs =
       dfsCodes
         .map(new DfsDecoder<>(gradoopConfig.getGraphHeadFactory()));
 
     DataSet<G> graphHeads = frequentSubgraphs
-      .map(new Value0Of3<G, 
-        ArrayList<Tuple2<GradoopId, Integer>>, ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>());
+      .map(new Value0Of3<G, ArrayList<Tuple2<GradoopId, Integer>>,
+        ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>());
 
     DataSet<V> vertices = frequentSubgraphs
       .flatMap(new ExpandVertices<G>())

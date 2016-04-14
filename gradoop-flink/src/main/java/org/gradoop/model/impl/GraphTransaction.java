@@ -1,24 +1,52 @@
+/*
+ * This file is part of Gradoop.
+ *
+ * Gradoop is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Gradoop is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package org.gradoop.model.impl;
 
-import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
-import org.gradoop.model.impl.id.GradoopId;
 
-import java.util.Collection;
 import java.util.Set;
 
+/**
+ * An encapsulated representation of a logical graph with duplicated elements.
+ *
+ * @param <G> EPGM graph head type
+ * @param <V> EPGM vertex type
+ * @param <E> EPGM edge type
+ */
 public class GraphTransaction
   <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge>
   extends Tuple3<G, Set<V>, Set<E>> {
 
+  /**
+   * default constructor
+   */
   public GraphTransaction() {
-
   }
 
+  /**
+   * valued constructor
+   * @param graphHead graph head
+   * @param vertices set of vertices
+   * @param edges set of edges
+   */
   public GraphTransaction(G graphHead, Set<V> vertices, Set<E> edges) {
     setGraphHead(graphHead);
     setVertices(vertices);
@@ -47,19 +75,5 @@ public class GraphTransaction
 
   public void  setEdges(Set<E> edges) {
     this.f2 = edges;
-  }
-
-  public Collection<E> getEdges(GradoopId vertexId) {
-    Collection<E> edges = Lists.newArrayList();
-
-    for(E edge : getEdges()) {
-      if(edge.getSourceId().equals(vertexId) ||
-        edge.getTargetId().equals(vertexId)) {
-
-        edges.add(edge);
-      }
-    }
-
-    return edges;
   }
 }

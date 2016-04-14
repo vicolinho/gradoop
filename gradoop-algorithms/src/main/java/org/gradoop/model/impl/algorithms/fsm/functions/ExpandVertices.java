@@ -27,22 +27,24 @@ import org.gradoop.model.impl.id.GradoopId;
 import java.util.ArrayList;
 
 /**
- * (GraphId, [Vertex,..], [Edge,..]) => [Vertex,..]
+ * (GraphHead, [vertex(),..], [edge(),..]) => (graphId, vertexId, vertexLabel)
  * @param <G> graph type
  */
 public class ExpandVertices<G extends EPGMGraphHead>
-  implements FlatMapFunction
-  <Tuple3<G, ArrayList<Tuple2<GradoopId, Integer>>,
-    ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>,
-    Tuple3<GradoopId, GradoopId, Integer>> {
+  implements FlatMapFunction<Tuple3<
+    G,
+    ArrayList<Tuple2<GradoopId, Integer>>,
+    ArrayList<Tuple3<GradoopId, GradoopId, Integer>>
+    >, Tuple3<GradoopId, GradoopId, Integer>> {
 
   @Override
   public void flatMap(
-    Tuple3<G, ArrayList<Tuple2<GradoopId, Integer>>,
-      ArrayList<Tuple3<GradoopId, GradoopId, Integer>>> triple,
-    Collector<Tuple3<GradoopId, GradoopId, Integer>> collector) throws Exception {
-    
-    for(Tuple2<GradoopId, Integer> vertex : triple.f1) {
+    Tuple3<G,
+      ArrayList<Tuple2<GradoopId, Integer>>,
+      ArrayList<Tuple3<GradoopId, GradoopId, Integer>>
+      > triple, Collector<Tuple3<GradoopId, GradoopId, Integer>> collector
+  ) throws Exception {
+    for (Tuple2<GradoopId, Integer> vertex : triple.f1) {
       collector.collect(new Tuple3<>(triple.f0.getId(), vertex.f0, vertex.f1));
     }
   }

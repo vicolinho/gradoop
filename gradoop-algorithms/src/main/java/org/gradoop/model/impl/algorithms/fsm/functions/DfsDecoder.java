@@ -27,11 +27,10 @@ import org.apache.flink.api.java.typeutils.TupleTypeInfo;
 import org.apache.flink.api.java.typeutils.TypeExtractor;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMGraphHeadFactory;
-import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.pojos.DFSCode;
 import org.gradoop.model.impl.algorithms.fsm.pojos.DFSStep;
+import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.id.GradoopId;
-import org.gradoop.model.impl.id.GradoopIdSet;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,10 +41,15 @@ import java.util.Map;
  * @param <G> graph type
  */
 public class DfsDecoder<G extends EPGMGraphHead> implements
-  ResultTypeQueryable
-  <Tuple3<G, ArrayList<Tuple2<GradoopId, Integer>>, ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>>,
-  MapFunction<CompressedDFSCode, 
-    Tuple3<G, ArrayList<Tuple2<GradoopId, Integer>>, ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>> {
+  ResultTypeQueryable<
+    Tuple3<
+      G,
+      ArrayList<Tuple2<GradoopId, Integer>>,
+      ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>>,
+  MapFunction<CompressedDFSCode,
+    Tuple3<G,
+      ArrayList<Tuple2<GradoopId, Integer>>,
+      ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>> {
 
   /**
    * graph head factory
@@ -57,11 +61,7 @@ public class DfsDecoder<G extends EPGMGraphHead> implements
    * @param graphHeadFactory graph head factory
    */
   public DfsDecoder(EPGMGraphHeadFactory<G> graphHeadFactory) {
-
     this.graphHeadFactory = graphHeadFactory;
-
-//    this.vertexFactory = vertexFactory;
-//    this.edgeFactory = edgeFactory;
   }
 
 
@@ -85,16 +85,14 @@ public class DfsDecoder<G extends EPGMGraphHead> implements
       vertices.add(new Tuple2<>(id, label));
       timeIdMap.put(time, id);
     }
-    
     return id;
   }
 
 
   @Override
-  public Tuple3<G, ArrayList<Tuple2<GradoopId, Integer>>, ArrayList<Tuple3<GradoopId, GradoopId, Integer>>> map(
+  public Tuple3<G, ArrayList<Tuple2<GradoopId, Integer>>,
+    ArrayList<Tuple3<GradoopId, GradoopId, Integer>>> map(
     CompressedDFSCode compressedDfsCode) throws  Exception {
-
-//    System.out.println("decode " + compressedDfsCode);
 
     DFSCode dfsCode = compressedDfsCode.getDfsCode();
 
@@ -102,8 +100,6 @@ public class DfsDecoder<G extends EPGMGraphHead> implements
 
     graphHead.setProperty("dfsCode", dfsCode.toString());
     graphHead.setProperty("support", compressedDfsCode.getSupport());
-
-    GradoopIdSet graphIds = GradoopIdSet.fromExisting(graphHead.getId());
 
     ArrayList<Tuple2<GradoopId, Integer>> vertices = Lists.newArrayList();
 
@@ -149,7 +145,8 @@ public class DfsDecoder<G extends EPGMGraphHead> implements
   }
 
   @Override
-  public TypeInformation<Tuple3<G, ArrayList<Tuple2<GradoopId, Integer>>, ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>>
+  public TypeInformation<Tuple3<G, ArrayList<Tuple2<GradoopId, Integer>>,
+    ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>>
   getProducedType() {
     return new TupleTypeInfo<>(
       TypeExtractor.getForClass(graphHeadFactory.getType()),
