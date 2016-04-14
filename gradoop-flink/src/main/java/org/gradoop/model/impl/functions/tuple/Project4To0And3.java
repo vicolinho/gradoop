@@ -15,27 +15,34 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.impl.algorithms.fsm.functions;
+package org.gradoop.model.impl.functions.tuple;
 
-import org.apache.flink.api.common.functions.JoinFunction;
+import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.java.functions.FunctionAnnotation;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple4;
-import org.gradoop.model.impl.id.GradoopId;
 
 /**
- * (graphId, sourceIdId, targetId, integerLabel) |><| (integerLabel,stringLabel)
- * => (graphId, sourceIdId, targetId, stringLabel)
+ * (f0,f1,f2,f3) => (f0,f3)
+ *
+ * @param <T0> f0 type
+ * @param <T1> f1 type
+ * @param <T2> f2 type
+ * @param <T3> f3 type
  */
-public class EdgeLabelDecoder
-  implements JoinFunction<Tuple4<GradoopId, GradoopId, GradoopId, Integer>,
-  Tuple2<Integer, String>, Tuple4<GradoopId, GradoopId, GradoopId, String>> {
-  @Override
-  public Tuple4<GradoopId, GradoopId, GradoopId, String> join(
-    Tuple4<GradoopId, GradoopId, GradoopId, Integer> gidSidTidLabel,
-    Tuple2<Integer, String> dictionaryEntry
-  ) throws Exception {
+@FunctionAnnotation.ForwardedFields("f0;f3->f1")
+public class Project4To0And3<T0, T1, T2, T3> implements
+  MapFunction<Tuple4<T0, T1, T2, T3>, Tuple2<T0,  T3>> {
 
-    return new Tuple4<>(gidSidTidLabel.f0,
-      gidSidTidLabel.f1, gidSidTidLabel.f2, dictionaryEntry.f1);
+  /**
+   * Reduce instantiations
+   */
+  private final Tuple2<T0, T3> reuseTuple = new Tuple2<>();
+
+  @Override
+  public Tuple2<T0, T3> map(Tuple4<T0, T1, T2, T3> quadruple) throws
+    Exception {
+    reuseTuple.setFields(quadruple.f0, quadruple.f3);
+    return reuseTuple;
   }
 }

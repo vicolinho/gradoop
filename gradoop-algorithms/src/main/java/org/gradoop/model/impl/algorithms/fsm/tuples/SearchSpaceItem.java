@@ -31,7 +31,6 @@ import java.util.Map;
 /**
  * instances either represent graphs OR the collector for frequent DFS codes
  *
- * f0 : graphId                           collectorId
  * f0 : false                             true
  * f1 :              true, if active
  * f2 : map vertexId - adjacency list     empty map
@@ -85,7 +84,7 @@ public class SearchSpaceItem extends Tuple5<
       getAdjacencyLists().clear();
     }
   }
-  
+
   public Boolean isCollector() {
     return this.f0;
   }
@@ -126,7 +125,8 @@ public class SearchSpaceItem extends Tuple5<
     return this.f4;
   }
 
-  public void setFrequentDfsCodes(ArrayList<CompressedDFSCode> collectedDfsCodes) {
+  public void setFrequentDfsCodes(
+    ArrayList<CompressedDFSCode> collectedDfsCodes) {
     this.f4 = collectedDfsCodes;
   }
 
@@ -176,7 +176,7 @@ public class SearchSpaceItem extends Tuple5<
    * @param codeEmbeddings embeddings of DFS codes
    * @return a search space item representing a graph transaction
    */
-  public static <L extends Comparable<L>> SearchSpaceItem createForGraph(
+  public static SearchSpaceItem createForGraph(
     ArrayList<AdjacencyList> adjacencyLists,
     HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings) {
 
@@ -188,7 +188,7 @@ public class SearchSpaceItem extends Tuple5<
    * factory method
    * @return a search space item representing the collector
    */
-  public static <L extends Comparable<L>> SearchSpaceItem createCollector() {
+  public static SearchSpaceItem createCollector() {
     ArrayList<AdjacencyList> adjacencyLists = new ArrayList<>();
     HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings = new
       HashMap<>();

@@ -234,18 +234,18 @@ public class GradoopIdSet implements Iterable<GradoopId>,
   public boolean equals(Object other) {
     Boolean equals = this == other;
 
-    if(!equals && other != null && other instanceof GradoopIdSet ) {
+    if (!equals && other != null && other instanceof GradoopIdSet) {
 
       GradoopIdSet otherSet = (GradoopIdSet) other;
 
-      if(this.size() == otherSet.size()) {
+      if (this.size() == otherSet.size()) {
 
         Iterator<GradoopId> ownSteps = this.iterator();
         Iterator<GradoopId> otherSteps = otherSet.iterator();
 
         equals = true;
 
-        while(otherSteps.hasNext() && equals) {
+        while (otherSteps.hasNext() && equals) {
           equals = ownSteps.next().equals(otherSteps.next());
         }
       }
@@ -258,11 +258,12 @@ public class GradoopIdSet implements Iterable<GradoopId>,
   public int hashCode() {
     HashCodeBuilder builder = new HashCodeBuilder();
 
-    for(GradoopId gradoopId : identifiers) {
+    for (GradoopId gradoopId : identifiers) {
       builder.append(gradoopId.hashCode());
     }
 
-    return builder.hashCode();  }
+    return builder.hashCode();
+  }
 
   @Override
   public String toString() {

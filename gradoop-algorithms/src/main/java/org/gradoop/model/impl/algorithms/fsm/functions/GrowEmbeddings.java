@@ -50,7 +50,10 @@ public class GrowEmbeddings extends
   implements CrossFunction
   <SearchSpaceItem, Collection<CompressedDFSCode>, SearchSpaceItem> {
 
-  public static String DS_NAME = "compressedDfsCodes";
+  /**
+   * broadcasting dataset name
+   */
+  public static final String DS_NAME = "compressedDfsCodes";
   /**
    * DFS code comparator
    */
@@ -59,6 +62,9 @@ public class GrowEmbeddings extends
    * edge pattern comparator
    */
   private final EdgePatternComparator<Integer> edgePatternComparator;
+  /**
+   * frequent DFS codes
+   */
   private Collection<CompressedDFSCode> frequentDfsCodes;
 
   /**
@@ -78,7 +84,7 @@ public class GrowEmbeddings extends
     List<Collection<CompressedDFSCode>> broadcast = getRuntimeContext()
       .getBroadcastVariable(DS_NAME);
 
-    if(broadcast.isEmpty()) {
+    if (broadcast.isEmpty()) {
       this.frequentDfsCodes = null;
     } else {
       this.frequentDfsCodes = broadcast.get(0);
@@ -104,7 +110,7 @@ public class GrowEmbeddings extends
 //    System.out.println(searchSpaceItem.getGraphId() +
 //      " was triggered to grow / collect");
 
-    if(frequentDfsCodes != null) {
+    if (frequentDfsCodes != null) {
       if (searchSpaceItem.isCollector()) {
         searchSpaceItem = updateCollector(searchSpaceItem, frequentDfsCodes);
       } else {
@@ -228,7 +234,7 @@ public class GrowEmbeddings extends
                     Set<Integer> mappedEdgeIndices = Sets
                       .newHashSet(embedding.getEdgeTimes());
 
-                    for(Integer mappedEdgeIndex : mappedEdgeIndices) {
+                    for (Integer mappedEdgeIndex : mappedEdgeIndices) {
                       builder.append(mappedEdgeIndex);
                     }
                     Integer coverage = builder.hashCode();
@@ -274,7 +280,7 @@ public class GrowEmbeddings extends
     graph.setCodeEmbeddings(compressedCodeEmbeddings);
     graph.setActive(! compressedCodeEmbeddings.isEmpty());
 
-//    if(compressedCodeEmbeddings.isEmpty()) {
+//    if (compressedCodeEmbeddings.isEmpty()) {
 //      System.out.println(graph.getGraphId() + " grew nothing");
 //    }
 

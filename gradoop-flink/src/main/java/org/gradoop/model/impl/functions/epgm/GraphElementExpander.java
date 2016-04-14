@@ -15,52 +15,27 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.impl.algorithms.fsm.tuples;
+package org.gradoop.model.impl.functions.epgm;
 
+import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.gradoop.model.api.EPGMLabeled;
+import org.apache.flink.util.Collector;
+import org.gradoop.model.api.EPGMGraphElement;
 import org.gradoop.model.impl.id.GradoopId;
 
 /**
- *  Minimal tuple-representation of an labeled vertex
- *  f0 : vertex id
- *  f1 : vertex label
+ * element => (graphId, element)
+ *
+ * @param <EL> graph element type
  */
-public class LabeledVertex<L extends Comparable<L>> extends Tuple2<GradoopId, L>
-  implements GenericLabeled<L> {
-
-  /**
-   * default constructor
-   */
-  public LabeledVertex() {
-  }
-
-  /**
-   * valued constructor
-   * @param id vertex id
-   * @param label vertex label
-   */
-  public LabeledVertex(GradoopId id, L label) {
-    this.f0 = id;
-    this.f1 = label;
-  }
-
-  public GradoopId getId() {
-    return this.f0;
-  }
-
-  public void setId(GradoopId id) {
-    this.f0 = id;
-  }
-
+public class GraphElementExpander<EL extends EPGMGraphElement> implements
+  FlatMapFunction<EL, Tuple2<GradoopId, EL>> {
   @Override
-  public L getLabel() {
-    return this.f1;
-  }
+  public void flatMap(EL el, Collector<Tuple2<GradoopId, EL>> collector) throws
+    Exception {
 
-  @Override
-  public void setLabel(L label) {
-    this.f1 = label;
+    for (GradoopId graphId : el.getGraphIds()) {
+      collector.collect(new Tuple2<>(graphId, el));
+    }
   }
-
 }

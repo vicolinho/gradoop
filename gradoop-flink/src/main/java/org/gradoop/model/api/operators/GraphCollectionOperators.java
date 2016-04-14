@@ -280,5 +280,5 @@ public interface GraphCollectionOperators
    * Transforms a graph collection into a set of graph transactions.
    * @return graph transactions representing the graph collection
    */
-  DataSet<GraphTransaction<G,V,E>> toTransactions();
+  DataSet<GraphTransaction<G, V, E>> toTransactions();
 }

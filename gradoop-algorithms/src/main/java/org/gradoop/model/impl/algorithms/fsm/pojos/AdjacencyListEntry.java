@@ -20,7 +20,7 @@ package org.gradoop.model.impl.algorithms.fsm.pojos;
 /**
  * pojo representing an adjacency list entry
  */
-public class AdjacencyListEntry{
+public class AdjacencyListEntry {
   /**
    * true, if edge is outgoing
    */
@@ -96,9 +96,8 @@ public class AdjacencyListEntry{
    * @param targetLabel target vertex label
    * @return entry
    */
-  public static AdjacencyListEntry newOutgoing
-    (Integer edgeId,
-    Integer edgeLabel, Integer targetId, Integer targetLabel) {
+  public static AdjacencyListEntry newOutgoing(
+    Integer edgeId, Integer edgeLabel, Integer targetId, Integer targetLabel) {
 
     return new AdjacencyListEntry(
       true, edgeId, edgeLabel, targetId, targetLabel);

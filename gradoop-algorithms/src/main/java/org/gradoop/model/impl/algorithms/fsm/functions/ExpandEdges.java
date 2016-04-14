@@ -37,7 +37,6 @@ public class ExpandEdges<G extends EPGMGraphHead>
     ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>,
     Tuple4<GradoopId, GradoopId, GradoopId, Integer>> {
 
-
   @Override
   public void flatMap(
     Tuple3<G, ArrayList<Tuple2<GradoopId, Integer>>,
@@ -45,7 +44,7 @@ public class ExpandEdges<G extends EPGMGraphHead>
     Collector<Tuple4<GradoopId, GradoopId, GradoopId, Integer>> collector
   ) throws Exception {
 
-    for(Tuple3<GradoopId, GradoopId, Integer> edge : graph.f2) {
+    for (Tuple3<GradoopId, GradoopId, Integer> edge : graph.f2) {
       collector.collect(new Tuple4<>(
         graph.f0.getId(), edge.f0, edge.f1, edge.f2));
     }

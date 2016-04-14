@@ -49,8 +49,8 @@ public class SearchSpace
   @Override
   public SearchSpaceItem join(
     Tuple2<GradoopId, ArrayList<Tuple2<GradoopId, Integer>>> graphVertices,
-    Tuple2<GradoopId, ArrayList<Tuple3<GradoopId, GradoopId, Integer>>> graphEdges) throws
-    Exception {
+    Tuple2<GradoopId, ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>
+      graphEdges) throws Exception {
 
     HashMap<GradoopId, Integer> vertexIndexMap = new HashMap<>();
     ArrayList<AdjacencyList> adjacencyLists = new ArrayList<>();
@@ -71,22 +71,21 @@ public class SearchSpace
     for (Tuple3<GradoopId, GradoopId, Integer> edge : graphEdges.f1) {
 
       Integer sourceIndex = vertexIndexMap.get(edge.f0);
-      
+
       // source vertex has frequent label
-      if(sourceIndex != null) {
+      if (sourceIndex != null) {
 
         Integer targetIndex = vertexIndexMap.get(edge.f1);
 
         // target vertex has frequent label
-        if(targetIndex != null) {
-          
+        if (targetIndex != null) {
           Integer sourceLabel = adjacencyLists
             .get(sourceIndex).getVertexLabel();
           Integer targetLabel = adjacencyLists
             .get(targetIndex).getVertexLabel();
 
           Integer edgeLabel = edge.f2;
-          
+
           // update adjacency lists
 
           adjacencyLists.get(sourceIndex).getEntries().add(AdjacencyListEntry

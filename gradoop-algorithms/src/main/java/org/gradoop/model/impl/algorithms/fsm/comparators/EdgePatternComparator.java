@@ -26,6 +26,8 @@ import java.util.Comparator;
 /**
  * Comparator for edge patterns considering vertex labels, edge label and
  * direction (if directed == true).
+ *
+* @param <L> label type
  */
 public class EdgePatternComparator<L extends Comparable<L>>
   implements Comparator<EdgePattern<L>>, Serializable {

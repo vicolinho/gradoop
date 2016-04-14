@@ -31,10 +31,10 @@ import org.gradoop.model.api.operators.GraphCollectionOperators;
 import org.gradoop.model.api.operators.ReducibleBinaryGraphToGraphOperator;
 import org.gradoop.model.api.operators.UnaryCollectionToCollectionOperator;
 import org.gradoop.model.api.operators.UnaryCollectionToGraphOperator;
-import org.gradoop.model.impl.functions.GraphTransactionTriple;
-import org.gradoop.model.impl.functions.GraphElementExpander;
-import org.gradoop.model.impl.functions.GraphElementSet;
-import org.gradoop.model.impl.functions.GraphVerticesEdges;
+import org.gradoop.model.impl.functions.epgm.GraphTransactionTriple;
+import org.gradoop.model.impl.functions.epgm.GraphElementExpander;
+import org.gradoop.model.impl.functions.epgm.GraphElementSet;
+import org.gradoop.model.impl.functions.epgm.GraphVerticesEdges;
 import org.gradoop.model.impl.functions.bool.Not;
 import org.gradoop.model.impl.functions.bool.Or;
 import org.gradoop.model.impl.functions.bool.True;
@@ -203,9 +203,19 @@ public class GraphCollection
     );
   }
 
+  /**
+   * Creates a graph collection from a graph transaction dataset.
+   *
+   * @param transactions transaction dataset
+   * @param config Gradoop config
+   * @param <G>           EPGM graph type
+   * @param <V>           EPGM vertex type
+   * @param <E>           EPGM edge type
+   * @return graph collection
+   */
   public static
   <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge>
-  GraphCollection<G,V,E> fromTransactions(
+  GraphCollection<G, V, E> fromTransactions(
     DataSet<GraphTransaction<G, V, E>> transactions,
     GradoopFlinkConfig<G, V, E> config) {
 
