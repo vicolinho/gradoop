@@ -21,6 +21,7 @@ import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
+import org.apache.flink.core.fs.FileSystem;
 import org.apache.flink.graph.Edge;
 import org.apache.flink.graph.Graph;
 import org.apache.flink.graph.Vertex;
@@ -252,13 +253,24 @@ public abstract class GraphBase
   public void writeAsJson(String vertexFile, String edgeFile,
     String graphFile) throws Exception {
 
-    getVertices().writeAsFormattedText(vertexFile,
+    writeAsJson(
+      vertexFile, edgeFile, graphFile, FileSystem.WriteMode.NO_OVERWRITE);
+  }
+
+  /**
+   * {@inheritDoc}
+   */
+  @Override
+  public void writeAsJson(String vertexFile, String edgeFile, String graphFile,
+    FileSystem.WriteMode writeMode) throws Exception {
+
+    getVertices().writeAsFormattedText(vertexFile, writeMode,
       new JsonWriter.VertexTextFormatter<V>());
 
-    getEdges().writeAsFormattedText(edgeFile,
+    getEdges().writeAsFormattedText(edgeFile, writeMode,
       new JsonWriter.EdgeTextFormatter<E>());
 
-    graphHeads.writeAsFormattedText(graphFile,
+    graphHeads.writeAsFormattedText(graphFile, writeMode,
       new JsonWriter.GraphTextFormatter<G>());
 
     getConfig().getExecutionEnvironment().execute();
