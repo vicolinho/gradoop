@@ -107,9 +107,6 @@ public class GrowEmbeddings extends
   @Override
   public SearchSpaceItem map(SearchSpaceItem searchSpaceItem) throws Exception {
 
-//    System.out.println(searchSpaceItem.getGraphId() +
-//      " was triggered to grow / collect");
-
     if (frequentDfsCodes != null) {
       if (searchSpaceItem.isCollector()) {
         searchSpaceItem = updateCollector(searchSpaceItem, frequentDfsCodes);
@@ -258,12 +255,6 @@ public class GrowEmbeddings extends
                     } else {
                       embeddings.add(embedding);
                     }
-
-//                    System.out.println(
-//                      graph.getGraphId() +
-//                        " grew " + parentDfsCode +
-//                        " to " + dfsCode
-//                    );
                   }
                 }
               }
@@ -279,10 +270,6 @@ public class GrowEmbeddings extends
 
     graph.setCodeEmbeddings(compressedCodeEmbeddings);
     graph.setActive(! compressedCodeEmbeddings.isEmpty());
-
-//    if (compressedCodeEmbeddings.isEmpty()) {
-//      System.out.println(graph.getGraphId() + " grew nothing");
-//    }
 
     return graph;
   }

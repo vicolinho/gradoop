@@ -52,6 +52,7 @@
                                     <include>org.gradoop:*</include>
                                     <include>org.s1ck:gdl</include>
                                     <include>org.codehaus.jettison:jettison</include>
+                                    <include>com.google.guava:guava</include>
                                 </includes>
                             </artifactSet>
                         </configuration>
@@ -63,6 +64,11 @@
 
     <dependencies>
         <!-- Compile dependencies -->
+
+        <dependency>
+            <groupId>org.gradoop</groupId>
+            <artifactId>gradoop-datagen</artifactId>
+        </dependency>
 
         <dependency>
             <groupId>org.gradoop</groupId>

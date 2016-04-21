@@ -17,7 +17,11 @@
 
 package org.gradoop.datagen.fsmtransactions;
 
+import com.google.common.collect.Lists;
+import org.apache.commons.lang3.StringUtils;
+
 import java.io.Serializable;
+import java.util.Collection;
 
 /**
  * configuration for transactional FSM data generators
@@ -26,47 +30,47 @@ public class FSMTransactionGeneratorConfig implements Serializable {
   /**
    * number of graphs to generate
    */
-  private final int graphCount;
+  private int graphCount;
   /**
    * minimum number of vertices
    */
-  private final int minVertexCount;
+  private int minVertexCount;
   /**
    * maximum number of vertices
    */
-  private final int maxVertexCount;
+  private int maxVertexCount;
   /**
    * distribution of vertex count among graphs
    */
-  private final int vertexDistribution;
+  private int vertexDistribution;
   /**
    * number of distinct vertex labels
    */
-  private final int vertexLabelCount;
+  private int vertexLabelCount;
   /**
    * length of vertex labels
    */
-  private final int vertexLabelSize;
+  private int vertexLabelSize;
   /**
    * minimum number of edges
    */
-  private final int minEdgeCount;
+  private int minEdgeCount;
   /**
    * maximum number of edges
    */
-  private final int maxEdgeCount;
+  private int maxEdgeCount;
   /**
    * distribution of vertex count among graphs
    */
-  private final int edgeDistribution;
+  private int edgeDistribution;
   /**
    * number of distinct edge labels
    */
-  private final int edgeLabelCount;
+  private int edgeLabelCount;
   /**
    * length of edge labels
    */
-  private final int edgeLabelSize;
+  private int edgeLabelSize;
 
   /**
    * constructor
@@ -170,6 +174,67 @@ public class FSMTransactionGeneratorConfig implements Serializable {
     return edgeLabelSize;
   }
 
+  public void setGraphCount(int graphCount) {
+    this.graphCount = graphCount;
+  }
+
+  public void setMinVertexCount(int minVertexCount) {
+    this.minVertexCount = minVertexCount;
+  }
+
+  public void setMaxVertexCount(int maxVertexCount) {
+    this.maxVertexCount = maxVertexCount;
+  }
+
+  public void setVertexDistribution(int vertexDistribution) {
+    this.vertexDistribution = vertexDistribution;
+  }
+
+  public void setVertexLabelCount(int vertexLabelCount) {
+    this.vertexLabelCount = vertexLabelCount;
+  }
+
+  public void setVertexLabelSize(int vertexLabelSize) {
+    this.vertexLabelSize = vertexLabelSize;
+  }
+
+  public void setMinEdgeCount(int minEdgeCount) {
+    this.minEdgeCount = minEdgeCount;
+  }
+
+  public void setMaxEdgeCount(int maxEdgeCount) {
+    this.maxEdgeCount = maxEdgeCount;
+  }
+
+  public void setEdgeDistribution(int edgeDistribution) {
+    this.edgeDistribution = edgeDistribution;
+  }
+
+  public void setEdgeLabelCount(int edgeLabelCount) {
+    this.edgeLabelCount = edgeLabelCount;
+  }
+
+  public void setEdgeLabelSize(int edgeLabelSize) {
+    this.edgeLabelSize = edgeLabelSize;
+  }
+
+  @Override
+  public String toString() {
+    Collection parameters = Lists.newArrayList(
+      graphCount,
+      minVertexCount,
+      maxVertexCount,
+      minEdgeCount,
+      maxEdgeCount,
+      vertexLabelCount,
+      edgeLabelCount,
+      vertexLabelSize,
+      edgeLabelSize
+    );
+
+    return StringUtils.join(parameters, ";");
+  }
+
   /**
    * distribution enum
    */
@@ -177,6 +242,8 @@ public class FSMTransactionGeneratorConfig implements Serializable {
     /**
      * linear distribution f(x) = ax + b
      */
-    public static final int LINEAR = 0;
+    public static int LINEAR = 0;
   }
+
+
 }
