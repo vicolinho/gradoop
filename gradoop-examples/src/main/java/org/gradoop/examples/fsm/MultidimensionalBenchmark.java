@@ -10,7 +10,7 @@ import org.gradoop.datagen.fsmtransactions.FSMTransactionGeneratorConfig;
 import org.gradoop.model.impl.EPGMDatabase;
 import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.algorithms.fsm.FSMConfig;
-import org.gradoop.model.impl.algorithms.fsm.GSpan;
+import org.gradoop.model.impl.algorithms.fsm.IterativeGSpan;
 import org.gradoop.model.impl.pojo.EdgePojo;
 import org.gradoop.model.impl.pojo.GraphHeadPojo;
 import org.gradoop.model.impl.pojo.VertexPojo;
@@ -113,8 +113,8 @@ public class MultidimensionalBenchmark implements ProgramDescription {
           .fromJsonFile(vertexFile, edgeFile, graphFile, gradoopConf)
           .getCollection();
 
-        GSpan<GraphHeadPojo, VertexPojo, EdgePojo> miner =
-        new GSpan<>(FSMConfig.forDirectedMultigraph(threshold));
+        IterativeGSpan<GraphHeadPojo, VertexPojo, EdgePojo> miner =
+        new IterativeGSpan<>(FSMConfig.forDirectedMultigraph(threshold));
 
         long patCount = miner.execute(input).getGraphHeads().count();
 
