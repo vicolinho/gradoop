@@ -18,8 +18,6 @@
 package org.gradoop.model.impl.algorithms.fsm;
 
 import org.apache.flink.api.java.DataSet;
-import org.apache.flink.api.java.operators.DataSource;
-import org.apache.flink.api.java.operators.IterativeDataSet;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.api.java.tuple.Tuple4;
@@ -28,14 +26,12 @@ import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
 import org.gradoop.model.api.operators.UnaryCollectionToCollectionOperator;
 import org.gradoop.model.impl.GraphCollection;
-import org.gradoop.model.impl.algorithms.fsm.functions.ConcatFrequentDfsCodes;
 import org.gradoop.model.impl.algorithms.fsm.functions.CountableLabel;
 import org.gradoop.model.impl.algorithms.fsm.functions.DfsDecoder;
 import org.gradoop.model.impl.algorithms.fsm.functions.Dictionary;
 import org.gradoop.model.impl.algorithms.fsm.functions.EdgeLabelDecoder;
 import org.gradoop.model.impl.algorithms.fsm.functions.EdgeLabelEncoder;
 import org.gradoop.model.impl.algorithms.fsm.functions.ExpandEdges;
-import org.gradoop.model.impl.algorithms.fsm.functions.ExpandFrequentDfsCodes;
 import org.gradoop.model.impl.algorithms.fsm.functions.ExpandVertices;
 import org.gradoop.model.impl.algorithms.fsm.functions.Frequent;
 import org.gradoop.model.impl.algorithms.fsm.functions.FrequentLabel;
@@ -46,16 +42,10 @@ import org.gradoop.model.impl.algorithms.fsm.functions
   .GraphIdSourceIdTargetIdLabel;
 import org.gradoop.model.impl.algorithms.fsm.functions.GraphIdVertexIdLabel;
 import org.gradoop.model.impl.algorithms.fsm.functions.GraphVertices;
-import org.gradoop.model.impl.algorithms.fsm.functions.GrowEmbeddings;
-import org.gradoop.model.impl.algorithms.fsm.functions.IsActive;
-import org.gradoop.model.impl.algorithms.fsm.functions.IsCollector;
 import org.gradoop.model.impl.algorithms.fsm.functions.MinSupport;
-import org.gradoop.model.impl.algorithms.fsm.functions.ReportDfsCodes;
-import org.gradoop.model.impl.algorithms.fsm.functions.SearchSpace;
 import org.gradoop.model.impl.algorithms.fsm.functions.VertexLabelDecoder;
 import org.gradoop.model.impl.algorithms.fsm.functions.VertexLabelEncoder;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
 import org.gradoop.model.impl.functions.tuple.Project3To0And2;
 import org.gradoop.model.impl.functions.tuple.Project4To0And3;
 import org.gradoop.model.impl.functions.tuple.SwitchPair;
@@ -65,15 +55,16 @@ import org.gradoop.model.impl.operators.count.Count;
 import org.gradoop.util.GradoopFlinkConfig;
 
 import java.util.ArrayList;
-import java.util.Collection;
 
 /**
- * The gSpan frequent subgraph mining algorithm implemented as Gradoop Operator
+ * abstract superclass of different implementations of the gSpan frequent
+ * subgraph mining algorithm as Gradoop operator
+ *
  * @param <G> graph type
  * @param <V> vertex type
  * @param <E> edge type
  */
-public class GSpan
+public abstract class AbstractGSpan
   <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge>
   implements UnaryCollectionToCollectionOperator<G, V, E> {
 
@@ -84,143 +75,26 @@ public class GSpan
   /**
    * frequent subgraph mining configuration
    */
-  private final FSMConfig fsmConfig;
+  protected final FSMConfig fsmConfig;
   /**
    * Gradoop configuration
    */
-  private GradoopFlinkConfig<G, V, E> gradoopConfig;
+  protected GradoopFlinkConfig<G, V, E> gradoopConfig;
   /**
    * edge label dictionary
    */
-  private DataSet<Tuple2<String, Integer>> edgeLabelDictionary;
+  protected DataSet<Tuple2<String, Integer>> edgeLabelDictionary;
   /**
    * vertex label dictionary
    */
-  private DataSet<Tuple2<String, Integer>> vertexLabelDictionary;
+  protected DataSet<Tuple2<String, Integer>> vertexLabelDictionary;
 
   /**
    * constructor
    * @param fsmConfig frequent subgraph mining configuration
    */
-  public GSpan(FSMConfig fsmConfig) {
+  public AbstractGSpan(FSMConfig fsmConfig) {
     this.fsmConfig = fsmConfig;
-  }
-
-  @Override
-  public GraphCollection<G, V, E>
-  execute(GraphCollection<G, V, E> collection)  {
-    setGradoopConfig(collection);
-    setMinSupport(collection);
-
-    // pre processing
-    DataSet<SearchSpaceItem> searchSpaceGraphs =
-      getSearchSpaceGraphs(collection);
-
-    DataSource<SearchSpaceItem> searchSpaceItemDataSource =
-      gradoopConfig.getExecutionEnvironment()
-        .fromElements(SearchSpaceItem.createCollector());
-
-    IterativeDataSet<SearchSpaceItem> searchSpace = searchSpaceItemDataSource
-      .union(searchSpaceGraphs)
-      .iterate(fsmConfig.getMaxEdgeCount());
-
-    DataSet<Collection<CompressedDFSCode>> currentFrequentDfsCodes =
-      searchSpace
-      .flatMap(new ReportDfsCodes())  // report codes
-        .groupBy(0)                     // group by code
-        .sum(1)                         // count support
-        .filter(new Frequent())         // filter by min support
-        .withBroadcastSet(minSupport, Frequent.DS_NAME)
-        .reduceGroup(new ConcatFrequentDfsCodes());
-
-    DataSet<SearchSpaceItem> growableSearchSpace = searchSpace
-      .filter(new IsActive())
-      .map(new GrowEmbeddings(fsmConfig))
-      .withBroadcastSet(currentFrequentDfsCodes, GrowEmbeddings.DS_NAME);
-
-    DataSet<SearchSpaceItem> collector = searchSpace
-      .closeWith(growableSearchSpace, currentFrequentDfsCodes);
-
-    DataSet<CompressedDFSCode> allFrequentDfsCodes = collector
-      .filter(new IsCollector())              // get only collector
-      .flatMap(new ExpandFrequentDfsCodes()); // expand array to data set
-
-    // post processing
-    return decodeDfsCodes(allFrequentDfsCodes);
-  }
-
-  private void setGradoopConfig(GraphCollection<G, V, E> collection) {
-    this.gradoopConfig = collection.getConfig();
-  }
-
-  protected void setMinSupport(GraphCollection<G, V, E> collection) {
-    this.minSupport = Count
-      .count(collection.getGraphHeads())
-      .map(new MinSupport(fsmConfig.getThreshold()));
-  }
-
-  /**
-   * turns a graph collection into a data set of search space items
-   * @param collection input collection
-   * @return search space
-   */
-  private DataSet<SearchSpaceItem> getSearchSpaceGraphs(
-    GraphCollection<G, V, E> collection) {
-
-    // vertices
-
-    DataSet<Tuple3<GradoopId, GradoopId, String>> gidVidLabel = collection
-      .getVertices()
-      .flatMap(new GraphIdVertexIdLabel<V>());
-
-    vertexLabelDictionary =
-      gidVidLabel
-        .map(new Project3To0And2<GradoopId, GradoopId, String>())
-        .distinct()
-        .map(new CountableLabel())
-        .groupBy(0)
-        .sum(1)
-        .filter(new FrequentLabel())
-        .withBroadcastSet(minSupport, Frequent.DS_NAME)
-        .reduceGroup(new Dictionary());
-
-    DataSet<Tuple2<GradoopId, ArrayList<Tuple2<GradoopId, Integer>>>>
-      graphVertices = gidVidLabel
-      .join(vertexLabelDictionary)
-        .where(2).equalTo(0)
-        .with(new VertexLabelEncoder())
-        .groupBy(0)
-        .reduceGroup(new GraphVertices());
-
-    // edges
-
-    DataSet<Tuple4<GradoopId, GradoopId, GradoopId, String>> gidSidTidLabel =
-      collection
-        .getEdges()
-        .flatMap(new GraphIdSourceIdTargetIdLabel<E>());
-
-    edgeLabelDictionary = gidSidTidLabel
-      .map(new Project4To0And3<GradoopId, GradoopId, GradoopId, String>())
-      .distinct()
-      .map(new CountableLabel())
-      .groupBy(0)
-      .sum(1)
-      .filter(new FrequentLabel())
-      .withBroadcastSet(minSupport, Frequent.DS_NAME)
-      .reduceGroup(new Dictionary());
-
-    DataSet<Tuple2<GradoopId, ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>>
-      graphEdges = gidSidTidLabel
-      .join(edgeLabelDictionary)
-        .where(3).equalTo(0)
-        .with(new EdgeLabelEncoder())
-        .groupBy(0)
-        .reduceGroup(new GraphEdges());
-
-    return graphVertices
-      .join(graphEdges)
-      .where(0).equalTo(0)
-      .with(new SearchSpace());
   }
 
   /**
@@ -262,6 +136,84 @@ public class GSpan
       graphHeads, vertices, edges, gradoopConfig);
   }
 
+  /**
+   * determines edge label frequency and prunes by minimum support;
+   * label frequencies are used to relabel edges where higher support leads
+   * to a smaller numeric label;
+   *
+   * @param collection input graph collection
+   * @return pruned and relabelled edges
+   */
+  protected DataSet
+    <Tuple2<GradoopId, ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>>
+  pruneAndRelabelEdges(GraphCollection<G, V, E> collection) {
+
+    DataSet<Tuple4<GradoopId, GradoopId, GradoopId, String>> gidSidTidLabel =
+      collection
+        .getEdges()
+        .flatMap(new GraphIdSourceIdTargetIdLabel<E>());
+
+    edgeLabelDictionary = gidSidTidLabel
+      .map(new Project4To0And3<GradoopId, GradoopId, GradoopId, String>())
+      .distinct()
+      .map(new CountableLabel())
+      .groupBy(0)
+      .sum(1)
+      .filter(new FrequentLabel())
+      .withBroadcastSet(minSupport, Frequent.DS_NAME)
+      .reduceGroup(new Dictionary());
+
+    return gidSidTidLabel
+      .join(edgeLabelDictionary)
+      .where(3).equalTo(0)
+      .with(new EdgeLabelEncoder())
+      .groupBy(0)
+      .reduceGroup(new GraphEdges());
+  }
+
+  /**
+   * determines vertex label frequency and prunes by minimum support;
+   * label frequencies are used to relabel vertices where higher support leads
+   * to a smaller numeric label;
+   *
+   * @param collection input graph collection
+   * @return pruned and relabelled edges
+   */
+  protected DataSet<Tuple2<GradoopId, ArrayList<Tuple2<GradoopId, Integer>>>>
+  pruneAndRelabelVertices( GraphCollection<G, V, E> collection) {
+
+    DataSet<Tuple3<GradoopId, GradoopId, String>> gidVidLabel = collection
+      .getVertices()
+      .flatMap(new GraphIdVertexIdLabel<V>());
+
+    vertexLabelDictionary =
+      gidVidLabel
+        .map(new Project3To0And2<GradoopId, GradoopId, String>())
+        .distinct()
+        .map(new CountableLabel())
+        .groupBy(0)
+        .sum(1)
+        .filter(new FrequentLabel())
+        .withBroadcastSet(minSupport, Frequent.DS_NAME)
+        .reduceGroup(new Dictionary());
+
+    return gidVidLabel
+      .join(vertexLabelDictionary)
+      .where(2).equalTo(0)
+      .with(new VertexLabelEncoder())
+      .groupBy(0)
+      .reduceGroup(new GraphVertices());
+  }
+
+  protected void setGradoopConfig(GraphCollection<G, V, E> collection) {
+    this.gradoopConfig = collection.getConfig();
+  }
+
+  protected void setMinSupport(GraphCollection<G, V, E> collection) {
+    this.minSupport = Count
+      .count(collection.getGraphHeads())
+      .map(new MinSupport(fsmConfig.getThreshold()));
+  }
 
   @Override
   public String getName() {

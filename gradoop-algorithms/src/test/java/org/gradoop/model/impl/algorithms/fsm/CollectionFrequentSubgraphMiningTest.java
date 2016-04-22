@@ -2,7 +2,6 @@ package org.gradoop.model.impl.algorithms.fsm;
 
 import org.gradoop.model.GradoopFlinkTestBase;
 import org.gradoop.model.api.operators.UnaryCollectionToCollectionOperator;
-import org.gradoop.model.impl.GradoopFlinkTestUtils;
 import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.pojo.EdgePojo;
 import org.gradoop.model.impl.pojo.GraphHeadPojo;
@@ -201,11 +200,13 @@ public class CollectionFrequentSubgraphMiningTest extends GradoopFlinkTestBase {
 
     FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.7f);
 
-//    miners.add(
-//      new GSpanDeltaIteration<GraphHeadPojo, VertexPojo, EdgePojo>(fsmConfig));
-
     miners.add(
-      new GSpan<GraphHeadPojo, VertexPojo, EdgePojo>(fsmConfig));
+      new IterativeGSpan<GraphHeadPojo, VertexPojo, EdgePojo>(
+        fsmConfig));
+
+//    miners.add(
+//      new FilterRefinementGSpan<GraphHeadPojo, VertexPojo, EdgePojo>(
+//        fsmConfig));
 
     return miners;
   }
