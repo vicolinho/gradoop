@@ -18,6 +18,7 @@
 package org.gradoop.model.impl.algorithms.fsm;
 
 import org.apache.flink.api.java.DataSet;
+import org.apache.flink.api.java.operators.JoinOperator;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.api.java.tuple.Tuple4;
@@ -37,11 +38,9 @@ import org.gradoop.model.impl.algorithms.fsm.functions.Frequent;
 import org.gradoop.model.impl.algorithms.fsm.functions.FrequentLabel;
 import org.gradoop.model.impl.algorithms.fsm.functions.FullEdge;
 import org.gradoop.model.impl.algorithms.fsm.functions.FullVertex;
-import org.gradoop.model.impl.algorithms.fsm.functions.GraphEdges;
 import org.gradoop.model.impl.algorithms.fsm.functions
   .GraphIdSourceIdTargetIdLabel;
 import org.gradoop.model.impl.algorithms.fsm.functions.GraphIdVertexIdLabel;
-import org.gradoop.model.impl.algorithms.fsm.functions.GraphVertices;
 import org.gradoop.model.impl.algorithms.fsm.functions.MinSupport;
 import org.gradoop.model.impl.algorithms.fsm.functions.VertexLabelDecoder;
 import org.gradoop.model.impl.algorithms.fsm.functions.VertexLabelEncoder;
@@ -137,6 +136,37 @@ public abstract class AbstractGSpan
   }
 
   /**
+   * determines vertex label frequency and prunes by minimum support;
+   * label frequencies are used to relabel vertices where higher support leads
+   * to a smaller numeric label;
+   *
+   * @param collection input graph collection
+   * @return pruned and relabelled edges
+   */
+  protected DataSet<Tuple3<GradoopId, GradoopId, Integer>>
+  pruneAndRelabelVertices( GraphCollection<G, V, E> collection) {
+
+    DataSet<Tuple3<GradoopId, GradoopId, String>> gidVidLabel = collection
+      .getVertices()
+      .flatMap(new GraphIdVertexIdLabel<V>());
+
+    vertexLabelDictionary =
+      gidVidLabel
+        .map(new Project3To0And2<GradoopId, GradoopId, String>())
+        .distinct()
+        .map(new CountableLabel())
+        .groupBy(0)
+        .sum(1)
+        .filter(new FrequentLabel())
+        .withBroadcastSet(minSupport, Frequent.DS_NAME)
+        .reduceGroup(new Dictionary());
+
+    return gidVidLabel.join(vertexLabelDictionary)
+      .where(2).equalTo(0)
+      .with(new VertexLabelEncoder());
+  }
+
+  /**
    * determines edge label frequency and prunes by minimum support;
    * label frequencies are used to relabel edges where higher support leads
    * to a smaller numeric label;
@@ -144,8 +174,7 @@ public abstract class AbstractGSpan
    * @param collection input graph collection
    * @return pruned and relabelled edges
    */
-  protected DataSet
-    <Tuple2<GradoopId, ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>>
+  protected DataSet<Tuple4<GradoopId, GradoopId, GradoopId, Integer>>
   pruneAndRelabelEdges(GraphCollection<G, V, E> collection) {
 
     DataSet<Tuple4<GradoopId, GradoopId, GradoopId, String>> gidSidTidLabel =
@@ -164,45 +193,8 @@ public abstract class AbstractGSpan
       .reduceGroup(new Dictionary());
 
     return gidSidTidLabel
-      .join(edgeLabelDictionary)
-      .where(3).equalTo(0)
-      .with(new EdgeLabelEncoder())
-      .groupBy(0)
-      .reduceGroup(new GraphEdges());
-  }
-
-  /**
-   * determines vertex label frequency and prunes by minimum support;
-   * label frequencies are used to relabel vertices where higher support leads
-   * to a smaller numeric label;
-   *
-   * @param collection input graph collection
-   * @return pruned and relabelled edges
-   */
-  protected DataSet<Tuple2<GradoopId, ArrayList<Tuple2<GradoopId, Integer>>>>
-  pruneAndRelabelVertices( GraphCollection<G, V, E> collection) {
-
-    DataSet<Tuple3<GradoopId, GradoopId, String>> gidVidLabel = collection
-      .getVertices()
-      .flatMap(new GraphIdVertexIdLabel<V>());
-
-    vertexLabelDictionary =
-      gidVidLabel
-        .map(new Project3To0And2<GradoopId, GradoopId, String>())
-        .distinct()
-        .map(new CountableLabel())
-        .groupBy(0)
-        .sum(1)
-        .filter(new FrequentLabel())
-        .withBroadcastSet(minSupport, Frequent.DS_NAME)
-        .reduceGroup(new Dictionary());
-
-    return gidVidLabel
-      .join(vertexLabelDictionary)
-      .where(2).equalTo(0)
-      .with(new VertexLabelEncoder())
-      .groupBy(0)
-      .reduceGroup(new GraphVertices());
+      .join(edgeLabelDictionary).where(3).equalTo(0)
+      .with(new EdgeLabelEncoder());
   }
 
   protected void setGradoopConfig(GraphCollection<G, V, E> collection) {

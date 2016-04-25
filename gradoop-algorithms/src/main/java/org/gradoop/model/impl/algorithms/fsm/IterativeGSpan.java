@@ -28,11 +28,13 @@ import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.algorithms.fsm.functions.ConcatFrequentDfsCodes;
 import org.gradoop.model.impl.algorithms.fsm.functions.ExpandFrequentDfsCodes;
 import org.gradoop.model.impl.algorithms.fsm.functions.Frequent;
+import org.gradoop.model.impl.algorithms.fsm.functions.GraphEdges;
+import org.gradoop.model.impl.algorithms.fsm.functions.GraphVertices;
 import org.gradoop.model.impl.algorithms.fsm.functions.GrowEmbeddings;
 import org.gradoop.model.impl.algorithms.fsm.functions.IsActive;
 import org.gradoop.model.impl.algorithms.fsm.functions.IsCollector;
 import org.gradoop.model.impl.algorithms.fsm.functions.ReportDfsCodes;
-import org.gradoop.model.impl.algorithms.fsm.functions.SearchSpace;
+import org.gradoop.model.impl.algorithms.fsm.functions.IterativeSearchSpace;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
 import org.gradoop.model.impl.id.GradoopId;
@@ -117,17 +119,21 @@ public class IterativeGSpan
     GraphCollection<G, V, E> collection) {
     // pre processing
     DataSet<Tuple2<GradoopId, ArrayList<Tuple2<GradoopId, Integer>>>>
-      graphVertices = pruneAndRelabelVertices(collection);
+      graphVertices = pruneAndRelabelVertices(collection)
+      .groupBy(0)
+      .reduceGroup(new GraphVertices());
 
     DataSet<Tuple2<GradoopId, ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>>
-      graphEdges = pruneAndRelabelEdges(collection);
+      graphEdges = pruneAndRelabelEdges(collection)
+      .groupBy(0)
+      .reduceGroup(new GraphEdges());
 
     // create graph transactions
     DataSet<SearchSpaceItem> searchSpaceGraphs =
       graphVertices
         .join(graphEdges)
         .where(0).equalTo(0)
-        .with(new SearchSpace());
+        .with(new IterativeSearchSpace());
 
     // create collector
     DataSet<SearchSpaceItem> collector =

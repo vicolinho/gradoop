@@ -39,11 +39,10 @@ import java.util.Set;
 /**
  * (GraphId, [Vertex,..]) |><| (GraphId, [Edge,..]) => Graph
  */
-public class SearchSpace
+public class IterativeSearchSpace
   implements JoinFunction<
   Tuple2<GradoopId, ArrayList<Tuple2<GradoopId, Integer>>>,
-  Tuple2<GradoopId, ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>,
-  SearchSpaceItem
+  Tuple2<GradoopId, ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>, SearchSpaceItem
   > {
 
   @Override

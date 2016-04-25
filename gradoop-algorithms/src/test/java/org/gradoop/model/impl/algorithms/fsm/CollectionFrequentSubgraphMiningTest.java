@@ -201,12 +201,10 @@ public class CollectionFrequentSubgraphMiningTest extends GradoopFlinkTestBase {
     FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.7f);
 
     miners.add(
-      new IterativeGSpan<GraphHeadPojo, VertexPojo, EdgePojo>(
-        fsmConfig));
-
-//    miners.add(
-//      new FilterRefinementGSpan<GraphHeadPojo, VertexPojo, EdgePojo>(
-//        fsmConfig));
+      new IterativeGSpan<GraphHeadPojo, VertexPojo, EdgePojo>(fsmConfig));
+//
+    miners.add(
+      new FilterAndRefineGSpan<GraphHeadPojo, VertexPojo, EdgePojo>(fsmConfig));
 
     return miners;
   }
