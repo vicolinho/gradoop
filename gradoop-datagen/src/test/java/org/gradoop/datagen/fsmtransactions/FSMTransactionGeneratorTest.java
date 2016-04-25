@@ -3,6 +3,7 @@ package org.gradoop.datagen.fsmtransactions;
 import org.gradoop.model.GradoopFlinkTestBase;
 import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.algorithms.fsm.FSMConfig;
+import org.gradoop.model.impl.algorithms.fsm.FilterAndRefineGSpan;
 import org.gradoop.model.impl.algorithms.fsm.IterativeGSpan;
 import org.gradoop.model.impl.pojo.EdgePojo;
 import org.gradoop.model.impl.pojo.GraphHeadPojo;
@@ -31,7 +32,7 @@ public class FSMTransactionGeneratorTest  extends GradoopFlinkTestBase {
     FSMTransactionGenerator<GraphHeadPojo, VertexPojo, EdgePojo> gen =
       new FSMTransactionGenerator<>(getConfig(), generatorConfig);
 
-    IterativeGSpan gSpan = new IterativeGSpan<>(
+    FilterAndRefineGSpan gSpan = new FilterAndRefineGSpan(
       FSMConfig.forDirectedMultigraph(0.3f));
 
     System.out.println("Data started");
