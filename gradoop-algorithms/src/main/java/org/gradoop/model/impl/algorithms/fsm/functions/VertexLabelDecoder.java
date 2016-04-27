@@ -17,24 +17,37 @@
 
 package org.gradoop.model.impl.algorithms.fsm.functions;
 
-import org.apache.flink.api.common.functions.JoinFunction;
-import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.api.java.tuple.Tuple3;
+import org.apache.flink.configuration.Configuration;
 import org.gradoop.model.impl.id.GradoopId;
+
+import java.util.ArrayList;
 
 /**
  * (graphId, vertexId, integerLabel) |><| (integerLabel, stringLabel)
  * => (graphId, vertexId, stringLabel)
  */
 public class VertexLabelDecoder
-  implements JoinFunction<Tuple3<GradoopId, GradoopId, Integer>,
-  Tuple2<Integer, String>, Tuple3<GradoopId, GradoopId, String>> {
-  @Override
-  public Tuple3<GradoopId, GradoopId, String> join(
-    Tuple3<GradoopId, GradoopId, Integer> gidVidLabel,
-    Tuple2<Integer, String> dictionaryEntry
-  ) throws Exception {
+  extends RichMapFunction<Tuple3<GradoopId, GradoopId, Integer>,
+  Tuple3<GradoopId, GradoopId, String>> {
 
-    return new Tuple3<>(gidVidLabel.f0, gidVidLabel.f1, dictionaryEntry.f1);
+  public static final String DICTIONARY = "dictionary";
+  private ArrayList<String> dictionary;
+
+  @Override
+  public void open(Configuration parameters) throws Exception {
+    super.open(parameters);
+    this.dictionary = getRuntimeContext()
+      .<ArrayList<String>>getBroadcastVariable(DICTIONARY)
+      .get(0);
   }
+
+  @Override
+  public Tuple3<GradoopId, GradoopId, String> map(
+    Tuple3<GradoopId, GradoopId, Integer> vertex) throws
+    Exception {
+    return new Tuple3<>(vertex.f0, vertex.f1, dictionary.get(vertex.f2));
+  }
+
 }

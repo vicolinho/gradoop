@@ -18,42 +18,33 @@
 package org.gradoop.model.impl.algorithms.fsm;
 
 import org.apache.flink.api.java.DataSet;
-import org.apache.flink.api.java.operators.JoinOperator;
+import org.apache.flink.api.java.operators.FlatMapOperator;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.api.java.tuple.Tuple4;
+import org.apache.flink.api.java.tuple.Tuple5;
 import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
 import org.gradoop.model.api.operators.UnaryCollectionToCollectionOperator;
 import org.gradoop.model.impl.GraphCollection;
-import org.gradoop.model.impl.algorithms.fsm.functions.CountableLabel;
-import org.gradoop.model.impl.algorithms.fsm.functions.DfsDecoder;
-import org.gradoop.model.impl.algorithms.fsm.functions.Dictionary;
-import org.gradoop.model.impl.algorithms.fsm.functions.EdgeLabelDecoder;
-import org.gradoop.model.impl.algorithms.fsm.functions.EdgeLabelEncoder;
-import org.gradoop.model.impl.algorithms.fsm.functions.ExpandEdges;
-import org.gradoop.model.impl.algorithms.fsm.functions.ExpandVertices;
-import org.gradoop.model.impl.algorithms.fsm.functions.Frequent;
-import org.gradoop.model.impl.algorithms.fsm.functions.FrequentLabel;
-import org.gradoop.model.impl.algorithms.fsm.functions.FullEdge;
-import org.gradoop.model.impl.algorithms.fsm.functions.FullVertex;
-import org.gradoop.model.impl.algorithms.fsm.functions
-  .GraphIdSourceIdTargetIdLabel;
-import org.gradoop.model.impl.algorithms.fsm.functions.GraphIdVertexIdLabel;
-import org.gradoop.model.impl.algorithms.fsm.functions.MinSupport;
-import org.gradoop.model.impl.algorithms.fsm.functions.VertexLabelDecoder;
-import org.gradoop.model.impl.algorithms.fsm.functions.VertexLabelEncoder;
+import org.gradoop.model.impl.algorithms.fsm.functions.*;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
+import org.gradoop.model.impl.algorithms.fsm.tuples.FatEdge;
+import org.gradoop.model.impl.algorithms.fsm.tuples.VertexIdLabel;
 import org.gradoop.model.impl.functions.tuple.Project3To0And2;
+import org.gradoop.model.impl.functions.tuple.Project3To1And2;
 import org.gradoop.model.impl.functions.tuple.Project4To0And3;
-import org.gradoop.model.impl.functions.tuple.SwitchPair;
+import org.gradoop.model.impl.functions.tuple.Value0Of2;
 import org.gradoop.model.impl.functions.tuple.Value0Of3;
+import org.gradoop.model.impl.functions.tuple.Value1Of2;
 import org.gradoop.model.impl.id.GradoopId;
+import org.gradoop.model.impl.id.GradoopIdSet;
 import org.gradoop.model.impl.operators.count.Count;
 import org.gradoop.util.GradoopFlinkConfig;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * abstract superclass of different implementations of the gSpan frequent
@@ -82,11 +73,11 @@ public abstract class AbstractGSpan
   /**
    * edge label dictionary
    */
-  protected DataSet<Tuple2<String, Integer>> edgeLabelDictionary;
+  protected DataSet<ArrayList<String>> edgeLabelDictionary;
   /**
    * vertex label dictionary
    */
-  protected DataSet<Tuple2<String, Integer>> vertexLabelDictionary;
+  protected DataSet<ArrayList<String>> vertexLabelDictionary;
 
   /**
    * constructor
@@ -115,19 +106,15 @@ public abstract class AbstractGSpan
 
     DataSet<V> vertices = frequentSubgraphs
       .flatMap(new ExpandVertices<G>())
-      .join(vertexLabelDictionary
-        .map(new SwitchPair<String, Integer>()))
-      .where(2).equalTo(0)
-      .with(new VertexLabelDecoder())
+      .map(new VertexLabelDecoder())
+      .withBroadcastSet(vertexLabelDictionary, ExpandVertices.DICTIONARY)
       .map(new FullVertex<>(gradoopConfig.getVertexFactory()))
       .returns(gradoopConfig.getVertexFactory().getType());
 
     DataSet<E> edges = frequentSubgraphs
       .flatMap(new ExpandEdges<G>())
-      .join(edgeLabelDictionary
-        .map(new SwitchPair<String, Integer>()))
-      .where(3).equalTo(0)
-      .with(new EdgeLabelDecoder())
+      .map(new EdgeLabelDecoder())
+      .withBroadcastSet(edgeLabelDictionary, EdgeLabelDecoder.DICTIONARY)
       .map(new FullEdge<>(gradoopConfig.getEdgeFactory()))
       .returns(gradoopConfig.getEdgeFactory().getType());
 
@@ -143,16 +130,13 @@ public abstract class AbstractGSpan
    * @param collection input graph collection
    * @return pruned and relabelled edges
    */
-  protected DataSet<Tuple3<GradoopId, GradoopId, Integer>>
+  protected DataSet<VertexIdLabel>
   pruneAndRelabelVertices( GraphCollection<G, V, E> collection) {
 
-    DataSet<Tuple3<GradoopId, GradoopId, String>> gidVidLabel = collection
-      .getVertices()
-      .flatMap(new GraphIdVertexIdLabel<V>());
+    DataSet<V> vertices = collection.getVertices();
 
-    vertexLabelDictionary =
-      gidVidLabel
-        .map(new Project3To0And2<GradoopId, GradoopId, String>())
+    vertexLabelDictionary = vertices
+        .flatMap(new GraphIdVertexIdLabel<V>())
         .distinct()
         .map(new CountableLabel())
         .groupBy(0)
@@ -161,9 +145,13 @@ public abstract class AbstractGSpan
         .withBroadcastSet(minSupport, Frequent.DS_NAME)
         .reduceGroup(new Dictionary());
 
-    return gidVidLabel.join(vertexLabelDictionary)
-      .where(2).equalTo(0)
-      .with(new VertexLabelEncoder());
+    DataSet<HashMap<String, Integer>> stringIntDictionary =
+      vertexLabelDictionary
+        .map(new FlipDictionary());
+
+    return vertices
+      .flatMap(new VertexLabelEncoder<V>())
+      .withBroadcastSet(stringIntDictionary, VertexLabelEncoder.DICTIONARY);
   }
 
   /**
@@ -174,8 +162,10 @@ public abstract class AbstractGSpan
    * @param collection input graph collection
    * @return pruned and relabelled edges
    */
-  protected DataSet<Tuple4<GradoopId, GradoopId, GradoopId, Integer>>
-  pruneAndRelabelEdges(GraphCollection<G, V, E> collection) {
+  protected DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>>
+  pruneAndRelabelEdges(
+
+    GraphCollection<G, V, E> collection) {
 
     DataSet<Tuple4<GradoopId, GradoopId, GradoopId, String>> gidSidTidLabel =
       collection
@@ -192,9 +182,20 @@ public abstract class AbstractGSpan
       .withBroadcastSet(minSupport, Frequent.DS_NAME)
       .reduceGroup(new Dictionary());
 
+    DataSet<HashMap<String, Integer>> stringIntDictionary = edgeLabelDictionary
+      .map(new FlipDictionary());
+
+    DataSet<VertexIdLabel> prunedVertices = pruneAndRelabelVertices(collection);
+
     return gidSidTidLabel
-      .join(edgeLabelDictionary).where(3).equalTo(0)
-      .with(new EdgeLabelEncoder());
+      .flatMap(new EdgeLabelEncoder())
+      .withBroadcastSet(stringIntDictionary, EdgeLabelEncoder.DICTIONARY)
+      .join(prunedVertices)
+      .where(1).equalTo(0)
+      .with(new AppendSourceLabel())
+      .join(prunedVertices)
+      .where(2).equalTo(0)
+      .with(new AppendTargetLabel());
   }
 
   protected void setGradoopConfig(GraphCollection<G, V, E> collection) {

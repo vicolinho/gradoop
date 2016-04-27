@@ -37,6 +37,8 @@ public class ExpandVertices<G extends EPGMGraphHead>
     ArrayList<Tuple3<GradoopId, GradoopId, Integer>>
     >, Tuple3<GradoopId, GradoopId, Integer>> {
 
+  public static final String DICTIONARY = "dictionary";
+
   @Override
   public void flatMap(
     Tuple3<G,

@@ -17,25 +17,41 @@
 
 package org.gradoop.model.impl.algorithms.fsm.functions;
 
+import org.apache.flink.api.common.functions.FlatJoinFunction;
 import org.apache.flink.api.common.functions.JoinFunction;
+import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple4;
+import org.apache.flink.configuration.Configuration;
+import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.id.GradoopId;
+
+import java.util.ArrayList;
 
 /**
  * (graphId, sourceIdId, targetId, integerLabel) |><| (integerLabel,stringLabel)
  * => (graphId, sourceIdId, targetId, stringLabel)
  */
-public class EdgeLabelDecoder
-  implements JoinFunction<Tuple4<GradoopId, GradoopId, GradoopId, Integer>,
-  Tuple2<Integer, String>, Tuple4<GradoopId, GradoopId, GradoopId, String>> {
-  @Override
-  public Tuple4<GradoopId, GradoopId, GradoopId, String> join(
-    Tuple4<GradoopId, GradoopId, GradoopId, Integer> gidSidTidLabel,
-    Tuple2<Integer, String> dictionaryEntry
-  ) throws Exception {
+public class EdgeLabelDecoder extends RichMapFunction<
+  Tuple4<GradoopId, GradoopId, GradoopId, Integer>,
+    Tuple4<GradoopId, GradoopId, GradoopId, String>> {
 
-    return new Tuple4<>(gidSidTidLabel.f0,
-      gidSidTidLabel.f1, gidSidTidLabel.f2, dictionaryEntry.f1);
+  public static final String DICTIONARY = "dictionary";
+  private ArrayList<String> dictionary;
+
+  @Override
+  public void open(Configuration parameters) throws Exception {
+    super.open(parameters);
+    this.dictionary = getRuntimeContext()
+      .<ArrayList<String>>getBroadcastVariable(DICTIONARY)
+      .get(0);
+  }
+
+  @Override
+  public Tuple4<GradoopId, GradoopId, GradoopId, String> map(
+    Tuple4<GradoopId, GradoopId, GradoopId, Integer> edge) throws
+    Exception {
+
+    return new Tuple4<>(edge.f0, edge.f1, edge.f2, dictionary.get(edge.f3));
   }
 }

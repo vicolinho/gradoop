@@ -22,6 +22,7 @@ import org.apache.flink.api.common.functions.GroupReduceFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.util.Collector;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
@@ -32,11 +33,11 @@ import java.util.List;
  * (label, support),.. => (label, 1), (label, 2)
  */
 public class Dictionary implements
-  GroupReduceFunction<Tuple2<String, Integer>, Tuple2<String, Integer>> {
+  GroupReduceFunction<Tuple2<String, Integer>, ArrayList<String>> {
 
   @Override
   public void reduce(Iterable<Tuple2<String, Integer>> iterable,
-    Collector<Tuple2<String, Integer>> collector) throws Exception {
+    Collector<ArrayList<String>> collector) throws Exception {
 
     List<Tuple2<String, Integer>> list = Lists.newArrayList();
 
@@ -61,8 +62,13 @@ public class Dictionary implements
       }
     });
 
-    for (int i = 0; i < list.size(); i++) {
-      collector.collect(new Tuple2<>(list.get(i).f0, i));
+    ArrayList<String> intStringDictionary = Lists
+      .newArrayListWithCapacity(list.size());
+
+    for (Tuple2<String, Integer> entry : list) {
+      intStringDictionary.add(entry.f0);
     }
+
+    collector.collect(intStringDictionary);
   }
 }
