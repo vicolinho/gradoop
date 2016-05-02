@@ -19,28 +19,17 @@ package org.gradoop.model.impl.algorithms.fsm;
 
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.operators.IterativeDataSet;
-import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
 import org.gradoop.model.impl.GraphCollection;
-import org.gradoop.model.impl.algorithms.fsm.functions.ConcatFrequentDfsCodes;
-import org.gradoop.model.impl.algorithms.fsm.functions.ExpandFrequentDfsCodes;
-import org.gradoop.model.impl.algorithms.fsm.functions.Frequent;
-import org.gradoop.model.impl.algorithms.fsm.functions.GraphEdges;
-import org.gradoop.model.impl.algorithms.fsm.functions.GraphVertices;
-import org.gradoop.model.impl.algorithms.fsm.functions.GrowEmbeddings;
-import org.gradoop.model.impl.algorithms.fsm.functions.IsActive;
-import org.gradoop.model.impl.algorithms.fsm.functions.IsCollector;
-import org.gradoop.model.impl.algorithms.fsm.functions.ReportDfsCodes;
-import org.gradoop.model.impl.algorithms.fsm.functions.IterativeSearchSpace;
+import org.gradoop.model.impl.algorithms.fsm.functions.*;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.tuples.FatEdge;
 import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
 import org.gradoop.model.impl.id.GradoopId;
 
-import java.util.ArrayList;
 import java.util.Collection;
 
 /**
@@ -64,12 +53,28 @@ public class IterativeGSpan
   @Override
   public GraphCollection<G, V, E>
   execute(GraphCollection<G, V, E> collection)  {
+    setConfigAndMinSupport(collection);
 
-    setGradoopConfig(collection);
-    setMinSupport(collection);
+    // pre processing
+    DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> fatEdges =
+      pruneAndRelabelEdges(collection);
 
-    // prepare search space
-    DataSet<SearchSpaceItem> searchSpace = prepareSearchSpace(collection);
+    // determine 1-edge frequent DFS codes
+    DataSet<CompressedDFSCode> allFrequentDfsCodes =
+      find1EdgeFrequentDfsCodes(fatEdges);
+
+    // filter edges by 1-edge DFS code
+    fatEdges = filterFatEdges(fatEdges, allFrequentDfsCodes);
+
+    // create graph transactions from remaining edges
+    DataSet<SearchSpaceItem> searchSpaceGraphs = fatEdges
+      .groupBy(0)
+      .reduceGroup(new IterativeSearchSpace());
+
+    // create search space with collector
+    DataSet<SearchSpaceItem> searchSpace = searchSpaceGraphs
+      .union(gradoopConfig.getExecutionEnvironment()
+        .fromElements(SearchSpaceItem.createCollector()));
 
     // ITERATION HEAD
     IterativeDataSet<SearchSpaceItem> workSet = searchSpace
@@ -77,7 +82,8 @@ public class IterativeGSpan
 
     // ITERATION BODY
     DataSet<SearchSpaceItem> activeWorkSet = workSet
-      .filter(new IsActive());
+      .map(new PatternGrowth(fsmConfig))  // grow supported embeddings
+      .filter(new IsActive());            // active, if at least one growth
 
     // determine frequent DFS codes
     DataSet<Collection<CompressedDFSCode>> iterationFrequentDfsCodes =
@@ -90,53 +96,24 @@ public class IterativeGSpan
         .reduceGroup(new ConcatFrequentDfsCodes());
 
     // grow children of frequent DFS codes
-    DataSet<SearchSpaceItem> nextWorkSet =
-      activeWorkSet
-        .map(new GrowEmbeddings(fsmConfig))
-        .withBroadcastSet(iterationFrequentDfsCodes, GrowEmbeddings.DS_NAME);
+    DataSet<SearchSpaceItem> nextWorkSet = activeWorkSet
+      .map(new SupportPruning())    // drop embeddings of infrequent codes
+      .withBroadcastSet(iterationFrequentDfsCodes, SupportPruning.DS_NAME)
+      .filter(new IsActive());      // active, if at least one frequent code
 
     // ITERATION FOOTER
     DataSet<SearchSpaceItem> collector = workSet
+      // terminate, if no new frequent DFS codes
       .closeWith(nextWorkSet, iterationFrequentDfsCodes);
 
     // post processing
-    DataSet<CompressedDFSCode> allFrequentDfsCodes = collector
-      .filter(new IsCollector())              // get only collector
-      .flatMap(new ExpandFrequentDfsCodes()); // expand array to data set
+    allFrequentDfsCodes = collector
+      .filter(new IsCollector())             // get only collector
+      .flatMap(new ExpandFrequentDfsCodes()) // expand array to data set
+      .union(allFrequentDfsCodes);
 
     return decodeDfsCodes(allFrequentDfsCodes);
   }
-
-  /**
-   * dictionary creation, label encoding and vertex/edge pruning by label
-   * frequency are triggered here; then, remaining vertices and edges are
-   * combined to graph transactions; finally, the collector is added as a
-   * special search space item
-   *
-   * @param collection input collection
-   * @return search space
-   */
-  private DataSet<SearchSpaceItem> prepareSearchSpace(
-    GraphCollection<G, V, E> collection) {
-    // pre processing
-
-    DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> graphEdges =
-      pruneAndRelabelEdges(collection);
-
-    // create graph transactions
-    DataSet<SearchSpaceItem> searchSpaceGraphs = graphEdges
-      .groupBy(0)
-      .reduceGroup(new IterativeSearchSpace());
-
-    // create collector
-    DataSet<SearchSpaceItem> collector =
-      gradoopConfig.getExecutionEnvironment()
-        .fromElements(SearchSpaceItem.createCollector());
-
-    return collector
-      .union(searchSpaceGraphs);
-  }
-
 
   @Override
   public String getName() {

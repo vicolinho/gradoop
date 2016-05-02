@@ -18,11 +18,9 @@
 package org.gradoop.model.impl.algorithms.fsm;
 
 import org.apache.flink.api.java.DataSet;
-import org.apache.flink.api.java.operators.FlatMapOperator;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.api.java.tuple.Tuple4;
-import org.apache.flink.api.java.tuple.Tuple5;
 import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
@@ -32,14 +30,12 @@ import org.gradoop.model.impl.algorithms.fsm.functions.*;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.tuples.FatEdge;
 import org.gradoop.model.impl.algorithms.fsm.tuples.VertexIdLabel;
+import org.gradoop.model.impl.functions.join.LeftSide;
 import org.gradoop.model.impl.functions.tuple.Project3To0And2;
-import org.gradoop.model.impl.functions.tuple.Project3To1And2;
 import org.gradoop.model.impl.functions.tuple.Project4To0And3;
-import org.gradoop.model.impl.functions.tuple.Value0Of2;
 import org.gradoop.model.impl.functions.tuple.Value0Of3;
 import org.gradoop.model.impl.functions.tuple.Value1Of2;
 import org.gradoop.model.impl.id.GradoopId;
-import org.gradoop.model.impl.id.GradoopIdSet;
 import org.gradoop.model.impl.operators.count.Count;
 import org.gradoop.util.GradoopFlinkConfig;
 
@@ -195,17 +191,38 @@ public abstract class AbstractGSpan
       .with(new AppendSourceLabel())
       .join(prunedVertices)
       .where(2).equalTo(0)
-      .with(new AppendTargetLabel());
+      .with(new AppendTargetLabelAndInitialDfsCode());
   }
 
-  protected void setGradoopConfig(GraphCollection<G, V, E> collection) {
+  protected void setConfigAndMinSupport(GraphCollection<G, V, E> collection) {
     this.gradoopConfig = collection.getConfig();
-  }
-
-  protected void setMinSupport(GraphCollection<G, V, E> collection) {
     this.minSupport = Count
       .count(collection.getGraphHeads())
       .map(new MinSupport(fsmConfig.getThreshold()));
+  }
+
+  protected DataSet<CompressedDFSCode> find1EdgeFrequentDfsCodes(
+    DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> graphEdges) {
+
+    return graphEdges
+      .map(new Project3To0And2<GradoopId, FatEdge, CompressedDFSCode>())
+      .distinct()
+      .map(new Value1Of2<GradoopId, CompressedDFSCode>())
+      .groupBy(0)
+      .sum(1)
+      .filter(new Frequent())
+      .withBroadcastSet(minSupport, Frequent.DS_NAME);
+  }
+
+  protected DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>>
+  filterFatEdges(
+    DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> fatEdges,
+    DataSet<CompressedDFSCode> allFrequentDfsCodes) {
+
+    return fatEdges
+      .join(allFrequentDfsCodes)
+      .where("2.0").equalTo(0)
+      .with(new LeftSide<Tuple3<GradoopId, FatEdge, CompressedDFSCode>, CompressedDFSCode>());
   }
 
   @Override

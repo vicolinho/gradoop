@@ -12,7 +12,7 @@ import org.gradoop.model.impl.algorithms.fsm.tuples.FatEdge;
 import org.gradoop.model.impl.algorithms.fsm.tuples.VertexIdLabel;
 import org.gradoop.model.impl.id.GradoopId;
 
-public class AppendTargetLabel implements JoinFunction<
+public class AppendTargetLabelAndInitialDfsCode implements JoinFunction<
   Tuple5<GradoopId, GradoopId, GradoopId, Integer, Integer>,
   VertexIdLabel, Tuple3<GradoopId, FatEdge, CompressedDFSCode>> {
 

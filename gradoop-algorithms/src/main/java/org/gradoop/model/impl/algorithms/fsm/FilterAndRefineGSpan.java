@@ -104,7 +104,7 @@
 //      .with(new AppendSourceLabel())
 //      .join(vertices)
 //      .where(2).equalTo(0)
-//      .with(new AppendTargetLabel());
+//      .with(new AppendTargetLabelAndInitialDfsCode());
 //
 //    DataSet<Tuple3<Integer, Integer, Integer>>
 //      frequentTriplePatterns = edges
