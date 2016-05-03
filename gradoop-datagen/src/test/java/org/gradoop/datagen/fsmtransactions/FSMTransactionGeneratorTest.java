@@ -3,8 +3,9 @@ package org.gradoop.datagen.fsmtransactions;
 import org.gradoop.model.GradoopFlinkTestBase;
 import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.algorithms.fsm.FSMConfig;
-import org.gradoop.model.impl.algorithms.fsm.FilterAndRefineGSpan;
-import org.gradoop.model.impl.algorithms.fsm.IterativeGSpan;
+import org.gradoop.model.impl.algorithms.fsm.IterativeTransactionalFSM;
+import org.gradoop.model.impl.algorithms.fsm.NaiveParallelTransactionalFSM;
+import org.gradoop.model.impl.operators.equality.CollectionEquality;
 import org.gradoop.model.impl.pojo.EdgePojo;
 import org.gradoop.model.impl.pojo.GraphHeadPojo;
 import org.gradoop.model.impl.pojo.VertexPojo;
@@ -32,22 +33,28 @@ public class FSMTransactionGeneratorTest  extends GradoopFlinkTestBase {
     FSMTransactionGenerator<GraphHeadPojo, VertexPojo, EdgePojo> gen =
       new FSMTransactionGenerator<>(getConfig(), generatorConfig);
 
-    FilterAndRefineGSpan gSpan = new FilterAndRefineGSpan(
-      FSMConfig.forDirectedMultigraph(0.3f));
-
-    System.out.println("Data started");
-
-    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> collection =
+    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> input =
       gen.execute();
 
-    System.out.println("Data finished, starting FSM");
+    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.3f);
 
-    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> frequentSubgraphs =
-      gSpan.execute(collection);
+    NaiveParallelTransactionalFSM<GraphHeadPojo, VertexPojo, EdgePojo> miner1 =
+      new NaiveParallelTransactionalFSM<>(fsmConfig);
 
-    System.out.println("FSM finished");
+    IterativeTransactionalFSM<GraphHeadPojo, VertexPojo, EdgePojo> miner2 =
+      new IterativeTransactionalFSM<>(fsmConfig);
 
-    assertTrue(frequentSubgraphs.getGraphHeads().count() > 0);
+    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> result1 =
+      miner1.execute(input);
+
+    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> result2 =
+      miner2.execute(input);
+
+//    assertTrue(result1.getGraphHeads().count() > 0);
+//    assertTrue(result2.getGraphHeads().count() > 0);
+
+    collectAndAssertTrue(result1.equalsByGraphElementData(result2));
+
   }
 
 }
