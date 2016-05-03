@@ -20,16 +20,16 @@ package org.gradoop.model.impl.algorithms.fsm.functions;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
+import org.gradoop.model.impl.algorithms.fsm.tuples.IterativeSearchSpaceItem;
 
 /**
  * Graph => [(CompressedDFSCode, 1),..]
  */
 public class ReportDfsCodes implements
-  FlatMapFunction<SearchSpaceItem, CompressedDFSCode> {
+  FlatMapFunction<IterativeSearchSpaceItem, CompressedDFSCode> {
 
   @Override
-  public void flatMap(SearchSpaceItem searchSpaceItem,
+  public void flatMap(IterativeSearchSpaceItem searchSpaceItem,
     Collector<CompressedDFSCode> collector) throws Exception {
 
     if (! searchSpaceItem.isCollector()) {

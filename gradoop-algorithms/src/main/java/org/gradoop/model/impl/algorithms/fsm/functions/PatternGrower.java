@@ -1,25 +1,7 @@
-/*
- * This file is part of Gradoop.
- *
- * Gradoop is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Gradoop is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
- */
-
 package org.gradoop.model.impl.algorithms.fsm.functions;
 
 import com.google.common.collect.Sets;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.apache.flink.api.common.functions.MapFunction;
 import org.gradoop.model.impl.algorithms.fsm.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.comparators.DfsCodeComparator;
 import org.gradoop.model.impl.algorithms.fsm.comparators.EdgePatternComparator;
@@ -30,8 +12,8 @@ import org.gradoop.model.impl.algorithms.fsm.pojos.DFSEmbedding;
 import org.gradoop.model.impl.algorithms.fsm.pojos.DFSStep;
 import org.gradoop.model.impl.algorithms.fsm.pojos.EdgePattern;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,10 +22,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Core of gSpan implementation. Grows embeddings of Frequent DFS codes.
+ * Created by peet on 03.05.16.
  */
-public class PatternGrowth
-  implements MapFunction<SearchSpaceItem, SearchSpaceItem> {
+public class PatternGrower implements Serializable {
 
   /**
    * DFS code comparator
@@ -54,52 +35,35 @@ public class PatternGrowth
    */
   private final EdgePatternComparator<Integer> edgePatternComparator;
 
-
-  /**
-   * constructor
-   * @param fsmConfig configuration
-   */
-  public PatternGrowth(FSMConfig fsmConfig) {
+  public PatternGrower(FSMConfig fsmConfig) {
     boolean directed = fsmConfig.isDirected();
 
     this.dfsCodeComparator = new DfsCodeComparator(directed);
     this.edgePatternComparator = new EdgePatternComparator<>(directed);
   }
 
-  @Override
-  public SearchSpaceItem map(SearchSpaceItem searchSpaceItem) throws Exception {
-
-    if (! searchSpaceItem.isCollector()) {
-      growFrequentDfsCodeEmbeddings(searchSpaceItem);
-    }
-
-    return searchSpaceItem;
-  }
-
-  /**
-   * grows all embeddings of frequent DFS codes in a graph
-   * @param graph graph search space item
-   * @return graph with grown embeddings
-   */
-  private SearchSpaceItem growFrequentDfsCodeEmbeddings(SearchSpaceItem graph) {
-
+  public HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> growEmbeddings(
+    ArrayList<AdjacencyList> adjacencyLists,
+    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> parentCodeEmbeddings) {
     // min DFS code per subgraph (set of edge ids)
     Map<Integer, HashSet<DFSCode>> coverageDfsCodes = new HashMap<>();
     Map<DFSCode, HashSet<DFSEmbedding>> codeEmbeddings = new HashMap<>();
 
     // for each supported DFS code
+
     for (Map.Entry<CompressedDFSCode, HashSet<DFSEmbedding>> entry :
-      graph.getCodeEmbeddings().entrySet()) {
+      parentCodeEmbeddings.entrySet()) {
 
       CompressedDFSCode compressedDfsCode = entry.getKey();
-
+      HashSet<DFSEmbedding> parentEmbeddings = entry.getValue();
       DFSCode parentDfsCode = compressedDfsCode.getDfsCode();
+
       EdgePattern<Integer> minPattern = parentDfsCode.getMinEdgePattern();
       List<Integer> rightmostPath = parentDfsCode
         .getRightMostPathVertexTimes();
 
       // for each embedding
-      for (DFSEmbedding parentEmbedding : entry.getValue()) {
+      for (DFSEmbedding parentEmbedding : parentEmbeddings) {
 
         // rightmost path is inverse, so first element is rightmost vertex
         Boolean rightMostVertex = true;
@@ -109,7 +73,8 @@ public class PatternGrowth
         for (Integer fromVertexTime : rightmostPath) {
 
           // query fromVertex data
-          AdjacencyList adjacencyList = graph.getAdjacencyLists()
+
+          AdjacencyList adjacencyList = adjacencyLists
             .get(vertexTimes.get(fromVertexTime));
           Integer fromVertexLabel = adjacencyList.getVertexLabel();
 
@@ -203,13 +168,7 @@ public class PatternGrowth
       }
     }
 
-    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> compressedCodeEmbeddings =
-      getMinDfsCodesAndEmbeddings(coverageDfsCodes, codeEmbeddings);
-
-    graph.setCodeEmbeddings(compressedCodeEmbeddings);
-    graph.setActive(! compressedCodeEmbeddings.isEmpty());
-
-    return graph;
+    return getMinDfsCodesAndEmbeddings(coverageDfsCodes, codeEmbeddings);
   }
 
   /**

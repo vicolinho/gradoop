@@ -27,7 +27,7 @@ import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.algorithms.fsm.functions.*;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.tuples.FatEdge;
-import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
+import org.gradoop.model.impl.algorithms.fsm.tuples.IterativeSearchSpaceItem;
 import org.gradoop.model.impl.id.GradoopId;
 
 import java.util.Collection;
@@ -67,22 +67,22 @@ public class IterativeGSpan
     fatEdges = filterFatEdges(fatEdges, allFrequentDfsCodes);
 
     // create graph transactions from remaining edges
-    DataSet<SearchSpaceItem> searchSpaceGraphs = fatEdges
+    DataSet<IterativeSearchSpaceItem> searchSpaceGraphs = fatEdges
       .groupBy(0)
       .reduceGroup(new IterativeSearchSpace());
 
     // create search space with collector
-    DataSet<SearchSpaceItem> searchSpace = searchSpaceGraphs
+    DataSet<IterativeSearchSpaceItem> searchSpace = searchSpaceGraphs
       .union(gradoopConfig.getExecutionEnvironment()
-        .fromElements(SearchSpaceItem.createCollector()));
+        .fromElements(IterativeSearchSpaceItem.createCollector()));
 
     // ITERATION HEAD
-    IterativeDataSet<SearchSpaceItem> workSet = searchSpace
+    IterativeDataSet<IterativeSearchSpaceItem> workSet = searchSpace
       .iterate(fsmConfig.getMaxEdgeCount());
 
     // ITERATION BODY
-    DataSet<SearchSpaceItem> activeWorkSet = workSet
-      .map(new PatternGrowth(fsmConfig))  // grow supported embeddings
+    DataSet<IterativeSearchSpaceItem> activeWorkSet = workSet
+      .map(new IterativePatternGrowth(fsmConfig))  // grow supported embeddings
       .filter(new IsActive());            // active, if at least one growth
 
     // determine frequent DFS codes
@@ -96,13 +96,13 @@ public class IterativeGSpan
         .reduceGroup(new ConcatFrequentDfsCodes());
 
     // grow children of frequent DFS codes
-    DataSet<SearchSpaceItem> nextWorkSet = activeWorkSet
+    DataSet<IterativeSearchSpaceItem> nextWorkSet = activeWorkSet
       .map(new SupportPruning())    // drop embeddings of infrequent codes
       .withBroadcastSet(iterationFrequentDfsCodes, SupportPruning.DS_NAME)
       .filter(new IsActive());      // active, if at least one frequent code
 
     // ITERATION FOOTER
-    DataSet<SearchSpaceItem> collector = workSet
+    DataSet<IterativeSearchSpaceItem> collector = workSet
       // terminate, if no new frequent DFS codes
       .closeWith(nextWorkSet, iterationFrequentDfsCodes);
 

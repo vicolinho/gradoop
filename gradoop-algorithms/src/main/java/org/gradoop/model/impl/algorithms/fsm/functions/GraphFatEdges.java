@@ -2,34 +2,34 @@ package org.gradoop.model.impl.algorithms.fsm.functions;
 
 import com.google.common.collect.Lists;
 import org.apache.flink.api.common.functions.GroupReduceFunction;
+import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.api.java.tuple.Tuple5;
 import org.apache.flink.api.java.tuple.Tuple6;
 import org.apache.flink.util.Collector;
+import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.tuples.FatEdge;
 import org.gradoop.model.impl.id.GradoopId;
 
 import java.util.ArrayList;
 
-/**
- * Created by peet on 27.04.16.
- */
 public class GraphFatEdges implements
-  GroupReduceFunction<Tuple6<GradoopId, GradoopId, GradoopId, Integer,
-    Integer, Integer>, ArrayList<FatEdge>> {
+  GroupReduceFunction<Tuple3<GradoopId, FatEdge, CompressedDFSCode>,
+  ArrayList<Tuple2<FatEdge, CompressedDFSCode>>> {
+
   @Override
   public void reduce(
-    Iterable<Tuple6<GradoopId, GradoopId, GradoopId, Integer, Integer, Integer>>
-      iterable, Collector <ArrayList<FatEdge>>  collector
-  ) throws Exception {
+    Iterable<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> iterable,
+    Collector<ArrayList<Tuple2<FatEdge, CompressedDFSCode>>> collector) throws
+    Exception {
 
-    ArrayList<FatEdge> out =
-      Lists.newArrayList();
+    ArrayList<Tuple2<FatEdge, CompressedDFSCode>> graphFatEdges = Lists
+      .newArrayList();
 
-    for(Tuple6<GradoopId, GradoopId, GradoopId, Integer, Integer, Integer>
-        edge : iterable) {
-      out.add(new FatEdge(edge.f1, edge.f2, edge.f3, edge.f4, edge.f5));
+    for(Tuple3<GradoopId, FatEdge, CompressedDFSCode> fatEdge : iterable) {
+      graphFatEdges.add(new Tuple2<>(fatEdge.f1, fatEdge.f2));
     }
 
-    collector.collect(out);
+    collector.collect(graphFatEdges);
   }
 }

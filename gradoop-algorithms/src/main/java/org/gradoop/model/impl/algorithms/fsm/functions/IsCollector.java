@@ -18,16 +18,16 @@
 package org.gradoop.model.impl.algorithms.fsm.functions;
 
 import org.apache.flink.api.common.functions.FilterFunction;
-import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
+import org.gradoop.model.impl.algorithms.fsm.tuples.IterativeSearchSpaceItem;
 
 /**
  * Filters the frequent DFS code collector
  */
 public class IsCollector
-  implements FilterFunction<SearchSpaceItem> {
+  implements FilterFunction<IterativeSearchSpaceItem> {
 
   @Override
-  public boolean filter(SearchSpaceItem searchSpaceItem) throws Exception {
+  public boolean filter(IterativeSearchSpaceItem searchSpaceItem) throws Exception {
     return searchSpaceItem.isCollector();
   }
 }

@@ -22,19 +22,18 @@ import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.configuration.Configuration;
 import org.gradoop.model.impl.algorithms.fsm.pojos.DFSEmbedding;
 import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.tuples.SearchSpaceItem;
+import org.gradoop.model.impl.algorithms.fsm.tuples.IterativeSearchSpaceItem;
 
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Core of gSpan implementation. Grows embeddings of Frequent DFS codes.
  */
 public class SupportPruning extends
-  RichMapFunction<SearchSpaceItem, SearchSpaceItem> {
+  RichMapFunction<IterativeSearchSpaceItem, IterativeSearchSpaceItem> {
 
   /**
    * broadcasting dataset name
@@ -59,7 +58,7 @@ public class SupportPruning extends
   }
 
   @Override
-  public SearchSpaceItem map(SearchSpaceItem searchSpaceItem) throws Exception {
+  public IterativeSearchSpaceItem map(IterativeSearchSpaceItem searchSpaceItem) throws Exception {
 
     if (frequentDfsCodes != null) {
       if (searchSpaceItem.isCollector()) {
@@ -78,7 +77,7 @@ public class SupportPruning extends
    * @param newFrequentDfsCodes new frequent DFS codes
    * @return updated collector
    */
-  private SearchSpaceItem updateCollector(SearchSpaceItem collector,
+  private IterativeSearchSpaceItem updateCollector(IterativeSearchSpaceItem collector,
     Collection<CompressedDFSCode> newFrequentDfsCodes) {
 
     collector.getFrequentDfsCodes().addAll(newFrequentDfsCodes);
@@ -92,7 +91,7 @@ public class SupportPruning extends
    * @param frequentDfsCodes frequent DFS codes
    * @return graph with grown embeddings
    */
-  private SearchSpaceItem dropInfrequentEmbeddings(SearchSpaceItem graph,
+  private IterativeSearchSpaceItem dropInfrequentEmbeddings(IterativeSearchSpaceItem graph,
     Collection<CompressedDFSCode> frequentDfsCodes) {
 
     HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings =

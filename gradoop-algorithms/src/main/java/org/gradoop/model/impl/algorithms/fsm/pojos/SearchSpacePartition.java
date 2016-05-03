@@ -1,22 +1,25 @@
 package org.gradoop.model.impl.algorithms.fsm.pojos;
 
+import org.apache.flink.api.java.tuple.Tuple2;
+import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.tuples.FatEdge;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 
-/**
- * Created by peet on 22.04.16.
- */
 public class SearchSpacePartition implements Serializable {
 
-  private final ArrayList<ArrayList<FatEdge>> partition;
+  private final ArrayList
+    <ArrayList<Tuple2<FatEdge, CompressedDFSCode>>> partition;
 
-  public SearchSpacePartition(ArrayList<ArrayList<FatEdge>> partition) {
+  public SearchSpacePartition(
+    ArrayList<ArrayList<Tuple2<FatEdge, CompressedDFSCode>>> partition) {
+
     this.partition = partition;
   }
 
-  public ArrayList<ArrayList<FatEdge>> getPartition() {
+  public ArrayList<ArrayList<Tuple2<FatEdge, CompressedDFSCode>>> getGraphs()
+  {
     return partition;
   }
 }

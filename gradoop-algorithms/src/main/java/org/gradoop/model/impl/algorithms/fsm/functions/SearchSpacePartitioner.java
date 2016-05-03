@@ -5,6 +5,7 @@ import org.apache.flink.api.common.functions.GroupCombineFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.pojos.SearchSpacePartition;
+import org.gradoop.model.impl.algorithms.fsm.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.tuples.FatEdge;
 
 import java.util.ArrayList;
@@ -12,20 +13,22 @@ import java.util.ArrayList;
 /**
  * Created by peet on 22.04.16.
  */
-public class SearchSpacePartitioner implements
-  GroupCombineFunction<Tuple2<Integer, ArrayList<FatEdge>>, SearchSpacePartition> {
+public class SearchSpacePartitioner
+  implements GroupCombineFunction
+  <ArrayList<Tuple2<FatEdge, CompressedDFSCode>>, SearchSpacePartition> {
 
   @Override
-  public void combine(Iterable<Tuple2<Integer, ArrayList<FatEdge>>> iterable,
+  public void combine(
+    Iterable<ArrayList<Tuple2<FatEdge, CompressedDFSCode>>> iterable,
     Collector<SearchSpacePartition> collector) throws Exception {
 
-    ArrayList<ArrayList<FatEdge>> partition = Lists.newArrayList();
+    ArrayList<ArrayList<Tuple2<FatEdge, CompressedDFSCode>>> partition = Lists
+      .newArrayList();
 
-    for(Tuple2<Integer, ArrayList<FatEdge>> lists : iterable) {
-      partition.add(lists.f1);
+    for(ArrayList<Tuple2<FatEdge, CompressedDFSCode>> graph : iterable) {
+      partition.add(graph);
     }
 
     collector.collect(new SearchSpacePartition(partition));
-
   }
 }

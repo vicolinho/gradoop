@@ -37,7 +37,7 @@ import java.util.Map;
  * f3 : map DFS code - embeddings         empty map
  * f4 : empty array                       frequent DFS codes
  */
-public class SearchSpaceItem extends Tuple5<
+public class IterativeSearchSpaceItem extends Tuple5<
     Boolean,
     Boolean,
     ArrayList<AdjacencyList>,
@@ -48,7 +48,7 @@ public class SearchSpaceItem extends Tuple5<
   /**
    * default constructor
    */
-  public SearchSpaceItem() {
+  public IterativeSearchSpaceItem() {
   }
 
   /**
@@ -59,7 +59,7 @@ public class SearchSpaceItem extends Tuple5<
    * @param codeEmbeddings embeddings of DFS codes (empty for collector)
    * @param frequentDfsCodes frequent DFS codes (empty for graph)
    */
-  public SearchSpaceItem(boolean collector, boolean active,
+  public IterativeSearchSpaceItem(boolean collector, boolean active,
     ArrayList<AdjacencyList> adjacencyLists,
     HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings,
     ArrayList<CompressedDFSCode> frequentDfsCodes) {
@@ -133,7 +133,7 @@ public class SearchSpaceItem extends Tuple5<
   @Override
   public String toString() {
 
-    StringBuilder builder = new StringBuilder("SearchSpaceItem");
+    StringBuilder builder = new StringBuilder("IterativeSearchSpaceItem");
 
     if (isCollector()) {
       builder.append(" (Collector)\n\tFrequent DFS codes\n");
@@ -176,11 +176,11 @@ public class SearchSpaceItem extends Tuple5<
    * @param codeEmbeddings embeddings of DFS codes
    * @return a search space item representing a graph transaction
    */
-  public static SearchSpaceItem createForGraph(
+  public static IterativeSearchSpaceItem createForGraph(
     ArrayList<AdjacencyList> adjacencyLists,
     HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings) {
 
-    return new SearchSpaceItem(false, true, adjacencyLists, codeEmbeddings,
+    return new IterativeSearchSpaceItem(false, true, adjacencyLists, codeEmbeddings,
       new ArrayList<CompressedDFSCode>());
   }
 
@@ -188,12 +188,12 @@ public class SearchSpaceItem extends Tuple5<
    * factory method
    * @return a search space item representing the collector
    */
-  public static SearchSpaceItem createCollector() {
+  public static IterativeSearchSpaceItem createCollector() {
     ArrayList<AdjacencyList> adjacencyLists = new ArrayList<>();
     HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings = new
       HashMap<>();
 
-    return new SearchSpaceItem(true, true, adjacencyLists, codeEmbeddings,
+    return new IterativeSearchSpaceItem(true, true, adjacencyLists, codeEmbeddings,
       new ArrayList<CompressedDFSCode>());
   }
 }
