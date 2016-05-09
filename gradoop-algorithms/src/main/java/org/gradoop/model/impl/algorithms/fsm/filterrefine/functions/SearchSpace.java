@@ -1,4 +1,4 @@
-package org.gradoop.model.impl.algorithms.fsm.naiveparallel.functions;
+package org.gradoop.model.impl.algorithms.fsm.filterrefine.functions;
 
 import org.apache.flink.api.common.functions.GroupReduceFunction;
 import org.apache.flink.api.java.tuple.Tuple3;
@@ -9,7 +9,7 @@ import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.FatEdge;
-import org.gradoop.model.impl.algorithms.fsm.naiveparallel.pojos.Transaction;
+import org.gradoop.model.impl.algorithms.fsm.filterrefine.pojos.Transaction;
 
 
 import org.gradoop.model.impl.id.GradoopId;

@@ -32,7 +32,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 
 /**
- * Core of gSpan implementation. Grows embeddings of Frequent DFS codes.
+ * Core of gSpan implementation. Grows embeddings of KnownToBeGloballyFrequent DFS codes.
  */
 public class PatternGrowth
   implements MapFunction<Transaction, Transaction> {

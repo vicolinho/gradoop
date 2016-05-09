@@ -33,7 +33,7 @@ import java.util.HashSet;
 import java.util.List;
 
 /**
- * Core of gSpan implementation. Grows embeddings of Frequent DFS codes.
+ * Core of gSpan implementation. Grows embeddings of KnownToBeGloballyFrequent DFS codes.
  */
 public class SupportPruning extends
   RichMapFunction<Transaction, Transaction> {

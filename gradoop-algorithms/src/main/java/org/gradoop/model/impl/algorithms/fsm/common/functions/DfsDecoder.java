@@ -58,7 +58,7 @@ public class DfsDecoder<G extends EPGMGraphHead> implements
     ArrayList<Tuple3<GradoopId, GradoopId, Integer>>> map(
     CompressedDFSCode compressedDfsCode) throws  Exception {
 
-    System.out.println(compressedDfsCode);
+//    System.out.println(compressedDfsCode);
 
     DFSCode dfsCode = compressedDfsCode.getDfsCode();
 

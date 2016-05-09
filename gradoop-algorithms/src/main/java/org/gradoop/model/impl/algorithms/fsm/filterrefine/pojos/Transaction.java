@@ -15,7 +15,7 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.impl.algorithms.fsm.naiveparallel.pojos;
+package org.gradoop.model.impl.algorithms.fsm.filterrefine.pojos;
 
 import org.apache.commons.lang3.StringUtils;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;

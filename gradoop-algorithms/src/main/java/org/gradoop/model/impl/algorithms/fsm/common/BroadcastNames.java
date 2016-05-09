@@ -10,4 +10,5 @@ public class BroadcastNames {
    */
   public static final String MIN_SUPPORT = "minSupport";
   public static final String DICTIONARY = "dictionary";
+  public static final String WORKER_GRAPHCOUNT = "workerIds";
 }

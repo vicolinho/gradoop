@@ -134,7 +134,7 @@ public class Transaction extends Tuple5<
     StringBuilder builder = new StringBuilder("Transaction");
 
     if (isCollector()) {
-      builder.append(" (Collector)\n\tFrequent DFS codes\n");
+      builder.append(" (Collector)\n\tKnownToBeGloballyFrequent DFS codes\n");
 
       for (CompressedDFSCode compressedDfsCode : getFrequentDfsCodes()) {
         builder.append("\n" + compressedDfsCode);

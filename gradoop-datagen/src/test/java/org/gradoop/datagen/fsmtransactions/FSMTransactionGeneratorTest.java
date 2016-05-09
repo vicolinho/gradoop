@@ -1,17 +1,16 @@
 package org.gradoop.datagen.fsmtransactions;
 
+import org.apache.flink.api.common.functions.CrossFunction;
 import org.gradoop.model.GradoopFlinkTestBase;
 import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.algorithms.fsm.FSMConfig;
+import org.gradoop.model.impl.algorithms.fsm.FilterRefineTransactionalFSM;
 import org.gradoop.model.impl.algorithms.fsm.IterativeTransactionalFSM;
-import org.gradoop.model.impl.algorithms.fsm.NaiveParallelTransactionalFSM;
-import org.gradoop.model.impl.operators.equality.CollectionEquality;
+import org.gradoop.model.impl.operators.count.Count;
 import org.gradoop.model.impl.pojo.EdgePojo;
 import org.gradoop.model.impl.pojo.GraphHeadPojo;
 import org.gradoop.model.impl.pojo.VertexPojo;
 import org.junit.Test;
-
-import static org.junit.Assert.assertTrue;
 
 public class FSMTransactionGeneratorTest  extends GradoopFlinkTestBase {
 
@@ -22,10 +21,10 @@ public class FSMTransactionGeneratorTest  extends GradoopFlinkTestBase {
         100, // graph count
         10,  // min vertex count
         20,  // max vertex count
-        5, 1, 20,  // min edge count
+        5,   // vertex label count
+        1,   // vertex label size
+        20,  // min edge count
         50, // max edge count
-        // vertex label count
-        // vertex label size
         5,  // edgeLabelCount,
         1   // edgeLabelSize
       );
@@ -36,24 +35,30 @@ public class FSMTransactionGeneratorTest  extends GradoopFlinkTestBase {
     GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> input =
       gen.execute();
 
+//    input.getConfig().getExecutionEnvironment().setParallelism(1);
+
     FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.3f);
 
-    NaiveParallelTransactionalFSM<GraphHeadPojo, VertexPojo, EdgePojo> miner1 =
-      new NaiveParallelTransactionalFSM<>(fsmConfig);
+    FilterRefineTransactionalFSM<GraphHeadPojo, VertexPojo, EdgePojo>
+      parallelMiner = new FilterRefineTransactionalFSM<>(fsmConfig);
 
-    IterativeTransactionalFSM<GraphHeadPojo, VertexPojo, EdgePojo> miner2 =
-      new IterativeTransactionalFSM<>(fsmConfig);
+    IterativeTransactionalFSM<GraphHeadPojo, VertexPojo, EdgePojo>
+      iterativeMiner = new IterativeTransactionalFSM<>(fsmConfig);
 
-    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> result1 =
-      miner1.execute(input);
+    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> parallelResult =
+      parallelMiner.execute(input);
 
-    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> result2 =
-      miner2.execute(input);
+    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> iterativeResult =
+      iterativeMiner.execute(input);
 
-//    assertTrue(result1.getGraphHeads().count() > 0);
-//    assertTrue(result2.getGraphHeads().count() > 0);
-
-    collectAndAssertTrue(result1.equalsByGraphElementData(result2));
+    Count.count(parallelResult.getGraphHeads()).cross(
+      Count.count(iterativeResult.getGraphHeads())
+    ).with(new CrossFunction<Long, Long, String>() {
+      @Override
+      public String cross(Long aLong, Long aLong2) throws Exception {
+        return aLong.toString() + "/" + aLong2.toString();
+      }
+    }).print();
 
   }
 

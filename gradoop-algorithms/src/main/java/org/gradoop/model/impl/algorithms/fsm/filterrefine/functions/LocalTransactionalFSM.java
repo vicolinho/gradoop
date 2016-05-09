@@ -1,18 +1,18 @@
-package org.gradoop.model.impl.algorithms.fsm.common.functions;
+package org.gradoop.model.impl.algorithms.fsm.filterrefine.functions;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import org.apache.flink.api.common.functions.RichGroupCombineFunction;
-import org.apache.flink.configuration.Configuration;
+import org.apache.flink.api.common.functions.FlatMapFunction;
+import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.FSMConfig;
-import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.gspan.PatternGrower;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.naiveparallel.pojos.Transaction;
+import org.gradoop.model.impl.algorithms.fsm.filterrefine.pojos.Transaction;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,45 +21,61 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class LocalTransactionalFSM extends RichGroupCombineFunction
-  <Transaction,  CompressedDFSCode> {
+public class LocalTransactionalFSM implements FlatMapFunction
+  <Tuple2<Integer, Map<Integer, Transaction>>,
+    Tuple3<CompressedDFSCode, Integer,  Boolean>> {
+
+  private final FSMConfig fsmConfig;
+  private int workerId;
 
   private final PatternGrower grower;
   /**
    * minimum support
    */
   private Integer minSupport;
+  private int minSupportForReport;
 
-  private final Map<Integer, Transaction> graphs = Maps
-    .newHashMap();
+  private float threshold;
 
-  /**
-   * constructor
-   * @param fsmConfig configuration
-   */
+  private Map<Integer, Transaction> graphs;
+
+  private final ArrayList<CompressedDFSCode> likelyFrequentDfsCodes = Lists
+    .newArrayList();
+
+
   public LocalTransactionalFSM(FSMConfig fsmConfig) {
+    this.fsmConfig = fsmConfig;
     this.grower = new PatternGrower(fsmConfig);
+    this.threshold = fsmConfig.getThreshold();
   }
 
   @Override
-  public void open(Configuration parameters) throws Exception {
-    super.open(parameters);
-    this.minSupport = getRuntimeContext()
-      .<Integer>getBroadcastVariable(BroadcastNames.MIN_SUPPORT)
-      .get(0);
+  public void flatMap(Tuple2<Integer, Map<Integer, Transaction>> pair,
+    Collector<Tuple3<CompressedDFSCode, Integer, Boolean>> collector
+  ) throws Exception {
+
+    this.workerId = pair.f0;
+    this.graphs = pair.f1;
+
+    int graphCount = graphs.size();
+
+    this.minSupport = (int) (threshold * (float) graphCount);
+    this.minSupportForReport = (int) (0.05 * (float) graphCount);
+
+    mine();
+
+    for(CompressedDFSCode compressedDFSCode : likelyFrequentDfsCodes)
+    {
+      collector.collect(new Tuple3<>(compressedDFSCode, workerId,
+        compressedDFSCode.getSupport() >= minSupport));
+    }
   }
 
-  @Override
-  public void combine(Iterable<Transaction> iterable,
-    Collector<CompressedDFSCode> collector) throws Exception {
-
-    indexGraphs(iterable);
+  public void mine() {
 
     boolean first = true;
 
-    ArrayList<CompressedDFSCode> allLikelyFrequentDfsCodes = Lists
-      .newArrayList();
-    ArrayList<CompressedDFSCode> currentLikelyFrequentDfsCodes;
+    ArrayList<CompressedDFSCode> currentFrequentDfsCodes;
 
     while (first || !graphs.isEmpty()) {
       if (first) {
@@ -68,28 +84,13 @@ public class LocalTransactionalFSM extends RichGroupCombineFunction
 
       growFrequentEmbeddings();
 
-      Map<CompressedDFSCode, Integer> currentDfsCodes = reportPatterns();
+      Map<CompressedDFSCode, Integer> currentDfsCodesWithSupport =
+        reportPatterns();
 
-      currentLikelyFrequentDfsCodes =
-        findCurrentFrequentPatterns(currentDfsCodes);
+      currentFrequentDfsCodes =
+        findCurrentFrequentPatterns(currentDfsCodesWithSupport);
 
-      deleteInfrequentEmbeddings(currentLikelyFrequentDfsCodes);
-
-      allLikelyFrequentDfsCodes.addAll(currentLikelyFrequentDfsCodes);
-    }
-
-    for(CompressedDFSCode compressedDFSCode : allLikelyFrequentDfsCodes) {
-      collector.collect(compressedDFSCode);
-    }
-  }
-
-  private void indexGraphs(Iterable<Transaction> iterable) {
-    int graphId = 0;
-    for(Transaction graph : iterable) {
-
-      graphs.put(graphId, graph);
-
-      graphId++;
+      deleteInfrequentEmbeddings(currentFrequentDfsCodes);
     }
   }
 
@@ -128,6 +129,7 @@ public class LocalTransactionalFSM extends RichGroupCombineFunction
         currentDfsCodes.put(code, (support == null) ? 1 : support + 1);
       }
     }
+
     return currentDfsCodes;
   }
 
@@ -140,10 +142,12 @@ public class LocalTransactionalFSM extends RichGroupCombineFunction
       .entrySet()) {
 
       Integer support = entry.getValue();
+      CompressedDFSCode code = entry.getKey();
+      code.setSupport(support);
+
+      likelyFrequentDfsCodes.add(code);
 
       if(support >= minSupport) {
-        CompressedDFSCode code = entry.getKey();
-        code.setSupport(support);
         currentLikelyFrequentDfsCodes.add(code);
       }
     }
@@ -183,4 +187,5 @@ public class LocalTransactionalFSM extends RichGroupCombineFunction
       graphs.remove(graphId);
     }
   }
+
 }
