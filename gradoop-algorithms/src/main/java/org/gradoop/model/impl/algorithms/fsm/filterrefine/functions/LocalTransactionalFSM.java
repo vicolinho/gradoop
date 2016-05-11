@@ -38,6 +38,7 @@ public class LocalTransactionalFSM implements FlatMapFunction
   private float threshold;
 
   private Map<Integer, Transaction> graphs;
+  private Set<Integer> activeGraphIds;
 
   private final ArrayList<CompressedDFSCode> likelyFrequentDfsCodes = Lists
     .newArrayList();
@@ -56,6 +57,7 @@ public class LocalTransactionalFSM implements FlatMapFunction
 
     this.workerId = pair.f0;
     this.graphs = pair.f1;
+    this.activeGraphIds = Sets.newHashSet(graphs.keySet());
 
     int graphCount = graphs.size();
 
@@ -77,7 +79,7 @@ public class LocalTransactionalFSM implements FlatMapFunction
 
     ArrayList<CompressedDFSCode> currentFrequentDfsCodes;
 
-    while (first || !graphs.isEmpty()) {
+    while (first || !activeGraphIds.isEmpty()) {
       if (first) {
         first = false;
       }
@@ -97,10 +99,9 @@ public class LocalTransactionalFSM implements FlatMapFunction
   private void growFrequentEmbeddings() {
     Collection<Integer> inactiveGraphs = Lists.newArrayList();
 
-    for(Map.Entry<Integer, Transaction> entry : graphs
-      .entrySet()) {
+    for(Integer graphId : activeGraphIds) {
 
-      Transaction graph = entry.getValue();
+      Transaction graph = graphs.get(graphId);
 
       ArrayList<AdjacencyList> adjacencyLists = graph.getAdjacencyLists();
 
@@ -111,7 +112,7 @@ public class LocalTransactionalFSM implements FlatMapFunction
         grower.growEmbeddings(adjacencyLists, parentEmbeddings);
 
       if(childEmbeddings.isEmpty()) {
-        inactiveGraphs.add(entry.getKey());
+        inactiveGraphs.add(graphId);
       } else {
         graph.setCodeEmbeddings(childEmbeddings);
       }
@@ -123,7 +124,10 @@ public class LocalTransactionalFSM implements FlatMapFunction
   private Map<CompressedDFSCode, Integer> reportPatterns() {
     Map<CompressedDFSCode, Integer> currentDfsCodes = Maps.newHashMap();
 
-    for(Transaction graph : graphs.values()) {
+    for(Integer graphId : activeGraphIds) {
+
+      Transaction graph = graphs.get(graphId);
+
       for(CompressedDFSCode code : graph.getCodeEmbeddings().keySet()) {
         Integer support = currentDfsCodes.get(code);
         currentDfsCodes.put(code, (support == null) ? 1 : support + 1);
@@ -158,10 +162,9 @@ public class LocalTransactionalFSM implements FlatMapFunction
     ArrayList<CompressedDFSCode> currentLikelyFrequentDfsCodes) {
     Collection<Integer> inactiveGraphs = Lists.newArrayList();
 
-    for(Map.Entry<Integer, Transaction> entry : graphs
-      .entrySet()) {
+    for(Integer graphId : activeGraphIds) {
 
-      Transaction graph = entry.getValue();
+      Transaction graph = graphs.get(graphId);
 
       HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings =
         graph.getCodeEmbeddings();
@@ -176,7 +179,7 @@ public class LocalTransactionalFSM implements FlatMapFunction
       }
 
       if(codeEmbeddings.isEmpty()) {
-        inactiveGraphs.add(entry.getKey());
+        inactiveGraphs.add(graphId);
       }
     }
     drop(inactiveGraphs);
@@ -184,7 +187,7 @@ public class LocalTransactionalFSM implements FlatMapFunction
 
   private void drop(Collection<Integer> inactiveGraphs) {
     for(Integer graphId : inactiveGraphs) {
-      graphs.remove(graphId);
+      activeGraphIds.remove(graphId);
     }
   }
 
