@@ -58,7 +58,7 @@ public class DFSEmbedding {
 
   @Override
   public String toString() {
-    return "\n\t\t\tVt : " + vertexTimes + "\n\t\t\t" + "Et : " + edgeTimes;
+    return "(tv=" + vertexTimes + ", " + "te=" + edgeTimes + ")";
   }
 
   public ArrayList<Integer> getVertexTimes() {

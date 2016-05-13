@@ -18,6 +18,7 @@
 package org.gradoop.model.impl.algorithms.fsm.common.pojos;
 
 import com.google.common.collect.Lists;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.builder.HashCodeBuilder;
 
 import java.io.Serializable;
@@ -118,32 +119,7 @@ public class DFSCode implements Serializable {
 
   @Override
   public String toString() {
-//    Collection<String> vertexLabels = Lists
-//      .newArrayList();
-//    Collection<String> edgeLabels = Lists
-//      .newArrayListWithExpectedSize(steps.size());
-//
-//    for(DFSStep step : steps) {
-//
-//      int fromTime = step.getFromTime();
-//      int toTime = step.getToTime();
-//
-//      if(vertexLabels.isEmpty()) {
-//        vertexLabels.add("(" + fromTime + ":" + step.getFromLabel() + ")");
-//      }
-//      if(toTime > fromTime) {
-//        vertexLabels.add("(" + toTime + ":" + step.getToLabel() + ")");
-//      }
-//
-//      edgeLabels.add("(" + fromTime + ")" +
-//        (step.isOutgoing() ?
-//        "-" + step.getEdgeLabel() + "->" : "<-" + step.getEdgeLabel()) +
-//        "(" + toTime + ")");
-//    }
-//
-//    return "\n" + StringUtils.join(vertexLabels,",") + "\n\t" +
-//      StringUtils.join(edgeLabels, ",");
-    return steps.toString();
+    return "[" + StringUtils.join(steps, " ") + "]";
   }
 
   @Override
@@ -190,5 +166,9 @@ public class DFSCode implements Serializable {
    */
   public static DFSCode deepCopy(DFSCode dfsCode) {
     return new DFSCode(Lists.newArrayList(dfsCode.getSteps()));
+  }
+
+  public int size() {
+    return steps.size();
   }
 }

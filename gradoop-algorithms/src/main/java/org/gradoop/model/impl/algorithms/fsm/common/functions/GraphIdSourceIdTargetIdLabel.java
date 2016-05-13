@@ -24,7 +24,7 @@ import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.impl.id.GradoopId;
 
 /**
- * EPGMVertex => (graphId, sourceId, targetId, edgeLabel),..
+ * EPGMVertex => (graphId, sourceValue, targetValue, edgeLabel),..
  * @param <E> edge type
  */
 public class GraphIdSourceIdTargetIdLabel<E extends EPGMEdge> implements

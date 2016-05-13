@@ -63,10 +63,10 @@ public class DfsCodeComparator implements Comparator<DFSCode>, Serializable {
     if (comparison == 0) {
       // c1 is child of c2
       if (i1.hasNext()) {
-        comparison = -1;
+        comparison = 1;
         // c2 is child of c1
       } else if (i2.hasNext()) {
-        comparison = 1;
+        comparison = -1;
       }
     }
 

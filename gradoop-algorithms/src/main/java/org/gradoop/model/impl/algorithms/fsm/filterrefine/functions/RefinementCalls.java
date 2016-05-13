@@ -35,8 +35,6 @@ public class RefinementCalls implements
     Tuple2<Integer, Collection<CompressedDFSCode>> call =
       new Tuple2<>(workerId, codes);
 
-    System.out.println(call);
-
     collector.collect(call);
   }
 

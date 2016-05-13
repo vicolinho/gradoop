@@ -25,7 +25,7 @@ import org.gradoop.model.impl.id.GradoopId;
 import org.gradoop.model.impl.id.GradoopIdSet;
 
 /**
- * (graphId, sourceId, targetId, edgeLabel) => edge
+ * (graphId, sourceValue, targetValue, edgeLabel) => edge
  *
  * @param <E> edge type
  */

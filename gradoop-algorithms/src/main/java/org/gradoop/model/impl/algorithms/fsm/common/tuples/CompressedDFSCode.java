@@ -81,7 +81,7 @@ public class CompressedDFSCode extends Tuple2<byte[], Integer> {
 
   @Override
   public String toString() {
-    return getSupport() + " " + getDfsCode().toString();
+    return getSupport() + ";" + getDfsCode().toString();
   }
 
   @Override

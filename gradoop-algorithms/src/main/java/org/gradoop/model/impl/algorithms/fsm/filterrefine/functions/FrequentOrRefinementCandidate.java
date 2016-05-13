@@ -99,6 +99,7 @@ public class FrequentOrRefinementCandidate
 
           // add refinement calls to missing workers
           for(Integer workerId : workerIdsWithoutReport) {
+            code.setSupport(0);
             collector.collect(new Tuple3<>(code, workerId, false));
           }
         }

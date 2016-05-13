@@ -30,7 +30,7 @@ import org.gradoop.model.impl.id.GradoopId;
  *
  * @param <E> EPGM edge type
  */
-@FunctionAnnotation.ForwardedFields("sourceId->f0;targetId->f1")
+@FunctionAnnotation.ForwardedFields("sourceValue->f0;targetValue->f1")
 public class EdgeToGellyEdgeMapper<E extends EPGMEdge>
   implements MapFunction<E, Edge<GradoopId, NullValue>> {
   /**

@@ -25,8 +25,10 @@ import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
 import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
+import org.gradoop.model.impl.algorithms.fsm.common.functions.Frequent;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.FatEdge;
+import org.gradoop.model.impl.algorithms.fsm.filterrefine.DebugOut;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine.functions.*;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine.pojos.Transaction;
 import org.gradoop.model.impl.functions.bool.False;
@@ -76,6 +78,7 @@ public class FilterRefineTransactionalFSM
       .groupBy(0)
       .reduceGroup(new SearchSpace())
       // partition transactions
+      .rebalance()
       .mapPartition(new SearchSpacePartition());
 
     // get worker ids with local graph counts
@@ -83,7 +86,7 @@ public class FilterRefineTransactionalFSM
       .reduceGroup(new WorkerIdGraphCount());
 
     // FILTER round
-    DataSet<Tuple3<CompressedDFSCode, Integer, Boolean>> candidates =
+    DataSet<Tuple3<CompressedDFSCode, Integer, Boolean>> filterResult =
       partitions
         // run local FSM
         .flatMap(new LocalTransactionalFSM(fsmConfig))
@@ -96,35 +99,43 @@ public class FilterRefineTransactionalFSM
           workerIdsGraphCount, BroadcastNames.WORKER_GRAPHCOUNT);
 
     // add globally frequent DFS codes to result
-    DataSet<CompressedDFSCode> newFrequent = candidates
-      .filter(new KnownToBeGloballyFrequent())
-      .map(new Value0Of3<CompressedDFSCode, Integer, Boolean>());
 
-    allFrequentDfsCodes = newFrequent
+    allFrequentDfsCodes = filterResult
+      .filter(new KnownToBeGloballyFrequent())
+      .map(new Value0Of3<CompressedDFSCode, Integer, Boolean>())
       .union(allFrequentDfsCodes);
 
     // REFINEMENT
 
     DataSet<Tuple3<CompressedDFSCode, Integer, Boolean>> refinementCandidates =
-      candidates
+      filterResult
         .filter(new NeedsRefinement());
 
-    DataSet<CompressedDFSCode> refinementCalls =
-      refinementCandidates
-        .filter(new RefinementCall())
-      .groupBy(1)
-      .reduceGroup(new RefinementCalls())
-      .join(partitions)
-      .where(0).equalTo(0)
-      .with(new Refinement());
-
+    // remember incomplete results
     DataSet<CompressedDFSCode> incompleteResults = refinementCandidates
       .filter(new IncompleteResult())
       .map(new Value0Of3<CompressedDFSCode, Integer, Boolean>());
 
-    // DEBUG
+    // get refined results
+    DataSet<CompressedDFSCode> refinementResults = refinementCandidates
+      .filter(new RefinementCall())
+      .groupBy(1)
+      .reduceGroup(new RefinementCalls())
+      .join(partitions)
+      .where(0).equalTo(0)
+      .with(new Refinement(fsmConfig));
+
     allFrequentDfsCodes = allFrequentDfsCodes
-      .union(refinementCalls.filter(new False<CompressedDFSCode>()));
+      .union(
+        incompleteResults
+          .union(refinementResults)
+          .groupBy(0)
+          .sum(1)
+          .filter(new Frequent())
+          .withBroadcastSet(minSupport, BroadcastNames.MIN_SUPPORT)
+      );
+
+//    allFrequentDfsCodes = allFrequentDfsCodes.map(new DebugOut());
 
     return decodeDfsCodes(allFrequentDfsCodes);
   }

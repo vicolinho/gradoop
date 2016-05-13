@@ -26,8 +26,8 @@ import org.gradoop.model.impl.id.GradoopId;
 import java.util.HashMap;
 
 /**
- * (graphId, sourceIdId, targetId, stringLabel) |><| (stringLabel, integerLabel)
- * => (graphId, sourceIdId, targetId, integerLabel)
+ * (graphId, sourceIdId, targetValue, stringLabel) |><| (stringLabel, integerLabel)
+ * => (graphId, sourceIdId, targetValue, integerLabel)
  */
 public class EdgeLabelEncoder extends RichFlatMapFunction
   <Tuple4<GradoopId, GradoopId, GradoopId, String>,

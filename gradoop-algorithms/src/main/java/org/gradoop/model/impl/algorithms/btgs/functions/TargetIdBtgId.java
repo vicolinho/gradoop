@@ -22,7 +22,7 @@ import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.impl.id.GradoopId;
 
 /**
- * edge -> (targetId, firstGraphId)
+ * edge -> (targetValue, firstGraphId)
  * @param <E> edge type
  */
 public class TargetIdBtgId<E extends EPGMEdge> implements

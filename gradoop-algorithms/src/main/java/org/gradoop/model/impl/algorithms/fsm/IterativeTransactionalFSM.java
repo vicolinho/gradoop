@@ -28,6 +28,7 @@ import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.*;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.FatEdge;
+import org.gradoop.model.impl.algorithms.fsm.iterative.DebugOut;
 import org.gradoop.model.impl.algorithms.fsm.iterative.functions.PatternGrowth;
 import org.gradoop.model.impl.algorithms.fsm.iterative.functions.SearchSpace;
 import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.Transaction;
@@ -114,6 +115,8 @@ public class IterativeTransactionalFSM
       .filter(new IsCollector())             // get only collector
       .flatMap(new ExpandFrequentDfsCodes()) // expand array to data set
       .union(allFrequentPatterns);
+
+    allFrequentPatterns = allFrequentPatterns.map(new DebugOut());
 
     return decodeDfsCodes(allFrequentPatterns);
   }
