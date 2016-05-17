@@ -14,7 +14,6 @@ import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSCode;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSStep;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.filterrefine.DebugOut;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine.pojos.StepPatternMapping;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine.pojos.StepPattern;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine.pojos.StepMappings;
@@ -143,7 +142,6 @@ public class Refinement implements
     }
     for(CompressedDFSCode code : compressedCodes) {
       if(code.getSupport() > 0) {
-        DebugOut.print("Ref", code);
         collector.collect(code);
       }
     }
@@ -153,35 +151,36 @@ public class Refinement implements
     Collection<DFSEmbedding> parents, StepMappings stepWithMappings) {
     Collection<DFSEmbedding> children = Lists.newArrayList();
 
-
     DFSStep step = stepWithMappings.getStep();
     Collection<StepPatternMapping> mappings = stepWithMappings.getMappings();
 
     for (DFSEmbedding parent : parents) {
       for (StepPatternMapping mapping : mappings)
       {
-        Integer sourceTime =
-          step.isOutgoing() ? step.getFromTime() : step.getToTime();
-        Integer mappingSourceId = mapping.getSourceId();
+        if(! parent.getEdgeTimes().contains(mapping.getEdgeId())) {
+          Integer sourceTime =
+            step.isOutgoing() ? step.getFromTime() : step.getToTime();
+          Integer mappingSourceId = mapping.getSourceId();
 
-        Integer mappedSourceId = parent.getVertexTimes().get(sourceTime);
+          Integer mappedSourceId = parent.getVertexTimes().get(sourceTime);
 
-        if(mappedSourceId == null || mappedSourceId.equals(mappingSourceId)) {
-          int targetTime =
-            step.isOutgoing() ? step.getToTime() : step.getFromTime();
-          Integer mappingTargetId = mapping.getTargetId();
-          Integer mappedTargetId = parent.getVertexTimes().get(targetTime);
+          if(mappedSourceId == null || mappedSourceId.equals(mappingSourceId)) {
+            int targetTime =
+              step.isOutgoing() ? step.getToTime() : step.getFromTime();
+            Integer mappingTargetId = mapping.getTargetId();
+            Integer mappedTargetId = parent.getVertexTimes().get(targetTime);
 
-          if(mappedTargetId == null || mappedTargetId.equals(mappingTargetId)) {
-            int edgeTime = stepWithMappings.getEdgeTime();
+            if(mappedTargetId == null || mappedTargetId.equals(mappingTargetId)) {
+              int edgeTime = stepWithMappings.getEdgeTime();
 
-            DFSEmbedding child = DFSEmbedding.deepCopy(parent);
+              DFSEmbedding child = DFSEmbedding.deepCopy(parent);
 
-            child.getVertexTimes().set(sourceTime, mappingSourceId);
-            child.getVertexTimes().set(targetTime, mappingTargetId);
-            child.getEdgeTimes().set(edgeTime, mapping.getEdgeId());
+              child.getVertexTimes().set(sourceTime, mappingSourceId);
+              child.getVertexTimes().set(targetTime, mappingTargetId);
+              child.getEdgeTimes().set(edgeTime, mapping.getEdgeId());
 
-            children.add(child);
+              children.add(child);
+            }
           }
         }
       }

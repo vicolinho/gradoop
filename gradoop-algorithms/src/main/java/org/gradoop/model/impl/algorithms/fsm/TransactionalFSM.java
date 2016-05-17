@@ -26,6 +26,7 @@ import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
 import org.gradoop.model.api.operators.UnaryCollectionToCollectionOperator;
 import org.gradoop.model.impl.GraphCollection;
+import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMCore;
 import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.*;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.AppendTargetLabelAndInitialDfsCode;
@@ -33,11 +34,8 @@ import org.gradoop.model.impl.algorithms.fsm.common.functions.DfsDecoder;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.FatEdge;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.VertexIdLabel;
-import org.gradoop.model.impl.functions.join.LeftSide;
-import org.gradoop.model.impl.functions.tuple.Project3To0And2;
 import org.gradoop.model.impl.functions.tuple.Project4To0And3;
 import org.gradoop.model.impl.functions.tuple.Value0Of3;
-import org.gradoop.model.impl.functions.tuple.Value1Of2;
 import org.gradoop.model.impl.id.GradoopId;
 import org.gradoop.model.impl.operators.count.Count;
 import org.gradoop.util.GradoopFlinkConfig;
@@ -60,7 +58,7 @@ public abstract class TransactionalFSM
   /**
    * minimum support
    */
-  protected DataSet minSupport;
+  protected DataSet<Integer> minSupport;
   /**
    * frequent subgraph mining configuration
    */
@@ -197,35 +195,16 @@ public abstract class TransactionalFSM
       .with(new AppendTargetLabelAndInitialDfsCode());
   }
 
-  protected void setConfigAndMinSupport(GraphCollection<G, V, E> collection) {
+  protected void setConfigAndMinSupport(GraphCollection<G, V, E> collection,
+    TransactionalFSMCore core) {
     this.gradoopConfig = collection.getConfig();
     this.minSupport = Count
       .count(collection.getGraphHeads())
       .map(new MinSupport(fsmConfig.getThreshold()));
-  }
 
-  protected DataSet<CompressedDFSCode> find1EdgeFrequentDfsCodes(
-    DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> graphEdges) {
-
-    return graphEdges
-      .map(new Project3To0And2<GradoopId, FatEdge, CompressedDFSCode>())
-      .distinct()
-      .map(new Value1Of2<GradoopId, CompressedDFSCode>())
-      .groupBy(0)
-      .sum(1)
-      .filter(new Frequent())
-      .withBroadcastSet(minSupport, BroadcastNames.MIN_SUPPORT);
-  }
-
-  protected DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>>
-  filterFatEdges(
-    DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> fatEdges,
-    DataSet<CompressedDFSCode> allFrequentDfsCodes) {
-
-    return fatEdges
-      .join(allFrequentDfsCodes)
-      .where("2.0").equalTo(0)
-      .with(new LeftSide<Tuple3<GradoopId, FatEdge, CompressedDFSCode>, CompressedDFSCode>());
+    core.setFsmConfig(fsmConfig);
+    core.setMinSupport(minSupport);
+    core.setExecutionEnvironment(gradoopConfig.getExecutionEnvironment());
   }
 
   @Override

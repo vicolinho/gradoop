@@ -55,19 +55,24 @@ public class FrequentOrRefinementCandidate
       .newHashSet(workerGraphCount.keySet());
 
     // init aggregate variables
+    boolean first = true;
     CompressedDFSCode code = null;
     int support = 0;
-    boolean knownToBeLocallyFrequent = false;
+    boolean altLeastOnceLocallyFrequent = false;
 
     // for each worker report
     for(Tuple3<CompressedDFSCode, Integer, Boolean> triple : iterable) {
-      code = triple.f0;
+      if(first) {
+        code = triple.f0;
+        first = false;
+      }
+
       Integer reportedWorkerId = triple.f1;
       Boolean locallyFrequent = triple.f2;
       support += code.getSupport();
 
-      if(!knownToBeLocallyFrequent && locallyFrequent) {
-        knownToBeLocallyFrequent = true;
+      if(!altLeastOnceLocallyFrequent && locallyFrequent) {
+        altLeastOnceLocallyFrequent = true;
       }
 
       workerIdsWithoutReport.remove(reportedWorkerId);
@@ -75,7 +80,7 @@ public class FrequentOrRefinementCandidate
 
     // CANDIDATE SELECTION
 
-    if(knownToBeLocallyFrequent) {
+    if(altLeastOnceLocallyFrequent) {
       // remember known support
       code.setSupport(support);
 
@@ -87,13 +92,14 @@ public class FrequentOrRefinementCandidate
           collector.collect(new Tuple3<>(code, -1, true));
         }
       } else {
+        int estimation = support;
+
         // add optimistic support estimations
         for(Integer workerId : workerIdsWithoutReport) {
-
-          support += (workerGraphCount.get(workerId) * threshold - 1);
+          estimation += (workerGraphCount.get(workerId) * threshold);
         }
         // if likely globally frequent
-        if(support >= minSupport) {
+        if(estimation >= minSupport) {
           // emit incomplete support message
           collector.collect(new Tuple3<>(code, -1, false));
 

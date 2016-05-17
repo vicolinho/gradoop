@@ -20,7 +20,6 @@ package org.gradoop.model.impl.algorithms.fsm.filterrefine.functions;
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.filterrefine.DebugOut;
 
 /**
  * filters frequent (CompressedDfsCodes, Support), i.e., Support > minSupport
@@ -31,10 +30,6 @@ public class KnownToBeGloballyFrequent
   @Override
   public boolean filter(Tuple3<CompressedDFSCode, Integer, Boolean> triple
   ) throws Exception {
-
-    if (triple.f2) {
-      DebugOut.print("Glob", triple.f0);
-    }
 
     return triple.f2;
   }
