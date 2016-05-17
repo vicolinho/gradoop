@@ -7,7 +7,7 @@ import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.util.Collector;
-import org.gradoop.model.impl.algorithms.fsm.FSMConfig;
+import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.gspan.PatternGrower;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;

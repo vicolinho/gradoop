@@ -17,18 +17,14 @@
 
 package org.gradoop.model.impl.algorithms.fsm;
 
-import org.apache.flink.api.java.DataSet;
-import org.apache.flink.api.java.tuple.Tuple3;
 import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
 import org.gradoop.model.impl.GraphCollection;
-import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMCore;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.FatEdge;
+import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
+import org.gradoop.model.impl.algorithms.fsm.common.TransactionalFSM;
 import org.gradoop.model.impl.algorithms.fsm.iterative
-  .IterativeTransactionalFSMCore;
-import org.gradoop.model.impl.id.GradoopId;
+  .IterativeTransactionalFSMiner;
 
 /**
  * The gSpan frequent subgraph mining algorithm implemented as Gradoop Operator
@@ -40,28 +36,19 @@ public class IterativeTransactionalFSM
   <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge>
   extends TransactionalFSM<G, V, E> {
 
-  private TransactionalFSMCore core = new IterativeTransactionalFSMCore();
-
   /**
    * constructor
    * @param fsmConfig frequent subgraph mining configuration
    */
   public IterativeTransactionalFSM(FSMConfig fsmConfig) {
-    super(fsmConfig);
+    super(fsmConfig, new IterativeTransactionalFSMiner());
   }
 
   @Override
-  public GraphCollection<G, V, E>
-  execute(GraphCollection<G, V, E> collection)  {
-    setConfigAndMinSupport(collection, core);
-
-    // pre processing
-    DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> fatEdges =
-      pruneAndRelabelEdges(collection);
-
-    DataSet<CompressedDFSCode> allFrequentPatterns = core.mine(fatEdges);
-
-    return decodeDfsCodes(allFrequentPatterns);
+  public GraphCollection<G, V, E> execute(GraphCollection<G, V, E> collection) {
+    this.miner.setExecutionEnvironment(
+      collection.getConfig().getExecutionEnvironment());
+    return super.execute(collection);
   }
 
   @Override

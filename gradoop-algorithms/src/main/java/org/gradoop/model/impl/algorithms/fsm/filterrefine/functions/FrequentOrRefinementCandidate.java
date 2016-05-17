@@ -2,11 +2,10 @@ package org.gradoop.model.impl.algorithms.fsm.filterrefine.functions;
 
 import com.google.common.collect.Sets;
 import org.apache.flink.api.common.functions.RichGroupReduceFunction;
-import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.util.Collector;
-import org.gradoop.model.impl.algorithms.fsm.FSMConfig;
+import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 

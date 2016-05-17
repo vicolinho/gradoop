@@ -9,7 +9,7 @@ import org.gradoop.datagen.fsmtransactions.FSMTransactionGenerator;
 import org.gradoop.datagen.fsmtransactions.FSMTransactionGeneratorConfig;
 import org.gradoop.model.impl.EPGMDatabase;
 import org.gradoop.model.impl.GraphCollection;
-import org.gradoop.model.impl.algorithms.fsm.FSMConfig;
+import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.IterativeTransactionalFSM;
 import org.gradoop.model.impl.pojo.EdgePojo;
 import org.gradoop.model.impl.pojo.GraphHeadPojo;

@@ -3,8 +3,7 @@ package org.gradoop.model.impl.algorithms.fsm.common;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.tuple.Tuple3;
-import org.gradoop.model.impl.algorithms.fsm.FSMConfig;
-import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMCore;
+import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMiner;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.Frequent;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.FatEdge;
@@ -16,31 +15,14 @@ import org.gradoop.model.impl.id.GradoopId;
 /**
  * Created by peet on 17.05.16.
  */
-public abstract class AbstractTransactionalFSMCore
-  implements TransactionalFSMCore {
+public abstract class AbstractTransactionalFSMiner
+  implements TransactionalFSMiner {
 
-  protected FSMConfig fsmConfig;
-  protected DataSet minSupport;
   protected ExecutionEnvironment env;
 
-  @Override
-  public void setFsmConfig(FSMConfig fsmConfig) {
-    this.fsmConfig = fsmConfig;
-  }
-
-  @Override
-  public void setMinSupport(DataSet<Integer> minSupport) {
-    this.minSupport = minSupport;
-  }
-
-  @Override
-  public void setExecutionEnvironment(
-    ExecutionEnvironment executionEnvironment) {
-    this.env = executionEnvironment;
-  }
-
   protected DataSet<CompressedDFSCode> find1EdgeFrequentDfsCodes(
-    DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> graphEdges) {
+    DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> graphEdges,
+    DataSet<Integer> minSupport) {
 
     return graphEdges
       .map(new Project3To0And2<GradoopId, FatEdge, CompressedDFSCode>())
@@ -61,5 +43,10 @@ public abstract class AbstractTransactionalFSMCore
       .join(allFrequentDfsCodes)
       .where("2.0").equalTo(0)
       .with(new LeftSide<Tuple3<GradoopId, FatEdge, CompressedDFSCode>, CompressedDFSCode>());
+  }
+
+  @Override
+  public void setExecutionEnvironment(ExecutionEnvironment env) {
+    this.env = env;
   }
 }

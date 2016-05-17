@@ -17,18 +17,13 @@
 
 package org.gradoop.model.impl.algorithms.fsm;
 
-import org.apache.flink.api.java.DataSet;
-import org.apache.flink.api.java.tuple.Tuple3;
 import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
-import org.gradoop.model.impl.GraphCollection;
-import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMCore;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.FatEdge;
+import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
+import org.gradoop.model.impl.algorithms.fsm.common.TransactionalFSM;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine
-  .FilterRefineTransactionalFSMCore;
-import org.gradoop.model.impl.id.GradoopId;
+  .FilterRefineTransactionalFSMiner;
 
 /**
  * The gSpan frequent subgraph mining algorithm implemented as Gradoop Operator
@@ -40,28 +35,12 @@ public class FilterRefineTransactionalFSM
   <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge>
   extends TransactionalFSM<G, V, E> {
 
-  private TransactionalFSMCore core = new FilterRefineTransactionalFSMCore();
-
   /**
    * constructor
    * @param fsmConfig frequent subgraph mining configuration
    */
   public FilterRefineTransactionalFSM(FSMConfig fsmConfig) {
-    super(fsmConfig);
-  }
-
-  @Override
-  public GraphCollection<G, V, E>
-  execute(GraphCollection<G, V, E> collection)  {
-    setConfigAndMinSupport(collection, core);
-
-    // pre processing
-    DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> fatEdges =
-      pruneAndRelabelEdges(collection);
-
-    DataSet<CompressedDFSCode> allFrequentDfsCodes = core.mine(fatEdges);
-
-    return decodeDfsCodes(allFrequentDfsCodes);
+    super(fsmConfig, new FilterRefineTransactionalFSMiner());
   }
 
   @Override

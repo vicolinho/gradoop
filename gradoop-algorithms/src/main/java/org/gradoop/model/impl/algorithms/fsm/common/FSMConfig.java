@@ -15,7 +15,7 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.impl.algorithms.fsm;
+package org.gradoop.model.impl.algorithms.fsm.common;
 
 import java.io.Serializable;
 

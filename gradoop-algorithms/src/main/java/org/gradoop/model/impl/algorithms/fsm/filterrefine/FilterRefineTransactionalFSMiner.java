@@ -3,9 +3,9 @@ package org.gradoop.model.impl.algorithms.fsm.filterrefine;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
+import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.Print;
-import org.gradoop.model.impl.algorithms.fsm.common
-  .AbstractTransactionalFSMCore;
+import org.gradoop.model.impl.algorithms.fsm.common.AbstractTransactionalFSMiner;
 import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.Frequent;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
@@ -18,18 +18,19 @@ import org.gradoop.model.impl.id.GradoopId;
 import java.util.Map;
 
 
-public class FilterRefineTransactionalFSMCore
-  extends AbstractTransactionalFSMCore {
+public class FilterRefineTransactionalFSMiner
+  extends AbstractTransactionalFSMiner {
 
   @Override
   public DataSet<CompressedDFSCode> mine(
-    DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> fatEdges) {
+    DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> fatEdges,
+    DataSet<Integer> minSupport, FSMConfig fsmConfig) {
 
     boolean debug = false;
 
     // determine 1-edge frequent DFS codes
     DataSet<CompressedDFSCode> allFrequentDfsCodes =
-      find1EdgeFrequentDfsCodes(fatEdges);
+      find1EdgeFrequentDfsCodes(fatEdges, minSupport);
 
     if(debug) {
       allFrequentDfsCodes = allFrequentDfsCodes.map(

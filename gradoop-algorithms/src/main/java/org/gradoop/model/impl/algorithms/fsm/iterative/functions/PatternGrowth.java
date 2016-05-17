@@ -18,7 +18,7 @@
 package org.gradoop.model.impl.algorithms.fsm.iterative.functions;
 
 import org.apache.flink.api.common.functions.MapFunction;
-import org.gradoop.model.impl.algorithms.fsm.FSMConfig;
+import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.gspan.PatternGrower;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;

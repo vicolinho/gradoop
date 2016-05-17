@@ -3,10 +3,8 @@ package org.gradoop.model.impl.algorithms.fsm.iterative;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.operators.IterativeDataSet;
 import org.apache.flink.api.java.tuple.Tuple3;
-import org.gradoop.model.impl.algorithms.fsm.FSMConfig;
-import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMCore;
-import org.gradoop.model.impl.algorithms.fsm.common
-  .AbstractTransactionalFSMCore;
+import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
+import org.gradoop.model.impl.algorithms.fsm.common.AbstractTransactionalFSMiner;
 import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.functions
   .ConcatFrequentPatterns;
@@ -25,19 +23,20 @@ import org.gradoop.model.impl.id.GradoopId;
 
 import java.util.Collection;
 
-public class IterativeTransactionalFSMCore
-  extends AbstractTransactionalFSMCore {
+public class IterativeTransactionalFSMiner
+  extends AbstractTransactionalFSMiner {
 
   @Override
   public DataSet<CompressedDFSCode> mine(
-    DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> fatEdges) {
+    DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> fatEdges,
+    DataSet<Integer> minSupport, FSMConfig fsmConfig) {
 
     // determine 1-edge frequent DFS patterns
-    DataSet<CompressedDFSCode> allFrequentPatterns =
-      find1EdgeFrequentDfsCodes(fatEdges);
+    DataSet<CompressedDFSCode> allFrequentDfsCodes =
+      find1EdgeFrequentDfsCodes(fatEdges, minSupport);
 
     // filter edges by 1-edge DFS pattern
-    fatEdges = filterFatEdges(fatEdges, allFrequentPatterns);
+    fatEdges = filterFatEdges(fatEdges, allFrequentDfsCodes);
 
     // create search space with collector
     DataSet<Transaction> searchSpace = fatEdges
@@ -77,11 +76,11 @@ public class IterativeTransactionalFSMCore
       .closeWith(nextWorkSet, currentFrequentPatterns);
 
     // post processing
-    allFrequentPatterns = collector
+    allFrequentDfsCodes = collector
       .filter(new IsCollector())             // get only collector
       .flatMap(new ExpandFrequentDfsCodes()) // expand array to data set
-      .union(allFrequentPatterns);
+      .union(allFrequentDfsCodes);
 
-    return allFrequentPatterns;
+    return allFrequentDfsCodes;
   }
 }

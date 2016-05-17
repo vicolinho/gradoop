@@ -2,9 +2,7 @@ package org.gradoop.model.impl.algorithms.fsm.common.gspan;
 
 import com.google.common.collect.Sets;
 import org.apache.commons.lang.builder.HashCodeBuilder;
-import org.gradoop.model.impl.algorithms.fsm.FSMConfig;
-import org.gradoop.model.impl.algorithms.fsm.common.gspan.DfsCodeComparator;
-import org.gradoop.model.impl.algorithms.fsm.common.gspan.EdgePatternComparator;
+import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyListEntry;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSCode;

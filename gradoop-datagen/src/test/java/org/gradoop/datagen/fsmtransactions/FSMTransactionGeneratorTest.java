@@ -3,7 +3,7 @@ package org.gradoop.datagen.fsmtransactions;
 import org.apache.flink.api.common.functions.CrossFunction;
 import org.gradoop.model.GradoopFlinkTestBase;
 import org.gradoop.model.impl.GraphCollection;
-import org.gradoop.model.impl.algorithms.fsm.FSMConfig;
+import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.FilterRefineTransactionalFSM;
 import org.gradoop.model.impl.algorithms.fsm.IterativeTransactionalFSM;
 import org.gradoop.model.impl.operators.count.Count;
