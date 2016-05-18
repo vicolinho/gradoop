@@ -1,12 +1,22 @@
 package org.gradoop.datagen.fsmtransactions;
 
-import org.apache.flink.api.common.functions.CrossFunction;
+import org.apache.flink.api.java.DataSet;
+import org.apache.flink.api.java.tuple.Tuple3;
 import org.gradoop.model.GradoopFlinkTestBase;
+import org.gradoop.model.impl.GradoopFlinkTestUtils;
 import org.gradoop.model.impl.GraphCollection;
+import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMiner;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
-import org.gradoop.model.impl.algorithms.fsm.FilterRefineTransactionalFSM;
-import org.gradoop.model.impl.algorithms.fsm.IterativeTransactionalFSM;
-import org.gradoop.model.impl.operators.count.Count;
+import org.gradoop.model.impl.algorithms.fsm.common
+  .GradoopTransactionalFSMEncoder;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.FatEdge;
+import org.gradoop.model.impl.algorithms.fsm.filterrefine
+  .FilterRefineTransactionalFSMiner;
+import org.gradoop.model.impl.algorithms.fsm.iterative
+  .IterativeTransactionalFSMiner;
+import org.gradoop.model.impl.functions.join.WithEmptySide;
+import org.gradoop.model.impl.id.GradoopId;
 import org.gradoop.model.impl.pojo.EdgePojo;
 import org.gradoop.model.impl.pojo.GraphHeadPojo;
 import org.gradoop.model.impl.pojo.VertexPojo;
@@ -15,7 +25,37 @@ import org.junit.Test;
 public class FSMTransactionGeneratorTest  extends GradoopFlinkTestBase {
 
   @Test
-  public void testExecute() throws Exception {
+  public void testPredictableGenerator() throws Exception {
+    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> input =
+      new PredictableFSMTransactionGenerator<>(getConfig(), 100)
+      .execute();
+
+    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.9f);
+
+    GradoopTransactionalFSMEncoder<GraphHeadPojo, VertexPojo, EdgePojo>
+      encoder = new GradoopTransactionalFSMEncoder<>();
+
+    DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> fatEdges =
+      encoder.encode(input, fsmConfig);
+
+    TransactionalFSMiner iMiner = new IterativeTransactionalFSMiner();
+    iMiner.setExecutionEnvironment(
+      input.getConfig().getExecutionEnvironment());
+    DataSet<CompressedDFSCode> iResult =
+      iMiner.mine(fatEdges, encoder.getMinSupport(), fsmConfig);
+
+    TransactionalFSMiner frMiner = new FilterRefineTransactionalFSMiner();
+    DataSet<CompressedDFSCode> frResult =
+      frMiner.mine(fatEdges, encoder.getMinSupport(), fsmConfig);
+
+    iResult.fullOuterJoin(frResult)
+      .where(0).equalTo(0)
+      .with(new WithEmptySide<CompressedDFSCode, CompressedDFSCode>())
+      .print();
+  }
+
+  @Test
+  public void testRandomGenerator() throws Exception {
     FSMTransactionGeneratorConfig generatorConfig =
       new FSMTransactionGeneratorConfig(
         100, // graph count
@@ -29,8 +69,8 @@ public class FSMTransactionGeneratorTest  extends GradoopFlinkTestBase {
         1   // edgeLabelSize
       );
 
-    FSMTransactionGenerator<GraphHeadPojo, VertexPojo, EdgePojo> gen =
-      new FSMTransactionGenerator<>(getConfig(), generatorConfig);
+    RandomFSMTransactionGenerator<GraphHeadPojo, VertexPojo, EdgePojo> gen =
+      new RandomFSMTransactionGenerator<>(getConfig(), generatorConfig);
 
     GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> input =
       gen.execute();
@@ -39,27 +79,26 @@ public class FSMTransactionGeneratorTest  extends GradoopFlinkTestBase {
 
     FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.3f);
 
-    FilterRefineTransactionalFSM<GraphHeadPojo, VertexPojo, EdgePojo>
-      parallelMiner = new FilterRefineTransactionalFSM<>(fsmConfig);
+    GradoopTransactionalFSMEncoder<GraphHeadPojo, VertexPojo, EdgePojo>
+      encoder = new GradoopTransactionalFSMEncoder<>();
 
-    IterativeTransactionalFSM<GraphHeadPojo, VertexPojo, EdgePojo>
-      iterativeMiner = new IterativeTransactionalFSM<>(fsmConfig);
+    DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> fatEdges =
+      encoder.encode(input, fsmConfig);
 
-    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> parallelResult =
-      parallelMiner.execute(input);
+    TransactionalFSMiner iMiner = new IterativeTransactionalFSMiner();
+    iMiner.setExecutionEnvironment(
+      input.getConfig().getExecutionEnvironment());
+    DataSet<CompressedDFSCode> iResult =
+      iMiner.mine(fatEdges, encoder.getMinSupport(), fsmConfig);
 
-    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> iterativeResult =
-      iterativeMiner.execute(input);
+    TransactionalFSMiner frMiner = new FilterRefineTransactionalFSMiner();
+    DataSet<CompressedDFSCode> frResult =
+      frMiner.mine(fatEdges, encoder.getMinSupport(), fsmConfig);
 
-    Count.count(parallelResult.getGraphHeads()).cross(
-      Count.count(iterativeResult.getGraphHeads())
-    ).with(new CrossFunction<Long, Long, String>() {
-      @Override
-      public String cross(Long aLong, Long aLong2) throws Exception {
-        return aLong.toString() + "/" + aLong2.toString();
-      }
-    }).print();
-
+    iResult.fullOuterJoin(frResult)
+      .where(0).equalTo(0)
+      .with(new WithEmptySide<CompressedDFSCode, CompressedDFSCode>())
+      .print();
   }
 
 }

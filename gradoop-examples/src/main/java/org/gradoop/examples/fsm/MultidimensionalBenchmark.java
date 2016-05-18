@@ -5,7 +5,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.flink.api.common.ProgramDescription;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.core.fs.FileSystem;
-import org.gradoop.datagen.fsmtransactions.FSMTransactionGenerator;
+import org.gradoop.datagen.fsmtransactions.RandomFSMTransactionGenerator;
 import org.gradoop.datagen.fsmtransactions.FSMTransactionGeneratorConfig;
 import org.gradoop.model.impl.EPGMDatabase;
 import org.gradoop.model.impl.GraphCollection;
@@ -93,8 +93,8 @@ public class MultidimensionalBenchmark implements ProgramDescription {
     GradoopFlinkConfig<GraphHeadPojo, VertexPojo, EdgePojo> gradoopConf =
       GradoopFlinkConfig.createDefaultConfig(environment);
 
-    FSMTransactionGenerator<GraphHeadPojo, VertexPojo, EdgePojo>
-      generator = new FSMTransactionGenerator<>(gradoopConf, genConf);
+    RandomFSMTransactionGenerator<GraphHeadPojo, VertexPojo, EdgePojo>
+      generator = new RandomFSMTransactionGenerator<>(gradoopConf, genConf);
 
     String vertexFile = filePrefix + "vertices.json";
     String edgeFile = filePrefix + "edges.json";

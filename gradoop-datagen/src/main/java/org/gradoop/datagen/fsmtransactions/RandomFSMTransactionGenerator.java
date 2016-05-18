@@ -18,7 +18,7 @@
 package org.gradoop.datagen.fsmtransactions;
 
 import com.google.common.collect.Lists;
-import org.gradoop.datagen.fsmtransactions.functions.FSMTransaction;
+import org.gradoop.datagen.fsmtransactions.functions.RandomTransaction;
 import org.apache.flink.api.java.DataSet;
 import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.api.EPGMGraphHead;
@@ -39,7 +39,7 @@ import java.util.Random;
  * @param <V> vertex type
  * @param <E> edge type
  */
-public class FSMTransactionGenerator
+public class RandomFSMTransactionGenerator
   <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge>
   implements CollectionGenerator<G, V, E> {
 
@@ -57,7 +57,7 @@ public class FSMTransactionGenerator
    * @param gradoopConfig Gradoop configuration
    * @param generatorConfig generator configuration
    */
-  public FSMTransactionGenerator(GradoopFlinkConfig<G, V, E> gradoopConfig,
+  public RandomFSMTransactionGenerator(GradoopFlinkConfig<G, V, E> gradoopConfig,
     FSMTransactionGeneratorConfig generatorConfig) {
     this.gradoopConfig = gradoopConfig;
     this.generatorConfig = generatorConfig;
@@ -73,7 +73,7 @@ public class FSMTransactionGenerator
 
     DataSet<GraphTransaction<G, V, E>> transactions = seeds
       .cross(count)
-      .with(new FSMTransaction<>(
+      .with(new RandomTransaction<>(
         gradoopConfig, generatorConfig, getVertexLabels(), getEdgeLabels()));
 
     return GraphCollection

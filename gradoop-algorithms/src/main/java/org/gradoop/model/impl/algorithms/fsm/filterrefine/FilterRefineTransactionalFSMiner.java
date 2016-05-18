@@ -82,7 +82,7 @@ public class FilterRefineTransactionalFSMiner
 
     // add globally frequent DFS codes to result
 
-    if(true) {
+    if(debug) {
       filterResult = filterResult.map(
         new Print<Tuple3<CompressedDFSCode, Integer, Boolean>>("filterResult"));
     }

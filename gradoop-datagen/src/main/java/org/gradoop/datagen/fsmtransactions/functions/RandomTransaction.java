@@ -50,7 +50,7 @@ import java.util.Set;
  * @param <V> vertex type
  * @param <E> edge type
  */
-public class FSMTransaction
+public class RandomTransaction
   <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge>
   implements CrossFunction<Long, Long, GraphTransaction<G, V, E>>,
   ResultTypeQueryable<GraphTransaction<G, V, E>> {
@@ -87,7 +87,7 @@ public class FSMTransaction
    * @param vertexLabels vertex labels
    * @param edgeLabels edge labels
    */
-  public FSMTransaction(
+  public RandomTransaction(
     GradoopFlinkConfig<G, V, E> gradoopFlinkConfig,
     FSMTransactionGeneratorConfig generatorConfig,
     List<String> vertexLabels,
