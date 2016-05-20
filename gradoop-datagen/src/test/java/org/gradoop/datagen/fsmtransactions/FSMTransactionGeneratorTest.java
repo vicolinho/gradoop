@@ -30,7 +30,7 @@ public class FSMTransactionGeneratorTest  extends GradoopFlinkTestBase {
       new PredictableFSMTransactionGenerator<>(getConfig(), 100)
       .execute();
 
-    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.9f);
+    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.95f);
 
     GradoopTransactionalFSMEncoder<GraphHeadPojo, VertexPojo, EdgePojo>
       encoder = new GradoopTransactionalFSMEncoder<>();

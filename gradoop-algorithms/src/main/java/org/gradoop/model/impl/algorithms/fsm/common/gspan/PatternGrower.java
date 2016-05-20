@@ -1,7 +1,6 @@
 package org.gradoop.model.impl.algorithms.fsm.common.gspan;
 
 import com.google.common.collect.Sets;
-import org.apache.commons.lang.builder.HashCodeBuilder;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyListEntry;
@@ -17,7 +16,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 public class PatternGrower implements Serializable {
 
@@ -41,7 +39,7 @@ public class PatternGrower implements Serializable {
     ArrayList<AdjacencyList> adjacencyLists,
     HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> parentCodeEmbeddings) {
     // min DFS code per subgraph (set of edge ids)
-    Map<Integer, HashSet<DFSCode>> coverageDfsCodes = new HashMap<>();
+    Map<Coverage, HashSet<DFSCode>> coverageDfsCodes = new HashMap<>();
     Map<DFSCode, HashSet<DFSEmbedding>> codeEmbeddings = new HashMap<>();
 
     // for each supported DFS code
@@ -126,14 +124,9 @@ public class PatternGrower implements Serializable {
                   embedding.getEdgeTimes().add(edgeIndex);
 
                   // check if subgraph already discovered
-                  HashCodeBuilder builder = new HashCodeBuilder();
-                  Set<Integer> mappedEdgeIndices = Sets
-                    .newHashSet(embedding.getEdgeTimes());
 
-                  for (Integer mappedEdgeIndex : mappedEdgeIndices) {
-                    builder.append(mappedEdgeIndex);
-                  }
-                  Integer coverage = builder.hashCode();
+                  Coverage coverage = Coverage
+                    .fromIdList(embedding.getEdgeTimes());
 
                   HashSet<DFSCode> dfsCodes =
                     coverageDfsCodes.get(coverage);
@@ -175,7 +168,7 @@ public class PatternGrower implements Serializable {
   private HashMap<CompressedDFSCode, HashSet<DFSEmbedding>>
   getMinDfsCodesAndEmbeddings(
 
-    Map<Integer, HashSet<DFSCode>> coverageDfsCodes,
+    Map<Coverage, HashSet<DFSCode>> coverageDfsCodes,
     Map<DFSCode, HashSet<DFSEmbedding>> codeEmbeddings) {
     HashMap<CompressedDFSCode, HashSet<DFSEmbedding>>
       compressedCodeEmbeddings = new HashMap<>();
