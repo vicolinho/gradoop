@@ -20,6 +20,7 @@ package org.gradoop.model.impl.algorithms.fsm.common.functions;
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.configuration.Configuration;
+import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.id.GradoopId;
 
 import java.util.ArrayList;
@@ -32,14 +33,13 @@ public class VertexLabelDecoder
   extends RichMapFunction<Tuple3<GradoopId, GradoopId, Integer>,
   Tuple3<GradoopId, GradoopId, String>> {
 
-  public static final String DICTIONARY = "dictionary";
   private ArrayList<String> dictionary;
 
   @Override
   public void open(Configuration parameters) throws Exception {
     super.open(parameters);
     this.dictionary = getRuntimeContext()
-      .<ArrayList<String>>getBroadcastVariable(DICTIONARY)
+      .<ArrayList<String>>getBroadcastVariable(BroadcastNames.VERTEX_DICTIONARY)
       .get(0);
   }
 

@@ -36,4 +36,9 @@ public class Coverage {
   public boolean equals(Object o) {
     return this.hashCode() == o.hashCode();
   }
+
+  @Override
+  public String toString() {
+    return String.valueOf(hashCode);
+  }
 }
