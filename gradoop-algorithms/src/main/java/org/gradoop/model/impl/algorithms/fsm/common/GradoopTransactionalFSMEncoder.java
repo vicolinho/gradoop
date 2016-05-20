@@ -110,7 +110,7 @@ public class GradoopTransactionalFSMEncoder
 
     return vertices
       .flatMap(new VertexLabelEncoder<V>())
-      .withBroadcastSet(reverseDictionary, VertexLabelEncoder.DICTIONARY);
+      .withBroadcastSet(reverseDictionary, BroadcastNames.VERTEX_DICTIONARY);
   }
 
   private DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> combine(
@@ -122,7 +122,7 @@ public class GradoopTransactionalFSMEncoder
 
     return encodedEdges
       .flatMap(new EdgeLabelEncoder())
-      .withBroadcastSet(reverseDictionary, BroadcastNames.DICTIONARY)
+      .withBroadcastSet(reverseDictionary, BroadcastNames.EDGE_DICTIONARY)
       .join(encodedVertices).where(1).equalTo(0).with(new AppendSourceLabel())
       .join(encodedVertices).where(2).equalTo(0)
       .with(new AppendTargetLabelAndInitialDfsCode());

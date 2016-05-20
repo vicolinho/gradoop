@@ -43,7 +43,9 @@ public class FSMConfig implements Serializable {
   /**
    * Maximum subgraph size by edge count.
    */
-  private final int maxEdgeCount;
+  private int maxEdgeCount;
+
+  private int minEdgeCount;
 
   /**
    * valued constructor
@@ -55,7 +57,8 @@ public class FSMConfig implements Serializable {
     this.threshold = threshold;
     this.directed = directed;
     this.multiGraph = multiGraph;
-    this.maxEdgeCount = 10;
+    this.maxEdgeCount = 0;
+    this.minEdgeCount = 0;
   }
 
   public float getThreshold() {
@@ -72,6 +75,18 @@ public class FSMConfig implements Serializable {
 
   public int getMaxEdgeCount() {
     return maxEdgeCount;
+  }
+
+  public void setMaxEdgeCount(int maxEdgeCount) {
+    this.maxEdgeCount = maxEdgeCount;
+  }
+
+  public int getMinEdgeCount() {
+    return minEdgeCount;
+  }
+
+  public void setMinEdgeCount(int minEdgeCount) {
+    this.minEdgeCount = minEdgeCount;
   }
 
   /**

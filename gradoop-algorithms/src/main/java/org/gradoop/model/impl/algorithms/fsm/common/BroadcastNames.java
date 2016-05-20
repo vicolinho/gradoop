@@ -9,6 +9,7 @@ public class BroadcastNames {
    * name of broadcast data set for minimum support
    */
   public static final String MIN_SUPPORT = "minSupport";
-  public static final String DICTIONARY = "dictionary";
+  public static final String VERTEX_DICTIONARY = "vertexDictionary";
   public static final String WORKER_GRAPHCOUNT = "workerIds";
+  public static final String EDGE_DICTIONARY = "edgeDictionary";
 }

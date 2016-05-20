@@ -7,6 +7,8 @@ import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.util.Collector;
+import org.gradoop.model.impl.algorithms.fsm.common
+  .AbstractTransactionalFSMiner;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.gspan.PatternGrower;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;
@@ -79,12 +81,20 @@ public class LocalTransactionalFSM implements FlatMapFunction
 
     ArrayList<CompressedDFSCode> currentFrequentDfsCodes;
 
-    while (first || !activeGraphIds.isEmpty()) {
+    int edgeCount = 1;
+    int maxEdgeCount = fsmConfig.getMaxEdgeCount();
+    maxEdgeCount = maxEdgeCount > 0 ?
+      maxEdgeCount : AbstractTransactionalFSMiner.MAX_EDGE_COUNT;
+
+    while ((first || !activeGraphIds.isEmpty()) &&
+      edgeCount < maxEdgeCount) {
+
       if (first) {
         first = false;
       }
 
       growFrequentEmbeddings();
+      edgeCount++;
 
       Map<CompressedDFSCode, Integer> currentDfsCodesWithSupport =
         reportPatterns();

@@ -53,11 +53,6 @@
             <artifactId>gradoop-flink</artifactId>
         </dependency>
 
-        <dependency>
-            <groupId>org.gradoop</groupId>
-            <artifactId>gradoop-algorithms</artifactId>
-        </dependency>
-
         <!-- Flink -->
         <dependency>
             <groupId>org.apache.flink</groupId>

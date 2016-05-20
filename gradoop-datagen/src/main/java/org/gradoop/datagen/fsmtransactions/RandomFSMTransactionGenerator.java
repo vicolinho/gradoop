@@ -67,7 +67,7 @@ public class RandomFSMTransactionGenerator
   public GraphCollection<G, V, E> execute() {
 
     DataSet<Long> seeds = gradoopConfig.getExecutionEnvironment()
-      .generateSequence(0, generatorConfig.getGraphCount());
+      .generateSequence(1, generatorConfig.getGraphCount());
 
     DataSet<Long> count = Count.count(seeds);
 

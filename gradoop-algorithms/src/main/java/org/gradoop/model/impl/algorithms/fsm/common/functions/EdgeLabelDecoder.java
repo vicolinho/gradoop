@@ -39,7 +39,7 @@ public class EdgeLabelDecoder extends RichMapFunction<
   public void open(Configuration parameters) throws Exception {
     super.open(parameters);
     this.dictionary = getRuntimeContext()
-      .<ArrayList<String>>getBroadcastVariable(BroadcastNames.DICTIONARY)
+      .<ArrayList<String>>getBroadcastVariable(BroadcastNames.EDGE_DICTIONARY)
       .get(0);
   }
 

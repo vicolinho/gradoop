@@ -18,6 +18,10 @@ import org.gradoop.model.impl.id.GradoopId;
 public abstract class AbstractTransactionalFSMiner
   implements TransactionalFSMiner {
 
+  /**
+   * maximum iteration, if no maximum edge count provided
+   */
+  public static final int MAX_EDGE_COUNT = 100;
   protected ExecutionEnvironment env;
 
   protected DataSet<CompressedDFSCode> find1EdgeFrequentDfsCodes(

@@ -22,9 +22,7 @@ import org.gradoop.util.GradoopFlinkConfig;
 
 import java.util.ArrayList;
 
-/**
- * Created by peet on 17.05.16.
- */
+
 public class GradoopTransactionalFSMDecoder
   <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge>
   implements TransactionalFSMDecoder<GraphCollection<G, V, E>> {
@@ -61,14 +59,14 @@ public class GradoopTransactionalFSMDecoder
     DataSet<V> vertices = frequentSubgraphs
       .flatMap(new ExpandVertices<G>())
       .map(new VertexLabelDecoder())
-      .withBroadcastSet(vertexLabelDictionary, BroadcastNames.DICTIONARY)
+      .withBroadcastSet(vertexLabelDictionary, BroadcastNames.VERTEX_DICTIONARY)
       .map(new FullVertex<>(gradoopConfig.getVertexFactory()))
       .returns(gradoopConfig.getVertexFactory().getType());
 
     DataSet<E> edges = frequentSubgraphs
       .flatMap(new ExpandEdges<G>())
       .map(new EdgeLabelDecoder())
-      .withBroadcastSet(edgeLabelDictionary, BroadcastNames.DICTIONARY)
+      .withBroadcastSet(edgeLabelDictionary, BroadcastNames.EDGE_DICTIONARY)
       .map(new FullEdge<>(gradoopConfig.getEdgeFactory()))
       .returns(gradoopConfig.getEdgeFactory().getType());
 

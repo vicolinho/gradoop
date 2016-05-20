@@ -21,6 +21,7 @@ import org.apache.flink.api.common.functions.RichFlatMapFunction;
 import org.apache.flink.api.java.tuple.Tuple4;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.util.Collector;
+import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.id.GradoopId;
 
 import java.util.HashMap;
@@ -33,7 +34,6 @@ public class EdgeLabelEncoder extends RichFlatMapFunction
   <Tuple4<GradoopId, GradoopId, GradoopId, String>,
     Tuple4<GradoopId, GradoopId, GradoopId, Integer>> {
 
-  public static final String DICTIONARY = "dictionary";
   private HashMap<String, Integer> dictionary;
 
   @Override
@@ -41,7 +41,7 @@ public class EdgeLabelEncoder extends RichFlatMapFunction
     super.open(parameters);
 
     this.dictionary = getRuntimeContext()
-      .<HashMap<String, Integer>>getBroadcastVariable(DICTIONARY)
+      .<HashMap<String, Integer>>getBroadcastVariable(BroadcastNames.EDGE_DICTIONARY)
       .get(0);
   }
 

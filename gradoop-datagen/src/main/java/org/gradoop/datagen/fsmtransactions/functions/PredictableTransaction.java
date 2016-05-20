@@ -120,7 +120,7 @@ public class PredictableTransaction
   private void createEdge(
     GradoopId sourceId, String label, GradoopId targetId, Set<E> edges) {
 
-    edges.add(edgeFactory.createEdge(label, targetId, sourceId));
+    edges.add(edgeFactory.createEdge(label, sourceId, targetId));
   }
 
   private GradoopId createVertex(String vertexLabel, Set<V> vertices) {

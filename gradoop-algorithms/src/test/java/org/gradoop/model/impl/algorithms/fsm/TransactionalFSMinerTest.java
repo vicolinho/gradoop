@@ -1,11 +1,14 @@
-package org.gradoop.datagen.fsmtransactions;
+package org.gradoop.model.impl.algorithms.fsm;
 
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.tuple.Tuple3;
+import org.gradoop.datagen.fsmtransactions.FSMTransactionGeneratorConfig;
+import org.gradoop.datagen.fsmtransactions.PredictableFSMTransactionGenerator;
+import org.gradoop.datagen.fsmtransactions.RandomFSMTransactionGenerator;
 import org.gradoop.model.GradoopFlinkTestBase;
-import org.gradoop.model.impl.GradoopFlinkTestUtils;
 import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMiner;
+import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common
   .GradoopTransactionalFSMEncoder;
@@ -15,22 +18,27 @@ import org.gradoop.model.impl.algorithms.fsm.filterrefine
   .FilterRefineTransactionalFSMiner;
 import org.gradoop.model.impl.algorithms.fsm.iterative
   .IterativeTransactionalFSMiner;
-import org.gradoop.model.impl.functions.join.WithEmptySide;
+import org.gradoop.model.impl.functions.bool.And;
 import org.gradoop.model.impl.id.GradoopId;
 import org.gradoop.model.impl.pojo.EdgePojo;
 import org.gradoop.model.impl.pojo.GraphHeadPojo;
 import org.gradoop.model.impl.pojo.VertexPojo;
 import org.junit.Test;
 
-public class FSMTransactionGeneratorTest  extends GradoopFlinkTestBase {
+public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
 
   @Test
   public void testPredictableGenerator() throws Exception {
     GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> input =
       new PredictableFSMTransactionGenerator<>(getConfig(), 100)
-      .execute();
+        .execute();
+
+//    getExecutionEnvironment().setParallelism(1);
 
     FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.95f);
+//    int edgeCount = 7;
+//    fsmConfig.setMinEdgeCount(edgeCount);
+//    fsmConfig.setMaxEdgeCount(edgeCount);
 
     GradoopTransactionalFSMEncoder<GraphHeadPojo, VertexPojo, EdgePojo>
       encoder = new GradoopTransactionalFSMEncoder<>();
@@ -48,10 +56,19 @@ public class FSMTransactionGeneratorTest  extends GradoopFlinkTestBase {
     DataSet<CompressedDFSCode> frResult =
       frMiner.mine(fatEdges, encoder.getMinSupport(), fsmConfig);
 
-    iResult.fullOuterJoin(frResult)
-      .where(0).equalTo(0)
-      .with(new WithEmptySide<CompressedDFSCode, CompressedDFSCode>())
-      .print();
+    collectAndAssertTrue(
+      And.reduce(
+        iResult.fullOuterJoin(frResult)
+          .where(0).equalTo(0)
+          .with(new EqualSupport())
+          .withBroadcastSet(
+            encoder.getVertexLabelDictionary(),
+            BroadcastNames.VERTEX_DICTIONARY)
+          .withBroadcastSet(
+            encoder.getEdgeLabelDictionary(),
+            BroadcastNames.EDGE_DICTIONARY)
+      )
+    );
   }
 
   @Test
@@ -95,10 +112,19 @@ public class FSMTransactionGeneratorTest  extends GradoopFlinkTestBase {
     DataSet<CompressedDFSCode> frResult =
       frMiner.mine(fatEdges, encoder.getMinSupport(), fsmConfig);
 
-    iResult.fullOuterJoin(frResult)
-      .where(0).equalTo(0)
-      .with(new WithEmptySide<CompressedDFSCode, CompressedDFSCode>())
-      .print();
+    collectAndAssertTrue(
+      And.reduce(
+        iResult.fullOuterJoin(frResult)
+          .where(0).equalTo(0)
+          .with(new EqualSupport())
+          .withBroadcastSet(
+            encoder.getVertexLabelDictionary(),
+            BroadcastNames.VERTEX_DICTIONARY)
+          .withBroadcastSet(
+            encoder.getEdgeLabelDictionary(),
+            BroadcastNames.EDGE_DICTIONARY)
+      )
+    );
   }
 
 }

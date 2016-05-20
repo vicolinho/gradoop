@@ -61,13 +61,11 @@ public class FrequentOrRefinementCandidate
 
     // for each worker report
     for(Tuple3<CompressedDFSCode, Integer, Boolean> triple : iterable) {
-      if(first) {
-        code = triple.f0;
-        first = false;
-      }
+      code = triple.f0;
 
       Integer reportedWorkerId = triple.f1;
       Boolean locallyFrequent = triple.f2;
+
       support += code.getSupport();
 
       if(!altLeastOnceLocallyFrequent && locallyFrequent) {

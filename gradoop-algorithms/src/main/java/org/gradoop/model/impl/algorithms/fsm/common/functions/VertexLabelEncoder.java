@@ -21,6 +21,7 @@ import org.apache.flink.api.common.functions.RichFlatMapFunction;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.util.Collector;
 import org.gradoop.model.api.EPGMVertex;
+import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.VertexIdLabel;
 
 import java.util.HashMap;
@@ -32,15 +33,13 @@ import java.util.HashMap;
 public class VertexLabelEncoder<V extends EPGMVertex>
   extends RichFlatMapFunction<V, VertexIdLabel> {
 
-
-  public static final String DICTIONARY = "dictionary";
   private HashMap<String, Integer> dictionary;
 
   @Override
   public void open(Configuration parameters) throws Exception {
     super.open(parameters);
     this.dictionary = getRuntimeContext()
-      .<HashMap<String, Integer>>getBroadcastVariable(DICTIONARY)
+      .<HashMap<String, Integer>>getBroadcastVariable(BroadcastNames.VERTEX_DICTIONARY)
       .get(0);
   }
 

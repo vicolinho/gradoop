@@ -33,8 +33,6 @@ public class WithEmptySide<L, R>
   public void join(L left, R right, Collector<Either<L, R>> collector) throws
     Exception {
 
-    System.out.println(left + "," + right );
-
     if (right == null) {
       collector.collect(Either.<L, R>Left(left));
     } else if (left == null) {
