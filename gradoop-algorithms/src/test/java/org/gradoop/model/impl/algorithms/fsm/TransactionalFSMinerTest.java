@@ -1,6 +1,8 @@
 package org.gradoop.model.impl.algorithms.fsm;
 
+import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.java.DataSet;
+import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.gradoop.datagen.fsmtransactions.FSMTransactionGeneratorConfig;
 import org.gradoop.datagen.fsmtransactions.PredictableFSMTransactionGenerator;
@@ -12,6 +14,7 @@ import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common
   .GradoopTransactionalFSMEncoder;
+import org.gradoop.model.impl.algorithms.fsm.common.PrintDfsCode;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.FatEdge;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine
@@ -28,15 +31,52 @@ import org.junit.Test;
 public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
 
   @Test
-  public void testPredictableGenerator() throws Exception {
+  public void testIterative() throws Exception {
     GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> input =
       new PredictableFSMTransactionGenerator<>(getConfig(), 100)
         .execute();
 
-//    getExecutionEnvironment().setParallelism(1);
+//    getExecutionEnvironment().setParallelism(3);
 
-    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.95f);
-//    int edgeCount = 7;
+    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.75f);
+//    int edgeCount = 2;
+//    fsmConfig.setMinEdgeCount(edgeCount);
+//    fsmConfig.setMaxEdgeCount(edgeCount);
+
+    GradoopTransactionalFSMEncoder<GraphHeadPojo, VertexPojo, EdgePojo>
+      encoder = new GradoopTransactionalFSMEncoder<>();
+
+    DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> fatEdges =
+      encoder.encode(input, fsmConfig);
+
+    TransactionalFSMiner iMiner = new IterativeTransactionalFSMiner();
+    iMiner.setExecutionEnvironment(
+      input.getConfig().getExecutionEnvironment());
+    DataSet<CompressedDFSCode> iResult =
+      iMiner.mine(fatEdges, encoder.getMinSupport(), fsmConfig);
+
+    iResult
+      .filter(new WrongCount())
+      .map(new PrintDfsCode())
+      .withBroadcastSet(
+        encoder.getVertexLabelDictionary(),
+        BroadcastNames.VERTEX_DICTIONARY)
+      .withBroadcastSet(
+        encoder.getEdgeLabelDictionary(),
+        BroadcastNames.EDGE_DICTIONARY)
+      .print();
+  }
+
+  @Test
+  public void testIterativeVsFilterRefine() throws Exception {
+    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> input =
+      new PredictableFSMTransactionGenerator<>(getConfig(), 100)
+        .execute();
+
+//    getExecutionEnvironment().setParallelism(3);
+
+    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.55f);
+//    int edgeCount = 2;
 //    fsmConfig.setMinEdgeCount(edgeCount);
 //    fsmConfig.setMaxEdgeCount(edgeCount);
 
@@ -127,4 +167,11 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
     );
   }
 
+  private class WrongCount implements FilterFunction<CompressedDFSCode> {
+    @Override
+    public boolean filter(CompressedDFSCode compressedDFSCode) throws
+      Exception {
+      return compressedDFSCode.getSupport() % 10 != 0;
+    }
+  }
 }
