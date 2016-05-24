@@ -19,7 +19,6 @@ package org.gradoop.model.impl.algorithms.fsm.common.tuples;
 
 import org.apache.commons.lang3.StringUtils;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSCode;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;
 import scala.collection.mutable.StringBuilder;
 
@@ -31,12 +30,12 @@ public class Transaction implements Serializable {
 
   private Map<Integer, AdjacencyList> adjacencyLists;
   private Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings;
-  private Collection<Collection<DFSCode>> codeSiblings;
+  private Collection<Collection<CompressedDFSCode>> codeSiblings;
 
   public Transaction(
     Map<Integer, AdjacencyList> adjacencyLists,
     Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings,
-    Collection<Collection<DFSCode>> codeSiblings) {
+    Collection<Collection<CompressedDFSCode>> codeSiblings) {
 
     this.adjacencyLists = adjacencyLists;
     this.codeEmbeddings = codeEmbeddings;
@@ -59,10 +58,14 @@ public class Transaction implements Serializable {
     this.codeEmbeddings = codeEmbeddings;
   }
 
+  public Collection<Collection<CompressedDFSCode>> getSiblingGroups() {
+    return codeSiblings;
+  }
+
   @Override
   public String toString() {
 
-    StringBuilder builder = new StringBuilder("TransactionWrapper");
+    StringBuilder builder = new StringBuilder("IterationItem");
 
 
     builder.append(" (Graph)\n\tAdjacency lists");
@@ -70,7 +73,7 @@ public class Transaction implements Serializable {
     int vertexIndex = 0;
     for (AdjacencyList entry : getAdjacencyLists().values()) {
 
-      builder.append("\n\t\t(" + entry.getVertexLabel() + ":" +
+      builder.append("\n\t\t(" + entry.getFromVertexLabel() + ":" +
         vertexIndex + ") : " +
         StringUtils.join(entry.getEntries(), " | "));
 
@@ -90,5 +93,13 @@ public class Transaction implements Serializable {
     }
 
     return builder.toString();
+  }
+
+  public void setCodeSiblings(Collection<Collection<CompressedDFSCode>> codeSiblings) {
+    this.codeSiblings = codeSiblings;
+  }
+
+  public Boolean canGrow() {
+    return this.codeEmbeddings != null;
   }
 }

@@ -22,26 +22,20 @@ import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.gspan.SearchSpaceBuilder;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.FatEdge;
-import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.TransactionWrapper;
-
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.Transaction;
+import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.IterationItem;
 
 
 import org.gradoop.model.impl.id.GradoopId;
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * (GraphId, [Vertex,..]) |><| (GraphId, [Edge,..]) => Graph
  */
 public class SearchSpace
   implements GroupReduceFunction
-  <Tuple3<GradoopId, FatEdge, CompressedDFSCode>, TransactionWrapper> {
+  <Tuple3<GradoopId, FatEdge, CompressedDFSCode>, IterationItem> {
 
   private final SearchSpaceBuilder builder;
 
@@ -52,8 +46,10 @@ public class SearchSpace
   @Override
   public void reduce(
     Iterable<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> iterable,
-    Collector<TransactionWrapper> collector) throws Exception {
+    Collector<IterationItem> collector) throws Exception {
 
-    collector.collect(TransactionWrapper.createForGraph(builder.createTransaction(iterable)));
+    Transaction transaction = builder.createTransaction(iterable);
+
+    collector.collect(new IterationItem(transaction));
   }
 }

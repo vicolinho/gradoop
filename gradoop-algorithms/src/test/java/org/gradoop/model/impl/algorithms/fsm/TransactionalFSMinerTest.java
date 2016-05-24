@@ -37,10 +37,10 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
 
 //    getExecutionEnvironment().setParallelism(3);
 
-    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.7f);
-    int edgeCount = 2;
-    fsmConfig.setMinEdgeCount(edgeCount);
-    fsmConfig.setMaxEdgeCount(edgeCount);
+    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.95f);
+//    int edgeCount = 2;
+//    fsmConfig.setMinEdgeCount(edgeCount);
+//    fsmConfig.setMaxEdgeCount(edgeCount);
 
     GradoopTransactionalFSMEncoder<GraphHeadPojo, VertexPojo, EdgePojo>
       encoder = new GradoopTransactionalFSMEncoder<>();
@@ -55,7 +55,7 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
       iMiner.mine(fatEdges, encoder.getMinSupport(), fsmConfig);
 
     iResult
-      .filter(new WrongCount())
+//      .filter(new WrongCount())
       .map(new PrintDfsCode())
       .withBroadcastSet(
         encoder.getVertexLabelDictionary(),

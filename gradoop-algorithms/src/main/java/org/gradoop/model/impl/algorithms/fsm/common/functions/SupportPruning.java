@@ -21,10 +21,10 @@ import com.google.common.collect.Lists;
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.configuration.Configuration;
 import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
+import org.gradoop.model.impl.algorithms.fsm.common.gspan.PatternGrower;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.TransactionWrapper;
-
+import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.IterationItem;
 
 
 import java.util.Collection;
@@ -34,8 +34,8 @@ import java.util.Map;
 /**
  * Core of gSpan implementation. Grows embeddings of KnownToBeGloballyFrequent DFS codes.
  */
-public class SupportPruning extends
-  RichMapFunction<TransactionWrapper, TransactionWrapper> {
+public class SupportPruning
+  extends RichMapFunction<IterationItem, IterationItem> {
 
   /**
    * frequent DFS codes
@@ -56,55 +56,15 @@ public class SupportPruning extends
   }
 
   @Override
-  public TransactionWrapper map(TransactionWrapper transactionWrapper) throws Exception {
+  public IterationItem map(IterationItem iterationItem) throws Exception {
 
     if (frequentDfsCodes != null) {
-      if (transactionWrapper.isCollector()) {
-        transactionWrapper = updateCollector(transactionWrapper, frequentDfsCodes);
+      if (iterationItem.isCollector()) {
+        iterationItem.collect(frequentDfsCodes);
       } else {
-        transactionWrapper = dropInfrequentEmbeddings(transactionWrapper, frequentDfsCodes);
+        PatternGrower.prune(iterationItem.getTransaction(), frequentDfsCodes);
       }
     }
-    return transactionWrapper;
-  }
-
-  /**
-   * appends frequent DFS codes collected so far by new ones
-   * @param collector collector search space item
-   * @param newFrequentDfsCodes new frequent DFS codes
-   * @return updated collector
-   */
-  private TransactionWrapper updateCollector(TransactionWrapper collector,
-    Collection<CompressedDFSCode> newFrequentDfsCodes) {
-
-    collector.getFrequentDfsCodes().addAll(newFrequentDfsCodes);
-
-    return collector;
-  }
-
-  /**
-   * grows all embeddings of frequent DFS codes in a graph
-   * @param wrapper graph search space item
-   * @param frequentDfsCodes frequent DFS codes
-   * @return graph with grown embeddings
-   */
-  private TransactionWrapper dropInfrequentEmbeddings(TransactionWrapper wrapper,
-    Collection<CompressedDFSCode> frequentDfsCodes) {
-
-    Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings =
-      wrapper.getTransaction().getCodeEmbeddings();
-
-    Collection<CompressedDFSCode> supportedCodes = Lists
-      .newArrayList(codeEmbeddings.keySet());
-
-    for (CompressedDFSCode supportedCode : supportedCodes) {
-      if (! frequentDfsCodes.contains(supportedCode)) {
-        codeEmbeddings.remove(supportedCode);
-      }
-    }
-
-    wrapper.setActive(! codeEmbeddings.isEmpty());
-
-    return wrapper;
+    return iterationItem;
   }
 }

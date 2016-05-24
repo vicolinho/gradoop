@@ -2,6 +2,7 @@ package org.gradoop.model.impl.algorithms.fsm;
 
 import org.gradoop.model.GradoopFlinkTestBase;
 import org.gradoop.model.api.operators.UnaryCollectionToCollectionOperator;
+import org.gradoop.model.impl.GradoopFlinkTestUtils;
 import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.pojo.EdgePojo;
@@ -185,10 +186,10 @@ public class TransactionalFSMTest extends GradoopFlinkTestBase {
     GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> result =
       gSpan.execute(searchSpace);
 
-//    System.out.println("EXPECTED");
-//    GradoopFlinkTestUtils.printDirectedCanonicalAdjacencyMatrix(expectation);
-//    System.out.println("RESULT");
-//    GradoopFlinkTestUtils.printDirectedCanonicalAdjacencyMatrix(result);
+    System.out.println("EXPECTED");
+    GradoopFlinkTestUtils.printDirectedCanonicalAdjacencyMatrix(expectation);
+    System.out.println("RESULT");
+    GradoopFlinkTestUtils.printDirectedCanonicalAdjacencyMatrix(result);
 
     collectAndAssertTrue(expectation.equalsByGraphElementData(result));
   }
@@ -204,8 +205,8 @@ public class TransactionalFSMTest extends GradoopFlinkTestBase {
     miners.add(
       new IterativeTransactionalFSM<GraphHeadPojo, VertexPojo, EdgePojo>(fsmConfig));
 
-    miners.add(
-      new FilterRefineTransactionalFSM<GraphHeadPojo, VertexPojo, EdgePojo>(fsmConfig));
+//    miners.add(
+//      new FilterRefineTransactionalFSM<GraphHeadPojo, VertexPojo, EdgePojo>(fsmConfig));
 
     return miners;
   }

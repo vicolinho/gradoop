@@ -68,7 +68,7 @@ public class AdjacencyListEntry {
     return minEdgePatternId;
   }
 
-  public Integer getVertexLabel() {
+  public Integer getToVertexLabel() {
     return vertexLabel;
   }
 
@@ -84,7 +84,7 @@ public class AdjacencyListEntry {
     return edgeLabel;
   }
 
-  public Integer getVertexId() {
+  public Integer getToVertexId() {
     return vertexId;
   }
 

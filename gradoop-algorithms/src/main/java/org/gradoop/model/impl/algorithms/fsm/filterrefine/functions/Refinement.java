@@ -209,15 +209,15 @@ public class Refinement implements
         if (edge.isOutgoing() || !directed) {
 
           StepPattern pattern = new StepPattern(
-            vertex.getVertexLabel(),
+            vertex.getFromVertexLabel(),
             edge.getEdgeLabel(),
-            edge.getVertexLabel()
+            edge.getToVertexLabel()
           );
 
           if (allStepPatterns.contains(pattern))
           {
             StepPatternMapping mapping = new StepPatternMapping(
-              sourceVertexId, edge.getEdgeId(), edge.getVertexId());
+              sourceVertexId, edge.getEdgeId(), edge.getToVertexId());
 
             Collection<StepPatternMapping> mappings = stepPatternMappings
               .get(pattern);

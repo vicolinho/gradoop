@@ -47,7 +47,7 @@ public class AdjacencyList {
     return vertexLabel + ":" + entries;
   }
 
-  public Integer getVertexLabel() {
+  public Integer getFromVertexLabel() {
     return vertexLabel;
   }
 

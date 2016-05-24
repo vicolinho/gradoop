@@ -92,13 +92,16 @@ public class SearchSpaceBuilder implements Serializable {
     Map<Integer, AdjacencyList> adjacencyLists = Maps.newHashMap();
     Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings =
       Maps.newHashMap();
-    Collection<Collection<DFSCode>> codeSiblings = Lists.newArrayList();
+
 
     List<DFSCode> oneEdgeCodes = Lists.newArrayList(codeEdges.keySet());
 
     Collections.sort(oneEdgeCodes, dfsCodeComparator);
 
     int minEdgePatternId = 0;
+
+    Collection<Collection<CompressedDFSCode>> codeSiblings =
+      Lists.newArrayList();
 
     for(DFSCode code : oneEdgeCodes) {
       Collection<DFSEmbedding> embeddings = Lists.newArrayList();
@@ -117,7 +120,10 @@ public class SearchSpaceBuilder implements Serializable {
           new DFSEmbedding(minEdgePatternId, vertexTimes, edgeTimes));
       }
 
-      codeEmbeddings.put(new CompressedDFSCode(code), embeddings);
+      CompressedDFSCode compressedCode = new CompressedDFSCode(code);
+
+      codeEmbeddings.put(compressedCode, embeddings);
+      codeSiblings.add(Lists.newArrayList(compressedCode));
 
       minEdgePatternId++;
     }

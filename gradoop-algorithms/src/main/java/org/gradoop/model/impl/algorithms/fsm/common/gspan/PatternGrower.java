@@ -1,212 +1,219 @@
 package org.gradoop.model.impl.algorithms.fsm.common.gspan;
 
-import com.google.common.collect.Sets;
+import com.google.common.collect.Lists;
+import org.apache.flink.hadoop.shaded.com.google.common.collect.Maps;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyListEntry;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSCode;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSStep;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.EdgePattern;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.Transaction;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 public class PatternGrower implements Serializable {
 
-  /**
-   * DFS code comparator
-   */
-  private final DfsCodeComparator dfsCodeComparator;
-  /**
-   * edge pattern comparator
-   */
-  private final EdgePatternComparator<Integer> edgePatternComparator;
+  private final DfsCodeSiblingComparator siblingComparator;
 
   public PatternGrower(FSMConfig fsmConfig) {
     boolean directed = fsmConfig.isDirected();
-
-    this.dfsCodeComparator = new DfsCodeComparator(directed);
-    this.edgePatternComparator = new EdgePatternComparator<>(directed);
+    this.siblingComparator = new DfsCodeSiblingComparator(directed);
   }
 
-  public void growEmbeddings(Transaction transaction) {
+  public void growEmbeddings(final Transaction transaction) {
 
+    Map<CompressedDFSCode, Collection<DFSEmbedding>> childCodeEmbeddings = null;
+    Collection<Collection<CompressedDFSCode>> childSiblingGroups = null;
 
+    // for each leaf on leftmost branch in DFS code tree
+    for (Collection<CompressedDFSCode> parentSiblings : transaction.getSiblingGroups()) {
 
-    // min DFS code per subgraph (set of edge ids)
-    Map<Coverage, HashSet<DFSCode>> coverageDfsCodes = new HashMap<>();
-    Map<DFSCode, HashSet<DFSEmbedding>> codeEmbeddings = new HashMap<>();
+      if (!parentSiblings.isEmpty()) {
+        Collection<CompressedDFSCode> childSiblings = null;
 
-    // for each supported DFS code
+        DFSCode parentCode = findMinimumDfsCode(parentSiblings);
 
-    for (Map.Entry<CompressedDFSCode, Collection<DFSEmbedding>> entry :
-      transaction.getCodeEmbeddings().entrySet()) {
+        List<Integer> rightmostPath = parentCode.getRightMostPathVertexTimes();
 
-      CompressedDFSCode compressedDfsCode = entry.getKey();
-      Collection<DFSEmbedding> parentEmbeddings = entry.getValue();
-      DFSCode parentDfsCode = compressedDfsCode.getDfsCode();
+        // for each embedding
+        for (DFSEmbedding parentEmbedding : transaction.getCodeEmbeddings()
+          .get(new CompressedDFSCode(parentCode))) {
 
-      EdgePattern<Integer> minPattern = parentDfsCode.getMinEdgePattern();
-      List<Integer> rightmostPath = parentDfsCode
-        .getRightMostPathVertexTimes();
+          // first iterated vertex is rightmost
+          Boolean rightMostVertex = true;
+          List<Integer> vertexTimes = parentEmbedding.getVertexTimes();
 
-      // for each embedding
-      for (DFSEmbedding parentEmbedding : parentEmbeddings) {
+          // for each time on rightmost path
+          for (Integer fromVertexTime : rightmostPath) {
 
-        // rightmost path is inverse, so first element is rightmost vertex
-        Boolean rightMostVertex = true;
-        List<Integer> vertexTimes = parentEmbedding.getVertexTimes();
+            // query fromVertex data
+            AdjacencyList adjacencyList = transaction.getAdjacencyLists()
+              .get(vertexTimes.get(fromVertexTime));
+            Integer fromVertexLabel = adjacencyList.getFromVertexLabel();
 
-        // for each time on rightmost path
-        for (Integer fromVertexTime : rightmostPath) {
+            // for each incident edge
+            for (AdjacencyListEntry entry : adjacencyList.getEntries()) {
 
-          // query fromVertex data
+              // if valid extension for branch
+              if (entry.getMinEdgePatternId() >=
+                parentEmbedding.getMinEdgePatternId()) {
 
-          AdjacencyList adjacencyList = transaction.getAdjacencyLists()
-            .get(vertexTimes.get(fromVertexTime));
-          Integer fromVertexLabel = adjacencyList.getVertexLabel();
+                Integer edgeId = entry.getEdgeId();
 
-          // for each incident edge
-          for (AdjacencyListEntry adjacencyListEntry :
-            adjacencyList.getEntries()) {
+                // if edge not already contained
+                if (!parentEmbedding.getEdgeTimes()
+                  .contains(edgeId)) {
+                  // query toVertexData
+                  Integer toVertexId = entry.getToVertexId();
+                  Integer toVertexTime = vertexTimes.indexOf(toVertexId);
+                  boolean forward = toVertexTime < 0;
 
-            boolean outgoing = adjacencyListEntry.isOutgoing();
-            Integer edgeLabel = adjacencyListEntry.getEdgeLabel();
-            Integer toVertexLabel = adjacencyListEntry.getVertexLabel();
+                  // PRUNING : grow only forward
+                  // or backward from rightmost vertex
+                  if (forward || rightMostVertex) {
 
-            EdgePattern<Integer> candidatePattern =
-              new EdgePattern<>(fromVertexLabel, outgoing, edgeLabel,
-                toVertexLabel);
+                    DFSEmbedding childEmbedding =
+                      DFSEmbedding.deepCopy(parentEmbedding);
+                    DFSCode childCode = DFSCode.deepCopy(parentCode);
 
-            // PRUNING : continue only if edge pattern is lexicographically
-            // larger than first step of DFS code
-            if (edgePatternComparator
-              .compare(minPattern, candidatePattern) <= 0) {
+                    // add new vertex to embedding for forward steps
+                    if (forward) {
+                      childEmbedding.getVertexTimes().add(toVertexId);
+                      toVertexTime = childEmbedding.getVertexTimes().size() - 1;
+                    }
 
-              Integer edgeIndex = adjacencyListEntry.getEdgeId();
+                    childCode.getSteps().add(new DFSStep(
+                      fromVertexTime,
+                      fromVertexLabel,
+                      entry.isOutgoing(),
+                      entry.getEdgeLabel(),
+                      toVertexTime,
+                      entry.getToVertexLabel()
+                    ));
 
-              // allow only edges not already contained
-              if (!parentEmbedding.getEdgeTimes().contains(edgeIndex)) {
+                    childEmbedding.getEdgeTimes().add(edgeId);
 
-                // query toVertexData
-                Integer toVertexId = adjacencyListEntry.getVertexId();
-                Integer toVertexTime = vertexTimes.indexOf(toVertexId);
-                boolean forward = toVertexTime < 0;
+                    CompressedDFSCode compressedChildCode =
+                      new CompressedDFSCode(childCode);
 
-                // PRUNING : grow only forward
-                // or backward from rightmost vertex
-                if (forward || rightMostVertex) {
+                    childSiblings = addSibling(
+                      childSiblings, compressedChildCode);
 
-                  DFSEmbedding embedding = DFSEmbedding
-                    .deepCopy(parentEmbedding);
-                  DFSCode dfsCode = DFSCode
-                    .<Integer>deepCopy(parentDfsCode);
-
-                  // add new vertex to embedding for forward steps
-                  if (forward) {
-                    embedding.getVertexTimes().add(toVertexId);
-                    toVertexTime = embedding.getVertexTimes().size() - 1;
-                  }
-
-                  dfsCode.getSteps().add(new DFSStep(
-                    fromVertexTime,
-                    fromVertexLabel,
-                    outgoing,
-                    edgeLabel,
-                    toVertexTime,
-                    toVertexLabel
-                  ));
-
-                  embedding.getEdgeTimes().add(edgeIndex);
-
-                  // check if subgraph already discovered
-
-                  Coverage coverage = Coverage
-                    .fromIdList(embedding.getEdgeTimes());
-
-                  HashSet<DFSCode> dfsCodes =
-                    coverageDfsCodes.get(coverage);
-
-                  if (dfsCodes == null) {
-                    coverageDfsCodes.put(
-                      coverage, Sets.newHashSet(dfsCode));
-                  } else {
-                    dfsCodes.add(dfsCode);
-                  }
-
-                  HashSet<DFSEmbedding> embeddings =
-                    codeEmbeddings.get(dfsCode);
-
-                  if (embeddings == null) {
-                    codeEmbeddings.put(
-                      dfsCode, Sets.newHashSet(embedding));
-                  } else {
-                    embeddings.add(embedding);
+                    childCodeEmbeddings = addCodeEmbedding(
+                      childCodeEmbeddings, compressedChildCode, childEmbedding);
                   }
                 }
               }
             }
+            rightMostVertex = false;
           }
-          rightMostVertex = false;
         }
+        childSiblingGroups = addSiblings(childSiblingGroups, childSiblings);
       }
     }
 
-    transaction.setCodeEmbeddings(
-      getMinDfsCodesAndEmbeddings(coverageDfsCodes, codeEmbeddings));
+    transaction.setCodeEmbeddings(childCodeEmbeddings);
+    transaction.setCodeSiblings(childSiblingGroups);
+
   }
 
-  /**
-   * determines all grown minimum DFS codes and their embeddings in a map
-   * @param coverageDfsCodes map : coverage => DFS codes
-   * @param codeEmbeddings map : DFS code => embeddings
-   * @return map : minimum DFS code per coverage => embeddings
-   */
-  private HashMap<CompressedDFSCode, Collection<DFSEmbedding>>
-  getMinDfsCodesAndEmbeddings(
+  private DFSCode findMinimumDfsCode(Collection<CompressedDFSCode> dfsCodes) {
 
-    Map<Coverage, HashSet<DFSCode>> coverageDfsCodes,
-    Map<DFSCode, HashSet<DFSEmbedding>> codeEmbeddings) {
-    HashMap<CompressedDFSCode, Collection<DFSEmbedding>>
-      compressedCodeEmbeddings = new HashMap<>();
+    Iterator<CompressedDFSCode> iterator = dfsCodes.iterator();
 
-    for (HashSet<DFSCode> dfsCodes : coverageDfsCodes.values()) {
-      DFSCode minDfsCode = null;
+    DFSCode minCode = iterator.next().getDfsCode();
 
-      if (dfsCodes.size() > 1) {
-        for (DFSCode dfsCode : dfsCodes) {
-          if (minDfsCode == null ||
-            dfsCodeComparator.compare(dfsCode, minDfsCode) < 0) {
-            minDfsCode = dfsCode;
-          }
-        }
-      } else {
-        minDfsCode = dfsCodes.iterator().next();
-      }
+    while (iterator.hasNext()) {
+      DFSCode nextCode = iterator.next().getDfsCode();
 
-      CompressedDFSCode minCompressedDfsCode =
-        new CompressedDFSCode(minDfsCode);
-
-      Collection<DFSEmbedding> minDfsCodeEmbeddings =
-        compressedCodeEmbeddings.get(minCompressedDfsCode);
-
-      HashSet<DFSEmbedding> coverageMinDfsCodeEmbeddings = codeEmbeddings
-        .get(minDfsCode);
-
-      if (minDfsCodeEmbeddings == null) {
-        compressedCodeEmbeddings.put(minCompressedDfsCode,
-          coverageMinDfsCodeEmbeddings);
-      } else {
-        minDfsCodeEmbeddings.addAll(coverageMinDfsCodeEmbeddings);
+      if(siblingComparator.compare(nextCode, minCode) < 0) {
+        minCode = nextCode;
       }
     }
-    return compressedCodeEmbeddings;
+
+    return minCode;
+  }
+
+  private Collection<CompressedDFSCode> addSibling(
+    Collection<CompressedDFSCode> siblings, CompressedDFSCode code) {
+
+    if (siblings == null) {
+      siblings = Lists.newArrayList(code);
+    } else {
+      siblings.add(code);
+    }
+
+    return siblings;
+  }
+
+  private Collection<Collection<CompressedDFSCode>> addSiblings(
+    Collection<Collection<CompressedDFSCode>> siblingGroups,
+    Collection<CompressedDFSCode> siblings) {
+
+    if(siblings != null) {
+      if (siblingGroups == null) {
+        siblingGroups = Lists.newArrayList();
+      }
+
+      siblingGroups.add(siblings);
+    }
+
+    return siblingGroups;
+  }
+
+  private Map<CompressedDFSCode, Collection<DFSEmbedding>> addCodeEmbedding(
+    Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings,
+    CompressedDFSCode code, DFSEmbedding embedding) {
+
+    Collection<DFSEmbedding> embeddings;
+
+    if(codeEmbeddings == null) {
+      codeEmbeddings = Maps.newHashMap();
+      codeEmbeddings.put(code, Lists.newArrayList(embedding));
+    } else {
+      embeddings = codeEmbeddings.get(code);
+
+      if(embeddings == null) {
+        codeEmbeddings.put(code, Lists.newArrayList(embedding));
+      } else {
+        embeddings.add(embedding);
+      }
+    }
+    return codeEmbeddings;
+  }
+
+
+  public static void prune(final Transaction transaction,
+    Collection<CompressedDFSCode> frequentDfsCodes) {
+
+    Iterator<Collection<CompressedDFSCode>> groupIterator = transaction
+      .getSiblingGroups().iterator();
+
+    while (groupIterator.hasNext()) {
+      Collection<CompressedDFSCode> group = groupIterator.next();
+      Iterator<CompressedDFSCode> codeIterator = group.iterator();
+
+      while (codeIterator.hasNext()) {
+        CompressedDFSCode code = codeIterator.next();
+
+        if(! frequentDfsCodes.contains(code)) {
+          // drop embeddings
+          transaction.getCodeEmbeddings().remove(code);
+          // remove from siblings
+          codeIterator.remove();
+        }
+      }
+
+      if(group.isEmpty()) {
+        // drop empty sibling group
+        groupIterator.remove();
+      }
+    }
   }
 }

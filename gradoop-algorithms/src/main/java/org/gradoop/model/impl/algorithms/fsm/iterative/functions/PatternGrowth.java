@@ -20,21 +20,13 @@ package org.gradoop.model.impl.algorithms.fsm.iterative.functions;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.gspan.PatternGrower;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.TransactionWrapper;
-
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.IterationItem;
 
 /**
  * Core of gSpan implementation. Grows embeddings of KnownToBeGloballyFrequent DFS codes.
  */
 public class PatternGrowth
-  implements MapFunction<TransactionWrapper, TransactionWrapper> {
+  implements MapFunction<IterationItem, IterationItem> {
 
   private final PatternGrower grower;
 
@@ -47,28 +39,12 @@ public class PatternGrowth
   }
 
   @Override
-  public TransactionWrapper map(TransactionWrapper transactionWrapper)
-    throws Exception {
+  public IterationItem map(IterationItem wrapper) throws Exception {
 
-    if (! transactionWrapper.isCollector()) {
-      growFrequentDfsCodeEmbeddings(transactionWrapper);
+    if (! wrapper.isCollector()) {
+      grower.growEmbeddings(wrapper.getTransaction());
     }
 
-    return transactionWrapper;
-  }
-
-  /**
-   * grows all embeddings of frequent DFS codes in a graph
-   * @param graph graph search space item
-   * @return graph with grown embeddings
-   */
-  private TransactionWrapper growFrequentDfsCodeEmbeddings(
-    TransactionWrapper graph) {
-
-    grower.growEmbeddings(graph.getTransaction());
-
-    graph.setActive(! graph.getTransaction().getCodeEmbeddings().isEmpty());
-
-    return graph;
+    return wrapper;
   }
 }

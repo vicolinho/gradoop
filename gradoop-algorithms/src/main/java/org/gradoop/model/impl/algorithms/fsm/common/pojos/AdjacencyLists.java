@@ -57,7 +57,7 @@ public class AdjacencyLists {
     for (AdjacencyList entry : getAdjacencyLists()) {
 
       builder.append("\n(" + vertexIndex + ":" +
-        entry.getVertexLabel() + ") : " +
+        entry.getFromVertexLabel() + ") : " +
         StringUtils.join(entry.getEntries(), " | "));
 
       vertexIndex++;

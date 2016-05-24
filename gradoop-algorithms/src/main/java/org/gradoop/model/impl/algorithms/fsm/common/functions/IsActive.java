@@ -18,18 +18,18 @@
 package org.gradoop.model.impl.algorithms.fsm.common.functions;
 
 import org.apache.flink.api.common.functions.FilterFunction;
-import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.TransactionWrapper;
+import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.IterationItem;
 
 
 /**
  * Filters active search space items
  */
 public class IsActive
-  implements FilterFunction<TransactionWrapper> {
+  implements FilterFunction<IterationItem> {
 
   @Override
-  public boolean filter(TransactionWrapper transactionWrapper) throws Exception {
+  public boolean filter(IterationItem iterationItem) throws Exception {
 
-    return transactionWrapper.isActive();
+    return iterationItem.isActive();
   }
 }

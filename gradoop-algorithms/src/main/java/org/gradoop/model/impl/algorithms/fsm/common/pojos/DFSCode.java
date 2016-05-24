@@ -171,4 +171,8 @@ public class DFSCode implements Serializable {
   public int size() {
     return steps.size();
   }
+
+  public DFSStep getLastStep() {
+    return steps.get(steps.size() - 1);
+  }
 }
