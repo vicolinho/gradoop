@@ -44,7 +44,7 @@ public class FilterRefineTransactionalFSMiner
       DataSet<Tuple2<Integer, Map<Integer, Transaction>>> partitions = fatEdges
         // group by graphId and create transaction for each graph
         .groupBy(0)
-        .reduceGroup(new SearchSpace())
+        .reduceGroup(new SearchSpace(fsmConfig))
         // partition transactions
         .rebalance()
         .mapPartition(new SearchSpacePartition());

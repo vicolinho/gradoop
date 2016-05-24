@@ -24,41 +24,39 @@ import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 import scala.collection.mutable.StringBuilder;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Collection;
 import java.util.Map;
 
 public class Transaction implements Serializable {
 
-  private ArrayList<AdjacencyList> adjacencyLists;
-  private HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings;
+  private Map<Integer, AdjacencyList> adjacencyLists;
+  private Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings;
 
-  public Transaction(ArrayList<AdjacencyList> adjacencyLists,
-    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings) {
+  public Transaction(Map<Integer, AdjacencyList> adjacencyLists,
+    Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings) {
     setAdjacencyLists(adjacencyLists);
     setCodeEmbeddings(codeEmbeddings);
 
   }
 
-  public ArrayList<AdjacencyList> getAdjacencyLists() {
+  public Map<Integer, AdjacencyList> getAdjacencyLists() {
     return adjacencyLists;
   }
 
   public void setAdjacencyLists(
-    ArrayList<AdjacencyList> adjacencyLists) {
+    Map<Integer, AdjacencyList> adjacencyLists) {
 
     this.adjacencyLists = adjacencyLists;
   }
 
-  public HashMap<CompressedDFSCode, HashSet<DFSEmbedding>>
+  public Map<CompressedDFSCode, Collection<DFSEmbedding>>
   getCodeEmbeddings() {
 
     return codeEmbeddings;
   }
 
   public void setCodeEmbeddings(
-    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings) {
+    Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings) {
 
     this.codeEmbeddings = codeEmbeddings;
   }
@@ -72,7 +70,7 @@ public class Transaction implements Serializable {
     builder.append(" (Graph)\n\tAdjacency lists");
 
     int vertexIndex = 0;
-    for (AdjacencyList entry : getAdjacencyLists()) {
+    for (AdjacencyList entry : getAdjacencyLists().values()) {
 
       builder.append("\n\t\t(" + entry.getVertexLabel() + ":" +
         vertexIndex + ") : " +
@@ -83,7 +81,7 @@ public class Transaction implements Serializable {
 
     builder.append("\n\tDFS codes and embeddings");
 
-    for (Map.Entry<CompressedDFSCode, HashSet<DFSEmbedding>> entry :
+    for (Map.Entry<CompressedDFSCode, Collection<DFSEmbedding>> entry :
       getCodeEmbeddings().entrySet()) {
 
       builder.append("\n\t\t" + entry.getKey().getDfsCode());

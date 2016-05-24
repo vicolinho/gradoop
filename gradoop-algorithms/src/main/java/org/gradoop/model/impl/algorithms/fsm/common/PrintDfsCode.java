@@ -18,6 +18,7 @@ public class PrintDfsCode extends RichMapFunction<CompressedDFSCode, String> {
   @Override
   public String map(CompressedDFSCode compressedDFSCode) throws Exception {
     return compressedDFSCode.getSupport() + ";" +
-      translator.translate(compressedDFSCode.getDfsCode());
+      translator.translate(compressedDFSCode.getDfsCode())
+      + compressedDFSCode.getDfsCode();
   }
 }

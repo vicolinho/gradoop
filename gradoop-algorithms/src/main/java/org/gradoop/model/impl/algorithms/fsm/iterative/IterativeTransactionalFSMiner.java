@@ -16,6 +16,8 @@ import org.gradoop.model.impl.algorithms.fsm.common.functions.ReportPatterns;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.SupportPruning;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.FatEdge;
+import org.gradoop.model.impl.algorithms.fsm.iterative.functions
+  .CreateCollector;
 import org.gradoop.model.impl.algorithms.fsm.iterative.functions.PatternGrowth;
 import org.gradoop.model.impl.algorithms.fsm.iterative.functions.SearchSpace;
 import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.Transaction;
@@ -47,8 +49,11 @@ public class IterativeTransactionalFSMiner
     // create search space with collector
     DataSet<Transaction> searchSpace = fatEdges
       .groupBy(0)
-      .reduceGroup(new SearchSpace())
-      .union(env.fromElements(Transaction.createCollector()));
+      .reduceGroup(new SearchSpace(fsmConfig))
+      .union(
+        env.fromElements(true)
+        .map(new CreateCollector())
+      );
 
     // ITERATION HEAD
     int maxEdgeCount = fsmConfig.getMaxEdgeCount();

@@ -19,7 +19,7 @@ package org.gradoop.model.impl.algorithms.fsm.common.pojos;
 
 import com.google.common.collect.Lists;
 
-import java.util.ArrayList;
+import java.util.List;
 
 /**
  * pojo representing a mapping between a graphs vertices and edges and a DFS
@@ -29,29 +29,22 @@ public class DFSEmbedding {
   /**
    * discovery times of vertices (index is time)
    */
-  private final ArrayList<Integer> vertexTimes;
+  private final List<Integer> vertexTimes;
   /**
    * discovery times of edges (index is time)
    */
-  private final ArrayList<Integer> edgeTimes;
+  private final List<Integer> edgeTimes;
+  private final int minEdgePatternId;
 
   /**
    * constructor
-   * @param vertexTimes initial vertex discovery times
-   * @param edgeId initial edge
-   */
-  public DFSEmbedding(ArrayList<Integer> vertexTimes, Integer edgeId) {
-    this.vertexTimes = vertexTimes;
-    this.edgeTimes = Lists.newArrayList(edgeId);
-  }
-
-  /**
-   * constructor
+   * @param minEdgePatternId
    * @param vertexTimes initial vertex discovery times
    * @param edgeTimes initial edge discovery times
    */
-  public DFSEmbedding(ArrayList<Integer> vertexTimes,
-    ArrayList<Integer> edgeTimes) {
+  public DFSEmbedding(
+    int minEdgePatternId, List<Integer> vertexTimes, List<Integer> edgeTimes) {
+    this.minEdgePatternId = minEdgePatternId;
     this.vertexTimes = vertexTimes;
     this.edgeTimes = edgeTimes;
   }
@@ -61,11 +54,15 @@ public class DFSEmbedding {
     return "(tv=" + vertexTimes + ", " + "te=" + edgeTimes + ")";
   }
 
-  public ArrayList<Integer> getVertexTimes() {
+  public int getMinEdgePatternId() {
+    return minEdgePatternId;
+  }
+
+  public List<Integer> getVertexTimes() {
     return vertexTimes;
   }
 
-  public ArrayList<Integer> getEdgeTimes() {
+  public List<Integer> getEdgeTimes() {
     return edgeTimes;
   }
 
@@ -76,6 +73,7 @@ public class DFSEmbedding {
    */
   public static DFSEmbedding deepCopy(DFSEmbedding embedding) {
     return new DFSEmbedding(
+      embedding.getMinEdgePatternId(),
       Lists.newArrayList(embedding.getVertexTimes()),
       Lists.newArrayList(embedding.getEdgeTimes())
     );

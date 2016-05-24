@@ -25,8 +25,9 @@ import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 import scala.collection.mutable.StringBuilder;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -38,13 +39,9 @@ import java.util.Map;
  * f3 : map DFS code - embeddings         empty map
  * f4 : empty array                       frequent DFS codes
  */
-public class Transaction extends Tuple5<
-    Boolean,
-    Boolean,
-    ArrayList<AdjacencyList>,
-    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>>,
-    ArrayList<CompressedDFSCode>
-  > {
+public class Transaction extends
+  Tuple5<Boolean, Boolean, Map<Integer, AdjacencyList>,
+    Map<CompressedDFSCode, Collection<DFSEmbedding>>, List<CompressedDFSCode>> {
 
   /**
    * default constructor
@@ -61,9 +58,9 @@ public class Transaction extends Tuple5<
    * @param frequentDfsCodes frequent DFS codes (empty for graph)
    */
   public Transaction(boolean collector, boolean active,
-    ArrayList<AdjacencyList> adjacencyLists,
-    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings,
-    ArrayList<CompressedDFSCode> frequentDfsCodes) {
+    Map<Integer, AdjacencyList> adjacencyLists,
+    Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings,
+    List<CompressedDFSCode> frequentDfsCodes) {
 
     setCollector(collector);
     setActive(active);
@@ -98,33 +95,33 @@ public class Transaction extends Tuple5<
     return this.f1;
   }
 
-  public ArrayList<AdjacencyList> getAdjacencyLists() {
+  public Map<Integer, AdjacencyList> getAdjacencyLists() {
     return f2;
   }
 
   public void setAdjacencyLists(
-    ArrayList<AdjacencyList> adjacencyLists) {
+    Map<Integer, AdjacencyList> adjacencyLists) {
 
     this.f2 = adjacencyLists;
   }
 
-  public HashMap<CompressedDFSCode, HashSet<DFSEmbedding>>
+  public Map<CompressedDFSCode, Collection<DFSEmbedding>>
   getCodeEmbeddings() {
     return f3;
   }
 
   public void setCodeEmbeddings(
-    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings) {
+    Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings) {
 
     this.f3 = codeEmbeddings;
   }
 
-  public ArrayList<CompressedDFSCode> getFrequentDfsCodes() {
+  public List<CompressedDFSCode> getFrequentDfsCodes() {
     return this.f4;
   }
 
   public void setFrequentDfsCodes(
-    ArrayList<CompressedDFSCode> collectedDfsCodes) {
+    List<CompressedDFSCode> collectedDfsCodes) {
     this.f4 = collectedDfsCodes;
   }
 
@@ -143,7 +140,7 @@ public class Transaction extends Tuple5<
       builder.append(" (Graph)\n\tAdjacency lists");
 
       int vertexIndex = 0;
-      for (AdjacencyList entry : getAdjacencyLists()) {
+      for (AdjacencyList entry : getAdjacencyLists().values()) {
 
         builder.append("\n\t\t(" + entry.getVertexLabel() + ":" +
           vertexIndex + ") : " +
@@ -154,7 +151,7 @@ public class Transaction extends Tuple5<
 
       builder.append("\n\tDFS codes and embeddings");
 
-      for (Map.Entry<CompressedDFSCode, HashSet<DFSEmbedding>> entry :
+      for (Map.Entry<CompressedDFSCode, Collection<DFSEmbedding>> entry :
         getCodeEmbeddings().entrySet()) {
 
         builder.append("\n\t\t" + entry.getKey().getDfsCode());
@@ -175,8 +172,8 @@ public class Transaction extends Tuple5<
    * @return a search space item representing a graph transaction
    */
   public static Transaction createForGraph(
-    ArrayList<AdjacencyList> adjacencyLists,
-    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings) {
+    Map<Integer, AdjacencyList> adjacencyLists,
+    Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings) {
 
     return new Transaction(false, true, adjacencyLists, codeEmbeddings,
       new ArrayList<CompressedDFSCode>());
@@ -187,11 +184,13 @@ public class Transaction extends Tuple5<
    * @return a search space item representing the collector
    */
   public static Transaction createCollector() {
-    ArrayList<AdjacencyList> adjacencyLists = new ArrayList<>();
-    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings = new
-      HashMap<>();
+    Map<Integer, AdjacencyList> adjacencyLists = new HashMap<>();
+    Map<CompressedDFSCode, Collection<DFSEmbedding>>
+      codeEmbeddings = new HashMap<>();
+
+    List<CompressedDFSCode> frequentDfsCodes = new ArrayList<>();
 
     return new Transaction(true, true, adjacencyLists, codeEmbeddings,
-      new ArrayList<CompressedDFSCode>());
+      frequentDfsCodes);
   }
 }

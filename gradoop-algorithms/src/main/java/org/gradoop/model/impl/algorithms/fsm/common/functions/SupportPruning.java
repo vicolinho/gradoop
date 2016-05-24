@@ -28,9 +28,8 @@ import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.Transaction;
 
 
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Core of gSpan implementation. Grows embeddings of KnownToBeGloballyFrequent DFS codes.
@@ -92,7 +91,7 @@ public class SupportPruning extends
   private Transaction dropInfrequentEmbeddings(Transaction graph,
     Collection<CompressedDFSCode> frequentDfsCodes) {
 
-    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings =
+    Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings =
       graph.getCodeEmbeddings();
 
     Collection<CompressedDFSCode> supportedCodes = Lists

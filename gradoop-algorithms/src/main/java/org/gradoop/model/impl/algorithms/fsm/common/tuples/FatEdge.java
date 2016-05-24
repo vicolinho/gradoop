@@ -1,26 +1,26 @@
 package org.gradoop.model.impl.algorithms.fsm.common.tuples;
 
-import org.apache.flink.api.java.tuple.Tuple5;
+import org.apache.flink.api.java.tuple.Tuple6;
 import org.gradoop.model.impl.id.GradoopId;
 
 public class FatEdge
-  extends Tuple5<GradoopId, GradoopId, Integer, Integer, Integer> {
+  extends Tuple6<GradoopId, GradoopId, Integer, Integer, Integer, Boolean> {
 
   public FatEdge() {
 
   }
 
-  public FatEdge(GradoopId sourceId, GradoopId targetId, Integer edgeLabel,
-    Integer sourceLabel, Integer targetLabel) {
+  public FatEdge(GradoopId minId, Integer minLabel, Boolean outgoing,
+    Integer label, GradoopId maxId, Integer maxLabel) {
 
-    super(sourceId, targetId, edgeLabel, sourceLabel, targetLabel);
+    super(minId, maxId, label, minLabel, maxLabel, outgoing);
   }
 
-  public GradoopId getSourceId() {
+  public GradoopId getMinId() {
     return this.f0;
   }
 
-  public GradoopId getTargetId() {
+  public GradoopId getMaxId() {
     return this.f1;
   }
 
@@ -28,11 +28,15 @@ public class FatEdge
     return f2;
   }
 
-  public Integer getSourceLabel() {
+  public Integer getMinLabel() {
     return f3;
   }
 
-  public Integer getTargetLabel() {
+  public Integer getMaxLabel() {
     return f4;
+  }
+
+  public boolean isOutgoing() {
+    return f5;
   }
 }

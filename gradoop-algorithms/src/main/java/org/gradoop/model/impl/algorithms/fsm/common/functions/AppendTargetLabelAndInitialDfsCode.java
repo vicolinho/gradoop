@@ -27,37 +27,45 @@ public class AppendTargetLabelAndInitialDfsCode implements JoinFunction<
     Integer targetLabel = targetVertex.f1;
 
     int fromTime = 0;
-    Integer fromLabel;
-    Boolean outgoing;
     int toTime;
-    Integer toLabel;
 
 
     if(sourceId.equals(targetId)) {
-      fromLabel = sourceLabel;
-      toLabel = fromLabel;
       toTime = fromTime;
-      outgoing = true;
     } else {
       toTime = 1;
-
-      outgoing = sourceLabel.compareTo(targetLabel) <= 0;
-
-      if(outgoing) {
-        fromLabel = sourceLabel;
-        toLabel = targetLabel;
-      } else {
-        fromLabel = targetLabel;
-        toLabel = sourceLabel;
-      }
     }
 
+    Boolean outgoing = sourceLabel.compareTo(targetLabel) <= 0;
+
+    GradoopId minId;
+    GradoopId maxId;
+
+    Integer minLabel;
+    Integer maxLabel;
+
+    if(outgoing) {
+      minLabel = sourceLabel;
+      minId = sourceId;
+      maxLabel = targetLabel;
+      maxId = targetId;
+    } else {
+      minLabel = targetLabel;
+      minId = targetId;
+      maxLabel = sourceLabel;
+      maxId = sourceId;
+    }
+
+
     DFSStep dfsStep = new DFSStep(
-      fromTime, fromLabel, outgoing, edgeLabel, toTime, toLabel);
+      fromTime, minLabel, outgoing, edgeLabel, toTime, maxLabel);
+
+    FatEdge fatEdge = new FatEdge(
+      minId, minLabel, outgoing, edgeLabel, maxId, maxLabel);
 
     return new Tuple3<>(
       edge.f0,
-      new FatEdge(sourceId, targetId, edgeLabel, sourceLabel, targetLabel),
+      fatEdge,
       new CompressedDFSCode(new DFSCode(dfsStep)));
   }
 }

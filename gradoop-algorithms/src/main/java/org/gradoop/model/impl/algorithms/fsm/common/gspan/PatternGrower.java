@@ -11,7 +11,7 @@ import org.gradoop.model.impl.algorithms.fsm.common.pojos.EdgePattern;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 
 import java.io.Serializable;
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -35,20 +35,20 @@ public class PatternGrower implements Serializable {
     this.edgePatternComparator = new EdgePatternComparator<>(directed);
   }
 
-  public HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> growEmbeddings(
-    ArrayList<AdjacencyList> adjacencyLists,
-    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> parentCodeEmbeddings) {
+  public HashMap<CompressedDFSCode, Collection<DFSEmbedding>> growEmbeddings(
+    Map<Integer, AdjacencyList> adjacencyLists,
+    Map<CompressedDFSCode, Collection<DFSEmbedding>> parentCodeEmbeddings) {
     // min DFS code per subgraph (set of edge ids)
     Map<Coverage, HashSet<DFSCode>> coverageDfsCodes = new HashMap<>();
     Map<DFSCode, HashSet<DFSEmbedding>> codeEmbeddings = new HashMap<>();
 
     // for each supported DFS code
 
-    for (Map.Entry<CompressedDFSCode, HashSet<DFSEmbedding>> entry :
+    for (Map.Entry<CompressedDFSCode, Collection<DFSEmbedding>> entry :
       parentCodeEmbeddings.entrySet()) {
 
       CompressedDFSCode compressedDfsCode = entry.getKey();
-      HashSet<DFSEmbedding> parentEmbeddings = entry.getValue();
+      Collection<DFSEmbedding> parentEmbeddings = entry.getValue();
       DFSCode parentDfsCode = compressedDfsCode.getDfsCode();
 
       EdgePattern<Integer> minPattern = parentDfsCode.getMinEdgePattern();
@@ -60,7 +60,7 @@ public class PatternGrower implements Serializable {
 
         // rightmost path is inverse, so first element is rightmost vertex
         Boolean rightMostVertex = true;
-        ArrayList<Integer> vertexTimes = parentEmbedding.getVertexTimes();
+        List<Integer> vertexTimes = parentEmbedding.getVertexTimes();
 
         // for each time on rightmost path
         for (Integer fromVertexTime : rightmostPath) {
@@ -165,12 +165,12 @@ public class PatternGrower implements Serializable {
    * @param codeEmbeddings map : DFS code => embeddings
    * @return map : minimum DFS code per coverage => embeddings
    */
-  private HashMap<CompressedDFSCode, HashSet<DFSEmbedding>>
+  private HashMap<CompressedDFSCode, Collection<DFSEmbedding>>
   getMinDfsCodesAndEmbeddings(
 
     Map<Coverage, HashSet<DFSCode>> coverageDfsCodes,
     Map<DFSCode, HashSet<DFSEmbedding>> codeEmbeddings) {
-    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>>
+    HashMap<CompressedDFSCode, Collection<DFSEmbedding>>
       compressedCodeEmbeddings = new HashMap<>();
 
     for (HashSet<DFSCode> dfsCodes : coverageDfsCodes.values()) {
@@ -190,7 +190,7 @@ public class PatternGrower implements Serializable {
       CompressedDFSCode minCompressedDfsCode =
         new CompressedDFSCode(minDfsCode);
 
-      HashSet<DFSEmbedding> minDfsCodeEmbeddings =
+      Collection<DFSEmbedding> minDfsCodeEmbeddings =
         compressedCodeEmbeddings.get(minCompressedDfsCode);
 
       HashSet<DFSEmbedding> coverageMinDfsCodeEmbeddings = codeEmbeddings

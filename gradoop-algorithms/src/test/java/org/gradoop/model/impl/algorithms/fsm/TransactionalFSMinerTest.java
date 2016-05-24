@@ -2,7 +2,6 @@ package org.gradoop.model.impl.algorithms.fsm;
 
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.java.DataSet;
-import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.gradoop.datagen.fsmtransactions.FSMTransactionGeneratorConfig;
 import org.gradoop.datagen.fsmtransactions.PredictableFSMTransactionGenerator;
@@ -38,10 +37,10 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
 
 //    getExecutionEnvironment().setParallelism(3);
 
-    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.75f);
-//    int edgeCount = 2;
-//    fsmConfig.setMinEdgeCount(edgeCount);
-//    fsmConfig.setMaxEdgeCount(edgeCount);
+    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.7f);
+    int edgeCount = 2;
+    fsmConfig.setMinEdgeCount(edgeCount);
+    fsmConfig.setMaxEdgeCount(edgeCount);
 
     GradoopTransactionalFSMEncoder<GraphHeadPojo, VertexPojo, EdgePojo>
       encoder = new GradoopTransactionalFSMEncoder<>();

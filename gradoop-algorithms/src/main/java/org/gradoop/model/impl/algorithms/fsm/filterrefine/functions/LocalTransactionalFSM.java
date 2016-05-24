@@ -19,7 +19,6 @@ import org.gradoop.model.impl.algorithms.fsm.filterrefine.pojos.Transaction;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
@@ -113,12 +112,12 @@ public class LocalTransactionalFSM implements FlatMapFunction
 
       Transaction graph = graphs.get(graphId);
 
-      ArrayList<AdjacencyList> adjacencyLists = graph.getAdjacencyLists();
+      Map<Integer, AdjacencyList> adjacencyLists = graph.getAdjacencyLists();
 
-      HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> parentEmbeddings =
+      Map<CompressedDFSCode, Collection<DFSEmbedding>> parentEmbeddings =
         graph.getCodeEmbeddings();
 
-      HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> childEmbeddings =
+      HashMap<CompressedDFSCode, Collection<DFSEmbedding>> childEmbeddings =
         grower.growEmbeddings(adjacencyLists, parentEmbeddings);
 
       if(childEmbeddings.isEmpty()) {
@@ -176,7 +175,7 @@ public class LocalTransactionalFSM implements FlatMapFunction
 
       Transaction graph = graphs.get(graphId);
 
-      HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> codeEmbeddings =
+      Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings =
         graph.getCodeEmbeddings();
 
       Set<CompressedDFSCode> supportedCodes = Sets

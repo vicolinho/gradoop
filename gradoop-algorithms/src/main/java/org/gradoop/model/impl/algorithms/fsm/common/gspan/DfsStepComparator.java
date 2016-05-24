@@ -42,55 +42,79 @@ public class DfsStepComparator implements Comparator<DFSStep>, Serializable {
   }
 
   @Override
-  public int compare(DFSStep s1, DFSStep s2) {
+  public int compare(DFSStep e1, DFSStep e2) {
     int comparison;
 
+    // forward - backward relation
+    if (e1.isForward() && e2.isForward()) {
+
+      if(e1.getToTime() < e2.getToTime()) {
+        comparison = -1;
+      } else if (e1.getToTime() > e2.getToTime()) {
+        comparison = 1;
+      } else {
+
+      }
+    }
+
     // same direction
-    if (s1.isForward() && s2.isForward()) {
+    if (e1.isForward() == e2.isForward()) {
 
       // both forward
-      if (s1.isForward()) {
+      if (e1.isForward()) {
 
-        // starts from same position
-        if (s1.getFromTime() == s2.getFromTime()) {
-
-          // inherit edge comparison by labels (lexicographically order)
-          comparison = compareLabels(s1, s2);
-
-          // starts from a later visited vertex
-        } else if (s1.getFromTime() > s2.getFromTime()) {
+        if (e1.getToTime() < e2.getToTime()) {
           comparison = -1;
 
-          // starts from an earlier visited vertex
-        } else {
+        } else if (e1.getToTime() > e2.getToTime()) {
           comparison = 1;
+
+        } else {
+          comparison = compareLabels(e1, e2);
         }
 
         // both backward
       } else {
 
-        // refers same position
-        if (s1.getToTime() == s2.getToTime()) {
+        if (e1.getFromTime() < e2.getFromTime() ||
+          e1.getFromTime() == e2.getFromTime() &&
+            e1.getToTime() < e2.getToTime()) {
 
-          // inherit edge comparison by labels (lexicographically order)
-          comparison = compareLabels(s1, s2);
-
-          // refers an earlier visited vertex
-        } else if (s1.getToTime() < s2.getToTime()) {
           comparison = -1;
 
-          // refers a later visited vertex
+        } else if (e1.getFromTime() > e2.getFromTime() ||
+          e1.getFromTime() == e2.getFromTime() &&
+            e1.getToTime() > e2.getToTime()) {
+
+          comparison = -1;
         } else {
-          comparison = 1;
+          comparison = compareLabels(e1, e2);
         }
       }
 
       // inverse direction
     } else {
-      if (s1.isBackward()) {
+
+      if (e1.isForward() && e2.isBackward() &&
+        (
+          e1.getFromTime() < e2.getToTime() ||
+            e1.getToTime() <= e2.getFromTime()
+        )
+        ) {
+
         comparison = -1;
-      } else {
+
+      } else if(e1.isBackward() && e2.isForward() &&
+        (
+          e1.getFromTime() > e2.getToTime() ||
+            e1.getToTime() >= e2.getFromTime()
+        )
+        ) {
+
         comparison = 1;
+
+      } else {
+        comparison = compareLabels(e1, e2);
       }
     }
 

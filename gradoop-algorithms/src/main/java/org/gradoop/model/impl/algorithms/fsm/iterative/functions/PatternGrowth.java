@@ -26,10 +26,10 @@ import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.Transaction;
 
 
-
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Core of gSpan implementation. Grows embeddings of KnownToBeGloballyFrequent DFS codes.
@@ -66,12 +66,12 @@ public class PatternGrowth
   private Transaction growFrequentDfsCodeEmbeddings(
     Transaction graph) {
 
-    ArrayList<AdjacencyList> adjacencyLists = graph.getAdjacencyLists();
+    Map<Integer, AdjacencyList> adjacencyLists = graph.getAdjacencyLists();
 
-    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> parentEmbeddings =
+    Map<CompressedDFSCode, Collection<DFSEmbedding>> parentEmbeddings =
       graph.getCodeEmbeddings();
 
-    HashMap<CompressedDFSCode, HashSet<DFSEmbedding>> childEmbeddings =
+    HashMap<CompressedDFSCode, Collection<DFSEmbedding>> childEmbeddings =
       grower.growEmbeddings(adjacencyLists, parentEmbeddings);
 
     graph.setCodeEmbeddings(childEmbeddings);

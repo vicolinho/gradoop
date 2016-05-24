@@ -21,6 +21,8 @@ package org.gradoop.model.impl.algorithms.fsm.common.pojos;
  * pojo representing an adjacency list entry
  */
 public class AdjacencyListEntry {
+  private final int minEdgePatternId;
+
   /**
    * true, if edge is outgoing
    */
@@ -44,20 +46,26 @@ public class AdjacencyListEntry {
 
   /**
    * constructor
+   * @param minEdgePatternId
    * @param outgoing true, if edge is outgoing
    * @param edgeId edge id
    * @param edgeLabel edge label
    * @param vertexId connected vertex id
    * @param vertexLabel connected vertex label
    */
-  public AdjacencyListEntry(boolean outgoing, Integer edgeId,
+  public AdjacencyListEntry(int minEdgePatternId, boolean outgoing, Integer edgeId,
     Integer edgeLabel, Integer vertexId, Integer vertexLabel) {
 
+    this.minEdgePatternId = minEdgePatternId;
     this.outgoing = outgoing;
     this.edgeId = edgeId;
     this.edgeLabel = edgeLabel;
     this.vertexId = vertexId;
     this.vertexLabel = vertexLabel;
+  }
+
+  public int getMinEdgePatternId() {
+    return minEdgePatternId;
   }
 
   public Integer getVertexLabel() {
@@ -86,35 +94,5 @@ public class AdjacencyListEntry {
       "-" + edgeId + ":" + edgeLabel + "-" +
       (outgoing ? ">" : "") +
       "(" + vertexId + ":" + vertexLabel + ")";
-  }
-
-  /**
-   * factory method for outgoing adjacency list entries
-   * @param edgeId edge id
-   * @param edgeLabel edge label
-   * @param targetId target vertex id
-   * @param targetLabel target vertex label
-   * @return entry
-   */
-  public static AdjacencyListEntry newOutgoing(
-    Integer edgeId, Integer edgeLabel, Integer targetId, Integer targetLabel) {
-
-    return new AdjacencyListEntry(
-      true, edgeId, edgeLabel, targetId, targetLabel);
-  }
-
-  /**
-   * factory method for incoming adjacency list entries
-   * @param edgeId edge id
-   * @param edgeLabel edge label
-   * @param sourceId source vertex id
-   * @param sourceLabel source vertex label
-   * @return entry
-   */
-  public static AdjacencyListEntry newIncoming(
-    Integer edgeId, Integer edgeLabel,  Integer sourceId, Integer sourceLabel) {
-
-    return new AdjacencyListEntry(
-      false, edgeId, edgeLabel, sourceId, sourceLabel);
   }
 }
