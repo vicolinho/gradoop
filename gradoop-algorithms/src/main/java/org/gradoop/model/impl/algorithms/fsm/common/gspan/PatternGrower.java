@@ -9,6 +9,7 @@ import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSStep;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.EdgePattern;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.Transaction;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -35,9 +36,10 @@ public class PatternGrower implements Serializable {
     this.edgePatternComparator = new EdgePatternComparator<>(directed);
   }
 
-  public HashMap<CompressedDFSCode, Collection<DFSEmbedding>> growEmbeddings(
-    Map<Integer, AdjacencyList> adjacencyLists,
-    Map<CompressedDFSCode, Collection<DFSEmbedding>> parentCodeEmbeddings) {
+  public void growEmbeddings(Transaction transaction) {
+
+
+
     // min DFS code per subgraph (set of edge ids)
     Map<Coverage, HashSet<DFSCode>> coverageDfsCodes = new HashMap<>();
     Map<DFSCode, HashSet<DFSEmbedding>> codeEmbeddings = new HashMap<>();
@@ -45,7 +47,7 @@ public class PatternGrower implements Serializable {
     // for each supported DFS code
 
     for (Map.Entry<CompressedDFSCode, Collection<DFSEmbedding>> entry :
-      parentCodeEmbeddings.entrySet()) {
+      transaction.getCodeEmbeddings().entrySet()) {
 
       CompressedDFSCode compressedDfsCode = entry.getKey();
       Collection<DFSEmbedding> parentEmbeddings = entry.getValue();
@@ -67,7 +69,7 @@ public class PatternGrower implements Serializable {
 
           // query fromVertex data
 
-          AdjacencyList adjacencyList = adjacencyLists
+          AdjacencyList adjacencyList = transaction.getAdjacencyLists()
             .get(vertexTimes.get(fromVertexTime));
           Integer fromVertexLabel = adjacencyList.getVertexLabel();
 
@@ -79,8 +81,9 @@ public class PatternGrower implements Serializable {
             Integer edgeLabel = adjacencyListEntry.getEdgeLabel();
             Integer toVertexLabel = adjacencyListEntry.getVertexLabel();
 
-            EdgePattern<Integer> candidatePattern = new EdgePattern<Integer>(
-              fromVertexLabel, outgoing, edgeLabel, toVertexLabel);
+            EdgePattern<Integer> candidatePattern =
+              new EdgePattern<>(fromVertexLabel, outgoing, edgeLabel,
+                toVertexLabel);
 
             // PRUNING : continue only if edge pattern is lexicographically
             // larger than first step of DFS code
@@ -156,7 +159,8 @@ public class PatternGrower implements Serializable {
       }
     }
 
-    return getMinDfsCodesAndEmbeddings(coverageDfsCodes, codeEmbeddings);
+    transaction.setCodeEmbeddings(
+      getMinDfsCodesAndEmbeddings(coverageDfsCodes, codeEmbeddings));
   }
 
   /**

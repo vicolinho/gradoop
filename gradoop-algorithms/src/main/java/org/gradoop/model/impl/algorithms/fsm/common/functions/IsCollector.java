@@ -18,17 +18,18 @@
 package org.gradoop.model.impl.algorithms.fsm.common.functions;
 
 import org.apache.flink.api.common.functions.FilterFunction;
-import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.Transaction;
+import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.TransactionWrapper;
+
 
 
 /**
  * Filters the frequent DFS code collector
  */
 public class IsCollector
-  implements FilterFunction<Transaction> {
+  implements FilterFunction<TransactionWrapper> {
 
   @Override
-  public boolean filter(Transaction transaction) throws Exception {
-    return transaction.isCollector();
+  public boolean filter(TransactionWrapper transactionWrapper) throws Exception {
+    return transactionWrapper.isCollector();
   }
 }

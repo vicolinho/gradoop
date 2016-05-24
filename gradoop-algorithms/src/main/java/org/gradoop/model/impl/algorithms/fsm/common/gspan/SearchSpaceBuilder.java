@@ -12,6 +12,7 @@ import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.SlimEdge;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.FatEdge;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.Transaction;
 import org.gradoop.model.impl.id.GradoopId;
 
 import java.io.Serializable;
@@ -29,15 +30,12 @@ public class SearchSpaceBuilder implements Serializable {
     dfsCodeComparator = new DfsCodeComparator(fsmConfig.isDirected());
   }
 
-  public void initAdjacencyListsAndCodeEmbeddings(
-    Iterable<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> iterable,
-    Map<Integer, AdjacencyList> adjacencyLists,
-    Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddingsMap) {
+  public Transaction createTransaction(
+    Iterable<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> iterable) {
 
     Map<DFSCode, Collection<SlimEdge>> codeEdges = createCodeEdges(iterable);
 
-    createCodeEmbeddingsMapAndUpdateAdjacencyLists(
-      codeEmbeddingsMap, adjacencyLists, codeEdges);
+    return createTransaction(codeEdges);
   }
 
   private Map<DFSCode, Collection<SlimEdge>> createCodeEdges(
@@ -88,10 +86,14 @@ public class SearchSpaceBuilder implements Serializable {
     return codeEdges;
   }
 
-  private void createCodeEmbeddingsMapAndUpdateAdjacencyLists(
-    Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddingsMap,
-    Map<Integer, AdjacencyList> adjacencyLists,
+  private Transaction createTransaction(
     Map<DFSCode, Collection<SlimEdge>> codeEdges) {
+
+    Map<Integer, AdjacencyList> adjacencyLists = Maps.newHashMap();
+    Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings =
+      Maps.newHashMap();
+    Collection<Collection<DFSCode>> codeSiblings = Lists.newArrayList();
+
     List<DFSCode> oneEdgeCodes = Lists.newArrayList(codeEdges.keySet());
 
     Collections.sort(oneEdgeCodes, dfsCodeComparator);
@@ -115,10 +117,12 @@ public class SearchSpaceBuilder implements Serializable {
           new DFSEmbedding(minEdgePatternId, vertexTimes, edgeTimes));
       }
 
-      codeEmbeddingsMap.put(new CompressedDFSCode(code), embeddings);
+      codeEmbeddings.put(new CompressedDFSCode(code), embeddings);
 
       minEdgePatternId++;
     }
+
+    return new Transaction(adjacencyLists, codeEmbeddings, codeSiblings);
   }
 
   private void updateAdjacencyLists(Map<Integer, AdjacencyList> adjacencyLists,

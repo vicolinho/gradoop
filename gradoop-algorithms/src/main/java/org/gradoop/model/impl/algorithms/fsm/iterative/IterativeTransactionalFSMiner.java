@@ -20,7 +20,9 @@ import org.gradoop.model.impl.algorithms.fsm.iterative.functions
   .CreateCollector;
 import org.gradoop.model.impl.algorithms.fsm.iterative.functions.PatternGrowth;
 import org.gradoop.model.impl.algorithms.fsm.iterative.functions.SearchSpace;
-import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.Transaction;
+import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.TransactionWrapper;
+
+
 import org.gradoop.model.impl.functions.bool.False;
 import org.gradoop.model.impl.id.GradoopId;
 
@@ -47,7 +49,7 @@ public class IterativeTransactionalFSMiner
     }
 
     // create search space with collector
-    DataSet<Transaction> searchSpace = fatEdges
+    DataSet<TransactionWrapper> searchSpace = fatEdges
       .groupBy(0)
       .reduceGroup(new SearchSpace(fsmConfig))
       .union(
@@ -60,11 +62,11 @@ public class IterativeTransactionalFSMiner
     int maxIterations = (maxEdgeCount > 0 ? maxEdgeCount : MAX_EDGE_COUNT) -1;
 
     if(maxIterations > 0) {
-      IterativeDataSet<Transaction> workSet = searchSpace
+      IterativeDataSet<TransactionWrapper> workSet = searchSpace
         .iterate(maxIterations);
 
       // ITERATION BODY
-      DataSet<Transaction> activeWorkSet = workSet
+      DataSet<TransactionWrapper> activeWorkSet = workSet
         .map(new PatternGrowth(fsmConfig))  // grow supported embeddings
         .filter(new IsActive());            // active, if at least one growth
 
@@ -79,7 +81,7 @@ public class IterativeTransactionalFSMiner
           .reduceGroup(new ConcatFrequentPatterns());
 
       // grow children of frequent DFS patterns
-      DataSet<Transaction> nextWorkSet = activeWorkSet
+      DataSet<TransactionWrapper> nextWorkSet = activeWorkSet
         .map(new SupportPruning())    // drop embeddings of
         // infrequent patterns
         .withBroadcastSet(
@@ -87,7 +89,7 @@ public class IterativeTransactionalFSMiner
         .filter(new IsActive());      // active, if at least one frequent pattern
 
       // ITERATION FOOTER
-      DataSet<Transaction> collector = workSet
+      DataSet<TransactionWrapper> collector = workSet
         // terminate, if no new frequent DFS patterns
         .closeWith(nextWorkSet, currentFrequentPatterns);
 

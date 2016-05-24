@@ -17,7 +17,7 @@ import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine.pojos.StepPatternMapping;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine.pojos.StepPattern;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine.pojos.StepMappings;
-import org.gradoop.model.impl.algorithms.fsm.filterrefine.pojos.Transaction;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.Transaction;
 
 import java.util.ArrayList;
 import java.util.Collection;

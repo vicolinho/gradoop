@@ -2,7 +2,7 @@ package org.gradoop.model.impl.algorithms.fsm.filterrefine.functions;
 
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.gradoop.model.impl.algorithms.fsm.filterrefine.pojos.Transaction;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.Transaction;
 
 import java.util.Map;
 

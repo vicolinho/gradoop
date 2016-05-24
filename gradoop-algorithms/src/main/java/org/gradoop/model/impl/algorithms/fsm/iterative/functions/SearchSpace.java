@@ -26,15 +26,14 @@ import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.FatEdge;
-import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.Transaction;
+import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.TransactionWrapper;
+
 
 
 import org.gradoop.model.impl.id.GradoopId;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -42,7 +41,7 @@ import java.util.Map;
  */
 public class SearchSpace
   implements GroupReduceFunction
-  <Tuple3<GradoopId, FatEdge, CompressedDFSCode>, Transaction> {
+  <Tuple3<GradoopId, FatEdge, CompressedDFSCode>, TransactionWrapper> {
 
   private final SearchSpaceBuilder builder;
 
@@ -53,16 +52,8 @@ public class SearchSpace
   @Override
   public void reduce(
     Iterable<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> iterable,
-    Collector<Transaction> collector) throws Exception {
+    Collector<TransactionWrapper> collector) throws Exception {
 
-    Map<Integer, AdjacencyList> adjacencyLists = new HashMap<>();
-    HashMap<CompressedDFSCode, Collection<DFSEmbedding>>
-      codeEmbeddingsMap = new HashMap<>();
-
-    builder.initAdjacencyListsAndCodeEmbeddings(iterable, adjacencyLists,
-      codeEmbeddingsMap);
-
-    collector.collect(Transaction
-      .createForGraph(adjacencyLists, codeEmbeddingsMap));
+    collector.collect(TransactionWrapper.createForGraph(builder.createTransaction(iterable)));
   }
 }

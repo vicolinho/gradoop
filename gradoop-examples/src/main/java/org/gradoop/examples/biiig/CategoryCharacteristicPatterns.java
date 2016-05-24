@@ -82,7 +82,7 @@ public class CategoryCharacteristicPatterns implements ProgramDescription {
     btgs = btgs.apply(new ApplyAggregation<>(
       "soCount", new CountSalesOrdersAggregateFunction()));
 
-    out.add("Business Transaction Graphs with Measures", btgs);
+    out.add("Business TransactionWrapper Graphs with Measures", btgs);
 
     btgs = btgs.apply(new ApplyTransformation<>(
         new CategorizeGraphsTransformationFunction(),
@@ -90,7 +90,7 @@ public class CategoryCharacteristicPatterns implements ProgramDescription {
         new EdgeLabelOnlyTransformationFunction())
     );
 
-    out.add("Business Transaction Graphs after Transformation", btgs);
+    out.add("Business TransactionWrapper Graphs after Transformation", btgs);
     out.print();
   }
 

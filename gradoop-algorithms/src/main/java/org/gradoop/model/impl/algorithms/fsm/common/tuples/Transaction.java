@@ -15,12 +15,12 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.impl.algorithms.fsm.filterrefine.pojos;
+package org.gradoop.model.impl.algorithms.fsm.common.tuples;
 
 import org.apache.commons.lang3.StringUtils;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;
+import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSCode;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 import scala.collection.mutable.StringBuilder;
 
 import java.io.Serializable;
@@ -31,22 +31,20 @@ public class Transaction implements Serializable {
 
   private Map<Integer, AdjacencyList> adjacencyLists;
   private Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings;
+  private Collection<Collection<DFSCode>> codeSiblings;
 
-  public Transaction(Map<Integer, AdjacencyList> adjacencyLists,
-    Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings) {
-    setAdjacencyLists(adjacencyLists);
-    setCodeEmbeddings(codeEmbeddings);
+  public Transaction(
+    Map<Integer, AdjacencyList> adjacencyLists,
+    Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings,
+    Collection<Collection<DFSCode>> codeSiblings) {
 
+    this.adjacencyLists = adjacencyLists;
+    this.codeEmbeddings = codeEmbeddings;
+    this.codeSiblings = codeSiblings;
   }
 
   public Map<Integer, AdjacencyList> getAdjacencyLists() {
     return adjacencyLists;
-  }
-
-  public void setAdjacencyLists(
-    Map<Integer, AdjacencyList> adjacencyLists) {
-
-    this.adjacencyLists = adjacencyLists;
   }
 
   public Map<CompressedDFSCode, Collection<DFSEmbedding>>
@@ -64,7 +62,7 @@ public class Transaction implements Serializable {
   @Override
   public String toString() {
 
-    StringBuilder builder = new StringBuilder("Transaction");
+    StringBuilder builder = new StringBuilder("TransactionWrapper");
 
 
     builder.append(" (Graph)\n\tAdjacency lists");

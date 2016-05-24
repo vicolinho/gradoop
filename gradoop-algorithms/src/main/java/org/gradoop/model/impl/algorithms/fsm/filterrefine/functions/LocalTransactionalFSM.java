@@ -14,7 +14,7 @@ import org.gradoop.model.impl.algorithms.fsm.common.gspan.PatternGrower;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.filterrefine.pojos.Transaction;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.Transaction;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -112,18 +112,10 @@ public class LocalTransactionalFSM implements FlatMapFunction
 
       Transaction graph = graphs.get(graphId);
 
-      Map<Integer, AdjacencyList> adjacencyLists = graph.getAdjacencyLists();
+      grower.growEmbeddings(graph);
 
-      Map<CompressedDFSCode, Collection<DFSEmbedding>> parentEmbeddings =
-        graph.getCodeEmbeddings();
-
-      HashMap<CompressedDFSCode, Collection<DFSEmbedding>> childEmbeddings =
-        grower.growEmbeddings(adjacencyLists, parentEmbeddings);
-
-      if(childEmbeddings.isEmpty()) {
+      if(graph.getCodeEmbeddings().isEmpty()) {
         inactiveGraphs.add(graphId);
-      } else {
-        graph.setCodeEmbeddings(childEmbeddings);
       }
     }
 

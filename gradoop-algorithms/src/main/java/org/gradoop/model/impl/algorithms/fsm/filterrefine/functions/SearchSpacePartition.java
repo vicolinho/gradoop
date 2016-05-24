@@ -3,7 +3,7 @@ package org.gradoop.model.impl.algorithms.fsm.filterrefine.functions;
 import org.apache.flink.api.common.functions.RichMapPartitionFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.util.Collector;
-import org.gradoop.model.impl.algorithms.fsm.filterrefine.pojos.Transaction;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.Transaction;
 
 import java.util.HashMap;
 import java.util.Map;

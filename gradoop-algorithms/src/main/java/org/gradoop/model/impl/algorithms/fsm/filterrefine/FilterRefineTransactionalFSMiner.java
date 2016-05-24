@@ -11,7 +11,7 @@ import org.gradoop.model.impl.algorithms.fsm.common.functions.Frequent;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.FatEdge;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine.functions.*;
-import org.gradoop.model.impl.algorithms.fsm.filterrefine.pojos.Transaction;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.Transaction;
 import org.gradoop.model.impl.functions.bool.False;
 import org.gradoop.model.impl.functions.tuple.Value0Of3;
 import org.gradoop.model.impl.id.GradoopId;

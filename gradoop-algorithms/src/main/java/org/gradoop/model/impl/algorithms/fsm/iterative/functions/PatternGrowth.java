@@ -23,19 +23,18 @@ import org.gradoop.model.impl.algorithms.fsm.common.gspan.PatternGrower;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.Transaction;
+import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.TransactionWrapper;
 
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 /**
  * Core of gSpan implementation. Grows embeddings of KnownToBeGloballyFrequent DFS codes.
  */
 public class PatternGrowth
-  implements MapFunction<Transaction, Transaction> {
+  implements MapFunction<TransactionWrapper, TransactionWrapper> {
 
   private final PatternGrower grower;
 
@@ -48,14 +47,14 @@ public class PatternGrowth
   }
 
   @Override
-  public Transaction map(Transaction transaction)
+  public TransactionWrapper map(TransactionWrapper transactionWrapper)
     throws Exception {
 
-    if (! transaction.isCollector()) {
-      growFrequentDfsCodeEmbeddings(transaction);
+    if (! transactionWrapper.isCollector()) {
+      growFrequentDfsCodeEmbeddings(transactionWrapper);
     }
 
-    return transaction;
+    return transactionWrapper;
   }
 
   /**
@@ -63,19 +62,12 @@ public class PatternGrowth
    * @param graph graph search space item
    * @return graph with grown embeddings
    */
-  private Transaction growFrequentDfsCodeEmbeddings(
-    Transaction graph) {
+  private TransactionWrapper growFrequentDfsCodeEmbeddings(
+    TransactionWrapper graph) {
 
-    Map<Integer, AdjacencyList> adjacencyLists = graph.getAdjacencyLists();
+    grower.growEmbeddings(graph.getTransaction());
 
-    Map<CompressedDFSCode, Collection<DFSEmbedding>> parentEmbeddings =
-      graph.getCodeEmbeddings();
-
-    HashMap<CompressedDFSCode, Collection<DFSEmbedding>> childEmbeddings =
-      grower.growEmbeddings(adjacencyLists, parentEmbeddings);
-
-    graph.setCodeEmbeddings(childEmbeddings);
-    graph.setActive(! childEmbeddings.isEmpty());
+    graph.setActive(! graph.getTransaction().getCodeEmbeddings().isEmpty());
 
     return graph;
   }
