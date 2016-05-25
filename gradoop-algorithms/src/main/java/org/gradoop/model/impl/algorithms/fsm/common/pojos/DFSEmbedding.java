@@ -49,6 +49,12 @@ public class DFSEmbedding {
     this.edgeTimes = edgeTimes;
   }
 
+  public DFSEmbedding(List<Integer> vertexTimes, List<Integer> edgeTimes) {
+    this.minEdgePatternId = 0;
+    this.vertexTimes = vertexTimes;
+    this.edgeTimes = edgeTimes;
+  }
+
   @Override
   public String toString() {
     return "(tv=" + vertexTimes + ", " + "te=" + edgeTimes + ")";

@@ -30,19 +30,19 @@ public class AdjacencyListEntry {
   /**
    * edge id
    */
-  private final Integer edgeId;
+  private final int edgeId;
   /**
    * edge label
    */
-  private final Integer edgeLabel;
+  private final int edgeLabel;
   /**
    * vertexId
    */
-  private final Integer vertexId;
+  private final int vertexId;
   /**
    * vertex label
    */
-  private final Integer vertexLabel;
+  private final int toVertexLabel;
 
   /**
    * constructor
@@ -51,40 +51,51 @@ public class AdjacencyListEntry {
    * @param edgeId edge id
    * @param edgeLabel edge label
    * @param vertexId connected vertex id
-   * @param vertexLabel connected vertex label
+   * @param toVertexLabel connected vertex label
    */
-  public AdjacencyListEntry(int minEdgePatternId, boolean outgoing, Integer edgeId,
-    Integer edgeLabel, Integer vertexId, Integer vertexLabel) {
+  public AdjacencyListEntry(int minEdgePatternId, boolean outgoing,
+    int edgeId, int edgeLabel, int vertexId, int toVertexLabel) {
 
     this.minEdgePatternId = minEdgePatternId;
     this.outgoing = outgoing;
     this.edgeId = edgeId;
     this.edgeLabel = edgeLabel;
     this.vertexId = vertexId;
-    this.vertexLabel = vertexLabel;
+    this.toVertexLabel = toVertexLabel;
+  }
+
+  public AdjacencyListEntry(boolean outgoing,
+    int edgeId, int edgeLabel, int vertexId, int toVertexLabel) {
+
+    this.minEdgePatternId = 0;
+    this.outgoing = outgoing;
+    this.edgeId = edgeId;
+    this.edgeLabel = edgeLabel;
+    this.vertexId = vertexId;
+    this.toVertexLabel = toVertexLabel;
   }
 
   public int getMinEdgePatternId() {
     return minEdgePatternId;
   }
 
-  public Integer getToVertexLabel() {
-    return vertexLabel;
+  public int getToVertexLabel() {
+    return toVertexLabel;
   }
 
   public boolean isOutgoing() {
     return outgoing;
   }
 
-  public Integer getEdgeId() {
+  public int getEdgeId() {
     return edgeId;
   }
 
-  public Integer getEdgeLabel() {
+  public int getEdgeLabel() {
     return edgeLabel;
   }
 
-  public Integer getToVertexId() {
+  public int getToVertexId() {
     return vertexId;
   }
 
@@ -93,6 +104,6 @@ public class AdjacencyListEntry {
     return (outgoing ? "" : "<") +
       "-" + edgeId + ":" + edgeLabel + "-" +
       (outgoing ? ">" : "") +
-      "(" + vertexId + ":" + vertexLabel + ")";
+      "(" + vertexId + ":" + toVertexLabel + ")";
   }
 }

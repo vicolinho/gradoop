@@ -186,10 +186,13 @@ public class TransactionalFSMTest extends GradoopFlinkTestBase {
     GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> result =
       gSpan.execute(searchSpace);
 
-    System.out.println("EXPECTED");
-    GradoopFlinkTestUtils.printDirectedCanonicalAdjacencyMatrix(expectation);
-    System.out.println("RESULT");
-    GradoopFlinkTestUtils.printDirectedCanonicalAdjacencyMatrix(result);
+//    System.out.println("EXPECTED");
+//    GradoopFlinkTestUtils.printDirectedCanonicalAdjacencyMatrix(expectation);
+//    System.out.println("RESULT");
+//    GradoopFlinkTestUtils.printDirectedCanonicalAdjacencyMatrix(result);
+
+//    FSMHelper.printMinDfsCodes(expectation);
+//    FSMHelper.printMinDfsCodes(result);
 
     collectAndAssertTrue(expectation.equalsByGraphElementData(result));
   }

@@ -19,7 +19,7 @@ package org.gradoop.model.impl.algorithms.fsm.iterative.functions;
 
 import org.apache.flink.api.common.functions.MapFunction;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
-import org.gradoop.model.impl.algorithms.fsm.common.gspan.PatternGrower;
+import org.gradoop.model.impl.algorithms.fsm.common.gspan.GSpan;
 import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.IterationItem;
 
 /**
@@ -28,21 +28,22 @@ import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.IterationItem;
 public class PatternGrowth
   implements MapFunction<IterationItem, IterationItem> {
 
-  private final PatternGrower grower;
+  private final FSMConfig fsmConfig;
 
   /**
    * constructor
    * @param fsmConfig configuration
    */
   public PatternGrowth(FSMConfig fsmConfig) {
-    this.grower = new PatternGrower(fsmConfig);
+    this.fsmConfig = fsmConfig;
   }
 
   @Override
   public IterationItem map(IterationItem wrapper) throws Exception {
 
     if (! wrapper.isCollector()) {
-      grower.growEmbeddings(wrapper.getTransaction());
+      GSpan.growEmbeddings(
+        wrapper.getTransaction(), fsmConfig.isDirected());
     }
 
     return wrapper;

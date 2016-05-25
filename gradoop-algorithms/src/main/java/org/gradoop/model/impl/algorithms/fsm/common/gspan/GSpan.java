@@ -2,7 +2,6 @@ package org.gradoop.model.impl.algorithms.fsm.common.gspan;
 
 import com.google.common.collect.Lists;
 import org.apache.flink.hadoop.shaded.com.google.common.collect.Maps;
-import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyListEntry;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSCode;
@@ -11,33 +10,27 @@ import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSStep;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.Transaction;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-public class PatternGrower implements Serializable {
+public class GSpan {
 
-  private final DfsCodeSiblingComparator siblingComparator;
-
-  public PatternGrower(FSMConfig fsmConfig) {
-    boolean directed = fsmConfig.isDirected();
-    this.siblingComparator = new DfsCodeSiblingComparator(directed);
-  }
-
-  public void growEmbeddings(final Transaction transaction) {
+  public static void growEmbeddings(
+    final Transaction transaction, final boolean directed) {
 
     Map<CompressedDFSCode, Collection<DFSEmbedding>> childCodeEmbeddings = null;
     Collection<Collection<CompressedDFSCode>> childSiblingGroups = null;
 
     // for each leaf on leftmost branch in DFS code tree
-    for (Collection<CompressedDFSCode> parentSiblings : transaction.getSiblingGroups()) {
+    for (Collection<CompressedDFSCode> parentSiblings :
+      transaction.getSiblingGroups()) {
 
       if (!parentSiblings.isEmpty()) {
         Collection<CompressedDFSCode> childSiblings = null;
 
-        DFSCode parentCode = findMinimumDfsCode(parentSiblings);
+        DFSCode parentCode = findMinimumDfsCode(parentSiblings, directed);
 
         List<Integer> rightmostPath = parentCode.getRightMostPathVertexTimes();
 
@@ -123,7 +116,8 @@ public class PatternGrower implements Serializable {
 
   }
 
-  private DFSCode findMinimumDfsCode(Collection<CompressedDFSCode> dfsCodes) {
+  public static DFSCode findMinimumDfsCode(
+    final Collection<CompressedDFSCode> dfsCodes, final boolean directed) {
 
     Iterator<CompressedDFSCode> iterator = dfsCodes.iterator();
 
@@ -132,7 +126,7 @@ public class PatternGrower implements Serializable {
     while (iterator.hasNext()) {
       DFSCode nextCode = iterator.next().getDfsCode();
 
-      if(siblingComparator.compare(nextCode, minCode) < 0) {
+      if(new DfsCodeSiblingComparator(directed).compare(nextCode, minCode) < 0) {
         minCode = nextCode;
       }
     }
@@ -140,7 +134,7 @@ public class PatternGrower implements Serializable {
     return minCode;
   }
 
-  private Collection<CompressedDFSCode> addSibling(
+  private static Collection<CompressedDFSCode> addSibling(
     Collection<CompressedDFSCode> siblings, CompressedDFSCode code) {
 
     if (siblings == null) {
@@ -152,7 +146,7 @@ public class PatternGrower implements Serializable {
     return siblings;
   }
 
-  private Collection<Collection<CompressedDFSCode>> addSiblings(
+  private static Collection<Collection<CompressedDFSCode>> addSiblings(
     Collection<Collection<CompressedDFSCode>> siblingGroups,
     Collection<CompressedDFSCode> siblings) {
 
@@ -160,14 +154,14 @@ public class PatternGrower implements Serializable {
       if (siblingGroups == null) {
         siblingGroups = Lists.newArrayList();
       }
-
       siblingGroups.add(siblings);
     }
 
     return siblingGroups;
   }
 
-  private Map<CompressedDFSCode, Collection<DFSEmbedding>> addCodeEmbedding(
+  private static Map<CompressedDFSCode, Collection<DFSEmbedding>>
+  addCodeEmbedding(
     Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings,
     CompressedDFSCode code, DFSEmbedding embedding) {
 
@@ -190,7 +184,7 @@ public class PatternGrower implements Serializable {
 
 
   public static void prune(final Transaction transaction,
-    Collection<CompressedDFSCode> frequentDfsCodes) {
+    final Collection<CompressedDFSCode> frequentDfsCodes) {
 
     Iterator<Collection<CompressedDFSCode>> groupIterator = transaction
       .getSiblingGroups().iterator();

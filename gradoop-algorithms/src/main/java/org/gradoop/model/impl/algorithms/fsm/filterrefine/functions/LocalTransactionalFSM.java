@@ -10,15 +10,13 @@ import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.common
   .AbstractTransactionalFSMiner;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
-import org.gradoop.model.impl.algorithms.fsm.common.gspan.PatternGrower;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;
+import org.gradoop.model.impl.algorithms.fsm.common.gspan.GSpan;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.Transaction;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -29,7 +27,6 @@ public class LocalTransactionalFSM implements FlatMapFunction
   private final FSMConfig fsmConfig;
   private int workerId;
 
-  private final PatternGrower grower;
   /**
    * minimum support
    */
@@ -47,7 +44,6 @@ public class LocalTransactionalFSM implements FlatMapFunction
 
   public LocalTransactionalFSM(FSMConfig fsmConfig) {
     this.fsmConfig = fsmConfig;
-    this.grower = new PatternGrower(fsmConfig);
     this.threshold = fsmConfig.getThreshold();
   }
 
@@ -112,7 +108,7 @@ public class LocalTransactionalFSM implements FlatMapFunction
 
       Transaction graph = graphs.get(graphId);
 
-      grower.growEmbeddings(graph);
+      GSpan.growEmbeddings(graph, fsmConfig.isDirected());
 
       if(graph.getCodeEmbeddings().isEmpty()) {
         inactiveGraphs.add(graphId);

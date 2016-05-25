@@ -17,6 +17,8 @@
 
 package org.gradoop.model.impl.algorithms.fsm.common.pojos;
 
+import com.google.common.collect.Lists;
+
 import java.util.ArrayList;
 import java.util.Collection;
 
@@ -27,7 +29,7 @@ public class AdjacencyList {
   /**
    * label of the associated vertex
    */
-  private final Integer vertexLabel;
+  private final Integer fromVertexLabel;
   /**
    * adjacency list entries
    */
@@ -35,20 +37,25 @@ public class AdjacencyList {
 
   /**
    * constructor
-   * @param vertexLabel vertex label
+   * @param fromVertexLabel vertex label
    */
-  public AdjacencyList(Integer vertexLabel) {
-    this.vertexLabel = vertexLabel;
-    entries = new ArrayList<>();
+  public AdjacencyList(Integer fromVertexLabel) {
+    this.fromVertexLabel = fromVertexLabel;
+    this.entries = Lists.newArrayList();
+  }
+
+  public AdjacencyList(int fromVertexLabel, AdjacencyListEntry entry) {
+    this.fromVertexLabel = fromVertexLabel;
+    this.entries = Lists.newArrayList(entry);
   }
 
   @Override
   public String toString() {
-    return vertexLabel + ":" + entries;
+    return fromVertexLabel + ":" + entries;
   }
 
   public Integer getFromVertexLabel() {
-    return vertexLabel;
+    return fromVertexLabel;
   }
 
   public Collection<AdjacencyListEntry> getEntries() {

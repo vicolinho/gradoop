@@ -12,6 +12,7 @@ import org.gradoop.model.impl.algorithms.fsm.common.functions.ExpandFrequentDfsC
 import org.gradoop.model.impl.algorithms.fsm.common.functions.Frequent;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.IsActive;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.IsCollector;
+import org.gradoop.model.impl.algorithms.fsm.common.functions.PostPruning;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.ReportPatterns;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.SupportPruning;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
@@ -78,6 +79,7 @@ public class IterativeTransactionalFSMiner
           .sum(1)                         // count support
           .filter(new Frequent())         // filter by min support
           .withBroadcastSet(minSupport, BroadcastNames.MIN_SUPPORT)
+          .flatMap(new PostPruning(fsmConfig))
           .reduceGroup(new ConcatFrequentPatterns());
 
       // grow children of frequent DFS patterns

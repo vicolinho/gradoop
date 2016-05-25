@@ -25,6 +25,7 @@ import org.gradoop.model.impl.id.GradoopId;
 import org.gradoop.model.impl.pojo.EdgePojo;
 import org.gradoop.model.impl.pojo.GraphHeadPojo;
 import org.gradoop.model.impl.pojo.VertexPojo;
+import org.junit.Assert;
 import org.junit.Test;
 
 public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
@@ -35,12 +36,7 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
       new PredictableFSMTransactionGenerator<>(getConfig(), 100)
         .execute();
 
-//    getExecutionEnvironment().setParallelism(3);
-
-    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.95f);
-//    int edgeCount = 2;
-//    fsmConfig.setMinEdgeCount(edgeCount);
-//    fsmConfig.setMaxEdgeCount(edgeCount);
+    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.8f);
 
     GradoopTransactionalFSMEncoder<GraphHeadPojo, VertexPojo, EdgePojo>
       encoder = new GradoopTransactionalFSMEncoder<>();
@@ -54,16 +50,7 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
     DataSet<CompressedDFSCode> iResult =
       iMiner.mine(fatEdges, encoder.getMinSupport(), fsmConfig);
 
-    iResult
-//      .filter(new WrongCount())
-      .map(new PrintDfsCode())
-      .withBroadcastSet(
-        encoder.getVertexLabelDictionary(),
-        BroadcastNames.VERTEX_DICTIONARY)
-      .withBroadcastSet(
-        encoder.getEdgeLabelDictionary(),
-        BroadcastNames.EDGE_DICTIONARY)
-      .print();
+    Assert.assertEquals(iResult.count(), 219);
   }
 
   @Test

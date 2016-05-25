@@ -33,7 +33,7 @@ public class DFSCode implements Serializable {
   /**
    * list of steps
    */
-  private final ArrayList<DFSStep> steps;
+  private final List<DFSStep> steps;
 
   /**
    * constructor
@@ -57,21 +57,6 @@ public class DFSCode implements Serializable {
    */
   public DFSCode() {
     this.steps = new ArrayList<>();
-  }
-
-  /**
-   * returns the edge pattern of the first step
-   * @return edge pattern
-   */
-  public EdgePattern<Integer> getMinEdgePattern() {
-    DFSStep firstStep = steps.get(0);
-
-    return new EdgePattern<>(
-      firstStep.getFromLabel(),
-      firstStep.isOutgoing(),
-      firstStep.getEdgeLabel(),
-      firstStep.getToLabel()
-    );
   }
 
   /**
@@ -113,7 +98,7 @@ public class DFSCode implements Serializable {
     return rightMostPath;
   }
 
-  public ArrayList<DFSStep> getSteps() {
+  public List<DFSStep> getSteps() {
     return steps;
   }
 

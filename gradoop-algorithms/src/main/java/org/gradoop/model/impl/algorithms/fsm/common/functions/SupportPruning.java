@@ -17,19 +17,16 @@
 
 package org.gradoop.model.impl.algorithms.fsm.common.functions;
 
-import com.google.common.collect.Lists;
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.configuration.Configuration;
 import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
-import org.gradoop.model.impl.algorithms.fsm.common.gspan.PatternGrower;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;
+import org.gradoop.model.impl.algorithms.fsm.common.gspan.GSpan;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.IterationItem;
 
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 
 /**
  * Core of gSpan implementation. Grows embeddings of KnownToBeGloballyFrequent DFS codes.
@@ -62,7 +59,7 @@ public class SupportPruning
       if (iterationItem.isCollector()) {
         iterationItem.collect(frequentDfsCodes);
       } else {
-        PatternGrower.prune(iterationItem.getTransaction(), frequentDfsCodes);
+        GSpan.prune(iterationItem.getTransaction(), frequentDfsCodes);
       }
     }
     return iterationItem;
