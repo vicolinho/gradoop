@@ -46,6 +46,7 @@ public class FSMConfig implements Serializable {
   private int maxEdgeCount;
 
   private int minEdgeCount;
+  private float reportThreshold = 0.05f;
 
   /**
    * valued constructor
@@ -96,5 +97,9 @@ public class FSMConfig implements Serializable {
    */
   public static FSMConfig forDirectedMultigraph(float threshold) {
     return new FSMConfig(threshold, true, true);
+  }
+
+  public float getLiklynessThreshold() {
+    return reportThreshold;
   }
 }

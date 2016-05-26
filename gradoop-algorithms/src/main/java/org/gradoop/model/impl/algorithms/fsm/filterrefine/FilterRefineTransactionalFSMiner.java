@@ -17,6 +17,7 @@ import org.gradoop.model.impl.functions.bool.False;
 import org.gradoop.model.impl.functions.tuple.Value0Of3;
 import org.gradoop.model.impl.id.GradoopId;
 
+import java.util.Collection;
 import java.util.Map;
 
 
@@ -42,7 +43,8 @@ public class FilterRefineTransactionalFSMiner
 
     if(fsmConfig.getMaxEdgeCount() != 1) {
       // distribute graphs to workers
-      DataSet<Tuple2<Integer, Map<Integer, GSpanTransaction>>> partitions = fatEdges
+      DataSet<Tuple2<Integer, Collection<GSpanTransaction>>> partitions =
+        fatEdges
         // group by graphId and create transaction for each graph
         .groupBy(0)
         .reduceGroup(new SearchSpace(fsmConfig))
@@ -54,9 +56,6 @@ public class FilterRefineTransactionalFSMiner
       DataSet<Map<Integer, Integer>> workerIdsGraphCount = partitions
         .map(new WorkerIdGraphCount())
         .reduceGroup(new WorkerIdsGraphCounts());
-
-      workerIdsGraphCount = workerIdsGraphCount.map(new Print<Map<Integer,
-        Integer>>("counts"));
 
       // FILTER round
       DataSet<Tuple3<CompressedDFSCode, Integer, Boolean>> fsmResult = partitions

@@ -64,7 +64,7 @@ public class GrowFrequentSubgraphs
   public IterationItem map(IterationItem wrapper) throws Exception {
 
     if (! wrapper.isCollector()) {
-      GSpan.growEmbeddings(
+      GSpan.growFrequentSubgraphs(
         wrapper.getTransaction(), frequentDfsCodes, fsmConfig);
     }
 

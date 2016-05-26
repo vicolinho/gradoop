@@ -1,30 +1,24 @@
 package org.gradoop.model.impl.algorithms.fsm.filterrefine.functions;
 
+import com.google.common.collect.Lists;
 import org.apache.flink.api.common.functions.RichMapPartitionFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.GSpanTransaction;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Collection;
 
 public class SearchSpacePartition extends RichMapPartitionFunction
-  <GSpanTransaction, Tuple2<Integer, Map<Integer, GSpanTransaction>>> {
+  <GSpanTransaction, Tuple2<Integer, Collection<GSpanTransaction>>> {
 
   @Override
   public void mapPartition(Iterable<GSpanTransaction> iterable,
-    Collector<Tuple2<Integer, Map<Integer, GSpanTransaction>>> collector) throws Exception {
-    int graphId = 0;
+    Collector<Tuple2<Integer, Collection<GSpanTransaction>>> collector) throws
+    Exception {
 
-    Map<Integer, GSpanTransaction> graphs = new HashMap<>();
+    int workerId = getRuntimeContext().getIndexOfThisSubtask();
+    Collection<GSpanTransaction> transactions = Lists.newArrayList(iterable);
 
-    for(GSpanTransaction graph : iterable) {
-      graphs.put(graphId, graph);
-
-      graphId++;
-    }
-
-    collector.collect(
-      new Tuple2<>(getRuntimeContext().getIndexOfThisSubtask(), graphs));
+    collector.collect(new Tuple2<>(workerId, transactions));
   }
 }

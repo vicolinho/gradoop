@@ -13,6 +13,7 @@ import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common
   .GradoopTransactionalFSMEncoder;
+import org.gradoop.model.impl.algorithms.fsm.common.PrintDfsCode;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.IntegerLabeledEdgeTriple;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine
@@ -53,6 +54,33 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
   }
 
   @Test
+  public void testFilterRefine() throws Exception {
+    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> input =
+      new PredictableFSMTransactionGenerator<>(getConfig(), 100)
+        .execute();
+
+    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.8f);
+
+    GradoopTransactionalFSMEncoder<GraphHeadPojo, VertexPojo, EdgePojo>
+      encoder = new GradoopTransactionalFSMEncoder<>();
+
+    DataSet<Tuple3<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>> fatEdges =
+      encoder.encode(input, fsmConfig);
+
+    TransactionalFSMiner iMiner = new FilterRefineTransactionalFSMiner();
+
+    DataSet<CompressedDFSCode> iResult =
+      iMiner.mine(fatEdges, encoder.getMinSupport(), fsmConfig);
+
+    iResult.map(new PrintDfsCode())
+      .withBroadcastSet(encoder.getVertexLabelDictionary(), BroadcastNames.VERTEX_DICTIONARY)
+      .withBroadcastSet(encoder.getEdgeLabelDictionary(), BroadcastNames.EDGE_DICTIONARY)
+      .print();
+
+//    Assert.assertEquals(62 * 3, iResult.count());
+  }
+
+  @Test
   public void testIterativeVsFilterRefine() throws Exception {
     GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> input =
       new PredictableFSMTransactionGenerator<>(getConfig(), 100)
@@ -60,7 +88,7 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
 
 //    getExecutionEnvironment().setParallelism(3);
 
-    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.55f);
+    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.95f);
 //    int edgeCount = 2;
 //    fsmConfig.setMinEdgeCount(edgeCount);
 //    fsmConfig.setMaxEdgeCount(edgeCount);

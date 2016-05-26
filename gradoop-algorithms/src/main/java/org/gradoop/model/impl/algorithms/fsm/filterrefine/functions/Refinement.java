@@ -29,7 +29,7 @@ import java.util.Set;
 
 public class Refinement implements
   FlatJoinFunction<Tuple2<Integer, Collection<CompressedDFSCode>>,
-    Tuple2<Integer, Map<Integer, GSpanTransaction>>, CompressedDFSCode> {
+    Tuple2<Integer, Collection<GSpanTransaction>>, CompressedDFSCode> {
 
   private final FSMConfig fsmConfig;
 
@@ -40,7 +40,7 @@ public class Refinement implements
   @Override
   public void join(
     Tuple2<Integer, Collection<CompressedDFSCode>> codePair,
-    Tuple2<Integer, Map<Integer, GSpanTransaction>> transactionPair,
+    Tuple2<Integer, Collection<GSpanTransaction>> transactionPair,
     Collector<CompressedDFSCode> collector) throws Exception {
 
     List<CompressedDFSCode> compressedCodes = Lists.newArrayList();
@@ -80,7 +80,7 @@ public class Refinement implements
     }
 
     // for each graph
-    for(GSpanTransaction graph : transactionPair.f1.values()) {
+    for(GSpanTransaction graph : transactionPair.f1) {
 
       // index step pattern mappings
       Map<StepPattern, Collection<StepPatternMapping>> stepPatternMappings =

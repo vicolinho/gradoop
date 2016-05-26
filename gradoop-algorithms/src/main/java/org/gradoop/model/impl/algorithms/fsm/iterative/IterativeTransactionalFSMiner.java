@@ -3,36 +3,38 @@ package org.gradoop.model.impl.algorithms.fsm.iterative;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.operators.IterativeDataSet;
 import org.apache.flink.api.java.tuple.Tuple3;
-import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
-import org.gradoop.model.impl.algorithms.fsm.common.AbstractTransactionalFSMiner;
+import org.gradoop.model.impl.algorithms.fsm.common
+  .AbstractTransactionalFSMiner;
 import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
-import org.gradoop.model.impl.algorithms.fsm.common.functions.CollectFrequentSubgraphs;
-import org.gradoop.model.impl.algorithms.fsm.common.functions.ExpandFrequentDfsCodes;
+import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
+import org.gradoop.model.impl.algorithms.fsm.common.functions
+  .CollectFrequentSubgraphs;
+import org.gradoop.model.impl.algorithms.fsm.common.functions
+  .ExpandFrequentDfsCodes;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.Frequent;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.HasGrownSubgraphs;
-import org.gradoop.model.impl.algorithms.fsm.common.functions.IsCollector;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.PostPrune;
-import org.gradoop.model.impl.algorithms.fsm.common.functions.ReportGrownSubgraphs;
+import org.gradoop.model.impl.algorithms.fsm.common.functions
+  .ReportGrownSubgraphs;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.SearchSpace;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.IntegerLabeledEdgeTriple;
-
-
-
+import org.gradoop.model.impl.algorithms.fsm.common.tuples
+  .IntegerLabeledEdgeTriple;
 import org.gradoop.model.impl.algorithms.fsm.iterative.functions.AddAll;
 import org.gradoop.model.impl.algorithms.fsm.iterative.functions
   .CollectedSubgraphs;
 import org.gradoop.model.impl.algorithms.fsm.iterative.functions
   .CreateCollector;
-import org.gradoop.model.impl.algorithms.fsm.iterative.functions.CreateEmptyCollector;
+import org.gradoop.model.impl.algorithms.fsm.iterative.functions
+  .CreateEmptyCollector;
+import org.gradoop.model.impl.algorithms.fsm.iterative.functions
+  .GrowFrequentSubgraphs;
+import org.gradoop.model.impl.algorithms.fsm.iterative.functions
+  .IsFrequentSubgraphCollector;
 import org.gradoop.model.impl.algorithms.fsm.iterative.functions.IsTransaction;
-import org.gradoop.model.impl.algorithms.fsm.iterative.functions.IsFrequentSubgraphCollector;
-import org.gradoop.model.impl.algorithms.fsm.iterative.functions.GrowFrequentSubgraphs;
 import org.gradoop.model.impl.algorithms.fsm.iterative.functions
   .WrapInIterationItem;
 import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.IterationItem;
-
-
 import org.gradoop.model.impl.functions.bool.False;
 import org.gradoop.model.impl.id.GradoopId;
 

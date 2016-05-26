@@ -165,7 +165,7 @@ public class GSpan {
       minEdgePatternId, false, edgeId, edgeLabel, minId, minLabel));
   }
 
-  public static void growEmbeddings(final GSpanTransaction transaction,
+  public static void growFrequentSubgraphs(final GSpanTransaction transaction,
     Collection<CompressedDFSCode> frequentDfsCodes, FSMConfig fsmConfig) {
 
     Map<CompressedDFSCode, Collection<DFSEmbedding>> childCodeEmbeddings = null;
@@ -265,7 +265,7 @@ public class GSpan {
 
   }
 
-  public static DFSCode findMinimumSupportedFrequentDfsCode(
+  private static DFSCode findMinimumSupportedFrequentDfsCode(
     final Collection<CompressedDFSCode> dfsCodes,
     Collection<CompressedDFSCode> frequentDfsCodes, final FSMConfig fsmConfig) {
 
@@ -369,5 +369,126 @@ public class GSpan {
         groupIterator.remove();
       }
     }
+  }
+
+  public static boolean isValidMinimumDfsCode(
+    CompressedDFSCode compressedDFSCode, FSMConfig fsmConfig) {
+
+    DFSCode reportedCode = compressedDFSCode.getDfsCode();
+    List<DFSStep> steps = reportedCode.getSteps();
+    GSpanTransaction transaction = initTransaction(steps);
+
+    for (int edgeCount = 2; edgeCount <= steps.size(); edgeCount++) {
+      GSpan.growFrequentSubgraphs(transaction, null, fsmConfig);
+    }
+
+    DFSCode minDfsCode = GSpan.findMinimumSupportedFrequentDfsCode(
+      transaction.getSiblingGroups().iterator().next(), null,
+      fsmConfig);
+
+    return reportedCode.equals(minDfsCode);
+  }
+
+  private static GSpanTransaction initTransaction(List<DFSStep> steps) {
+    DFSStep firstStep = steps.get(0);
+
+    CompressedDFSCode startCode = new CompressedDFSCode(new DFSCode(firstStep));
+
+    Collection<DFSEmbedding> embeddings = Lists.newArrayList();
+
+    Map<Integer, AdjacencyList> adjacencyLists = com.google.common.collect.Maps.newHashMap();
+
+    int edgeId = 0;
+    for(DFSStep step : steps) {
+      // first step or same direction and labels as first step
+      if(edgeId == 0 || samePattern(firstStep, step)){
+        addEmbedding(embeddings, edgeId, step, false);
+        // inverse direction but same labels as first step
+      } else if (inversePattern(firstStep, step)) {
+        addEmbedding(embeddings, edgeId, step, true);
+      }
+
+      int fromId = step.getFromTime();
+      int fromLabel = step.getFromLabel();
+      boolean outgoing = step.isOutgoing();
+      int edgeLabel = step.getEdgeLabel();
+      int toId = step.getToTime();
+      int toLabel = step.getToLabel();
+
+      addEntry(adjacencyLists,
+        fromId, fromLabel, outgoing, edgeId, edgeLabel, toId, toLabel);
+      addEntry(adjacencyLists,
+        toId, toLabel, !outgoing, edgeId, edgeLabel, fromId, fromLabel);
+
+      edgeId++;
+    }
+
+    return new GSpanTransaction(adjacencyLists,
+      initCodeEmbeddings(startCode, embeddings), initCodeSiblings(startCode));
+  }
+
+  private static void addEmbedding(Collection<DFSEmbedding> embeddings,
+    int edgeId, DFSStep step, boolean inverse) {
+
+    List<Integer> vertexTimes;
+
+    if (step.isLoop()) {
+      vertexTimes = Lists.newArrayList(step.getFromTime());
+    } else if(!inverse) {
+      vertexTimes = Lists.newArrayList(step.getFromTime(), step.getToTime());
+    } else {
+      vertexTimes = Lists.newArrayList(step.getToTime(), step.getFromTime());
+    }
+
+    List<Integer> edgeTimes = Lists.newArrayList(edgeId);
+    embeddings.add(new DFSEmbedding(vertexTimes, edgeTimes));
+  }
+
+  private static boolean inversePattern(DFSStep firstStep, DFSStep secondStep) {
+    return ! secondStep.isOutgoing().equals(firstStep.isOutgoing()) &&
+      secondStep.isLoop().equals(firstStep.isLoop()) &&
+      secondStep.getFromLabel().equals(firstStep.getToLabel()) &&
+      secondStep.getToLabel().equals(firstStep.getFromLabel());
+  }
+
+  private static boolean samePattern(DFSStep firstStep, DFSStep secondStep) {
+    return secondStep.isOutgoing().equals(firstStep.isOutgoing()) &&
+      secondStep.isLoop().equals(firstStep.isLoop()) &&
+      secondStep.getFromLabel().equals(firstStep.getFromLabel()) &&
+      secondStep.getToLabel().equals(firstStep.getToLabel());
+  }
+
+  private static void addEntry(Map<Integer, AdjacencyList> adjacencyLists,
+    int fromId, int fromLabel, boolean outgoing, int edgeId, int edgeLabel,
+    int toId, int toLabel) {
+
+    AdjacencyList adjacencyList = adjacencyLists.get(fromId);
+
+    AdjacencyListEntry entry =
+      new AdjacencyListEntry(outgoing, edgeId, edgeLabel, toId, toLabel);
+
+    if(adjacencyList == null) {
+      adjacencyLists.put(fromId, new AdjacencyList(fromLabel, entry));
+    } else {
+      adjacencyList.getEntries().add(entry);
+    }
+  }
+
+  private static Collection<Collection<CompressedDFSCode>> initCodeSiblings(
+    CompressedDFSCode startCode) {
+    Collection<CompressedDFSCode> siblings = Lists
+      .newArrayList(startCode);
+    Collection<Collection<CompressedDFSCode>> codeSiblings =
+      Lists.newArrayListWithExpectedSize(1);
+    codeSiblings.add(siblings);
+    return codeSiblings;
+  }
+
+  private static Map<CompressedDFSCode, Collection<DFSEmbedding>> initCodeEmbeddings(
+    CompressedDFSCode startCode, Collection<DFSEmbedding> embeddings) {
+    Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings =
+      com.google.common.collect.Maps.newHashMap();
+    codeEmbeddings.put(startCode, embeddings);
+    return codeEmbeddings;
   }
 }
