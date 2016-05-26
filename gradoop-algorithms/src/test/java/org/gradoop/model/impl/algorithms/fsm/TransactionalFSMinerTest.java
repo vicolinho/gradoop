@@ -13,9 +13,8 @@ import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common
   .GradoopTransactionalFSMEncoder;
-import org.gradoop.model.impl.algorithms.fsm.common.PrintDfsCode;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.FatEdge;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.IntegerLabeledEdgeTriple;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine
   .FilterRefineTransactionalFSMiner;
 import org.gradoop.model.impl.algorithms.fsm.iterative
@@ -36,12 +35,12 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
       new PredictableFSMTransactionGenerator<>(getConfig(), 100)
         .execute();
 
-    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.8f);
+    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.85f);
 
     GradoopTransactionalFSMEncoder<GraphHeadPojo, VertexPojo, EdgePojo>
       encoder = new GradoopTransactionalFSMEncoder<>();
 
-    DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> fatEdges =
+    DataSet<Tuple3<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>> fatEdges =
       encoder.encode(input, fsmConfig);
 
     TransactionalFSMiner iMiner = new IterativeTransactionalFSMiner();
@@ -50,7 +49,7 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
     DataSet<CompressedDFSCode> iResult =
       iMiner.mine(fatEdges, encoder.getMinSupport(), fsmConfig);
 
-    Assert.assertEquals(iResult.count(), 219);
+    Assert.assertEquals(68 * 2, iResult.count());
   }
 
   @Test
@@ -69,7 +68,7 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
     GradoopTransactionalFSMEncoder<GraphHeadPojo, VertexPojo, EdgePojo>
       encoder = new GradoopTransactionalFSMEncoder<>();
 
-    DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> fatEdges =
+    DataSet<Tuple3<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>> fatEdges =
       encoder.encode(input, fsmConfig);
 
     TransactionalFSMiner iMiner = new IterativeTransactionalFSMiner();
@@ -125,7 +124,7 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
     GradoopTransactionalFSMEncoder<GraphHeadPojo, VertexPojo, EdgePojo>
       encoder = new GradoopTransactionalFSMEncoder<>();
 
-    DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> fatEdges =
+    DataSet<Tuple3<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>> fatEdges =
       encoder.encode(input, fsmConfig);
 
     TransactionalFSMiner iMiner = new IterativeTransactionalFSMiner();

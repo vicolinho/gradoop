@@ -12,7 +12,7 @@ import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSCode;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSStep;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.Transaction;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.GSpanTransaction;
 
 import java.util.Collection;
 import java.util.List;
@@ -27,28 +27,27 @@ public class PostPruning
     this.fsmConfig = fsmConfig;
   }
 
-
   @Override
   public void flatMap(CompressedDFSCode compressedDFSCode,
     Collector<CompressedDFSCode> collector) throws Exception {
 
     DFSCode reportedCode = compressedDFSCode.getDfsCode();
     List<DFSStep> steps = reportedCode.getSteps();
-    Transaction transaction = initTransaction(steps);
+    GSpanTransaction transaction = initTransaction(steps);
 
     for (int edgeCount = 2; edgeCount <= steps.size(); edgeCount++) {
-      GSpan.growEmbeddings(transaction, fsmConfig.isDirected());
+      GSpan.growEmbeddings(transaction, fsmConfig);
     }
 
     DFSCode minDfsCode = GSpan.findMinimumDfsCode(
-      transaction.getSiblingGroups().iterator().next(), fsmConfig.isDirected());
+      transaction.getSiblingGroups().iterator().next(), fsmConfig);
 
     if(reportedCode.equals(minDfsCode)) {
       collector.collect(compressedDFSCode);
     }
   }
 
-  private Transaction initTransaction(List<DFSStep> steps) {
+  private GSpanTransaction initTransaction(List<DFSStep> steps) {
     DFSStep firstStep = steps.get(0);
 
     CompressedDFSCode startCode = new CompressedDFSCode(new DFSCode(firstStep));
@@ -82,7 +81,7 @@ public class PostPruning
       edgeId++;
     }
 
-    return new Transaction(adjacencyLists,
+    return new GSpanTransaction(adjacencyLists,
       initCodeEmbeddings(startCode, embeddings), initCodeSiblings(startCode));
   }
 

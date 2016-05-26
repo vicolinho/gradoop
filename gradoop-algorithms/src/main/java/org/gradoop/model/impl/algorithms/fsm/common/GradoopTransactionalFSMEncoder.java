@@ -10,7 +10,7 @@ import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMEncoder;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.*;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.FatEdge;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.IntegerLabeledEdgeTriple;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.VertexIdLabel;
 import org.gradoop.model.impl.functions.tuple.Project4To0And3;
 import org.gradoop.model.impl.id.GradoopId;
@@ -45,7 +45,7 @@ public class GradoopTransactionalFSMEncoder
    * @return pruned and relabelled edges
    */
   @Override
-  public DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> encode(
+  public DataSet<Tuple3<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>> encode(
     GraphCollection<G, V, E> collection, FSMConfig fsmConfig) {
 
     setMinSupport(collection, fsmConfig);
@@ -58,11 +58,11 @@ public class GradoopTransactionalFSMEncoder
     return combine(encodedVertices, encodedEdges);
   }
 
-  public void setMinSupport(GraphCollection<G, V, E> collection,
+  private void setMinSupport(GraphCollection<G, V, E> collection,
     FSMConfig fsmConfig) {
     this.minSupport = Count
       .count(collection.getGraphHeads())
-      .map(new MinSupport(fsmConfig.getThreshold()));
+      .map(new MinSupport(fsmConfig));
   }
 
   private DataSet<Tuple4<GradoopId, GradoopId, GradoopId, String>> encodeEdges(
@@ -113,7 +113,7 @@ public class GradoopTransactionalFSMEncoder
       .withBroadcastSet(reverseDictionary, BroadcastNames.VERTEX_DICTIONARY);
   }
 
-  private DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> combine(
+  private DataSet<Tuple3<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>> combine(
     DataSet<VertexIdLabel> encodedVertices,
     DataSet<Tuple4<GradoopId, GradoopId, GradoopId, String>> encodedEdges) {
 

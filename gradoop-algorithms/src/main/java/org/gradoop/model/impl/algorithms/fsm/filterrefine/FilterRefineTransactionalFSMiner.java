@@ -8,10 +8,11 @@ import org.gradoop.model.impl.algorithms.fsm.Print;
 import org.gradoop.model.impl.algorithms.fsm.common.AbstractTransactionalFSMiner;
 import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.Frequent;
+import org.gradoop.model.impl.algorithms.fsm.common.functions.SearchSpace;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.FatEdge;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.IntegerLabeledEdgeTriple;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine.functions.*;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.Transaction;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.GSpanTransaction;
 import org.gradoop.model.impl.functions.bool.False;
 import org.gradoop.model.impl.functions.tuple.Value0Of3;
 import org.gradoop.model.impl.id.GradoopId;
@@ -24,7 +25,7 @@ public class FilterRefineTransactionalFSMiner
 
   @Override
   public DataSet<CompressedDFSCode> mine(
-    DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> fatEdges,
+    DataSet<Tuple3<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>> fatEdges,
     DataSet<Integer> minSupport, FSMConfig fsmConfig) {
 
     // determine 1-edge frequent DFS codes
@@ -41,7 +42,7 @@ public class FilterRefineTransactionalFSMiner
 
     if(fsmConfig.getMaxEdgeCount() != 1) {
       // distribute graphs to workers
-      DataSet<Tuple2<Integer, Map<Integer, Transaction>>> partitions = fatEdges
+      DataSet<Tuple2<Integer, Map<Integer, GSpanTransaction>>> partitions = fatEdges
         // group by graphId and create transaction for each graph
         .groupBy(0)
         .reduceGroup(new SearchSpace(fsmConfig))

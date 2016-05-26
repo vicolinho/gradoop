@@ -6,16 +6,16 @@ import org.apache.flink.api.java.tuple.Tuple5;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSCode;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSStep;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.FatEdge;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.IntegerLabeledEdgeTriple;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.VertexIdLabel;
 import org.gradoop.model.impl.id.GradoopId;
 
 public class AppendTargetLabelAndInitialDfsCode implements JoinFunction<
   Tuple5<GradoopId, GradoopId, GradoopId, Integer, Integer>,
-  VertexIdLabel, Tuple3<GradoopId, FatEdge, CompressedDFSCode>> {
+  VertexIdLabel, Tuple3<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>> {
 
   @Override
-  public Tuple3<GradoopId, FatEdge, CompressedDFSCode>
+  public Tuple3<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>
   join(Tuple5<GradoopId, GradoopId, GradoopId, Integer, Integer> edge,
     VertexIdLabel targetVertex) throws Exception {
 
@@ -36,36 +36,16 @@ public class AppendTargetLabelAndInitialDfsCode implements JoinFunction<
       toTime = 1;
     }
 
-    Boolean outgoing = sourceLabel.compareTo(targetLabel) <= 0;
-
-    GradoopId minId;
-    GradoopId maxId;
-
-    Integer minLabel;
-    Integer maxLabel;
-
-    if(outgoing) {
-      minLabel = sourceLabel;
-      minId = sourceId;
-      maxLabel = targetLabel;
-      maxId = targetId;
-    } else {
-      minLabel = targetLabel;
-      minId = targetId;
-      maxLabel = sourceLabel;
-      maxId = sourceId;
-    }
-
 
     DFSStep dfsStep = new DFSStep(
-      fromTime, minLabel, outgoing, edgeLabel, toTime, maxLabel);
+      fromTime, sourceLabel, true, edgeLabel, toTime, targetLabel);
 
-    FatEdge fatEdge = new FatEdge(
-      minId, minLabel, outgoing, edgeLabel, maxId, maxLabel);
+    IntegerLabeledEdgeTriple triple = new IntegerLabeledEdgeTriple(
+      sourceId, sourceLabel, edgeLabel, targetId, targetLabel);
 
     return new Tuple3<>(
       edge.f0,
-      fatEdge,
+      triple,
       new CompressedDFSCode(new DFSCode(dfsStep)));
   }
 }

@@ -8,6 +8,7 @@ import org.gradoop.model.api.EPGMElement;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
 import org.gradoop.model.impl.GraphTransaction;
+import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.gspan.GSpan;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyListEntry;
@@ -15,7 +16,7 @@ import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSCode;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSStep;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.Transaction;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.GSpanTransaction;
 import org.gradoop.model.impl.id.GradoopId;
 
 import java.util.Collection;
@@ -28,6 +29,12 @@ import java.util.Set;
 public class MinDfsCode
   <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge>
   implements MapFunction<GraphTransaction<G, V, E>, CompressedDFSCode> {
+
+  private final FSMConfig fsmConfig;
+
+  public MinDfsCode(FSMConfig fsmConfig) {
+    this.fsmConfig = fsmConfig;
+  }
 
   @Override
   public CompressedDFSCode map(GraphTransaction<G, V, E> graphTransaction
@@ -55,11 +62,11 @@ public class MinDfsCode
 
     codeSiblings.add(Lists.newArrayList(codeEmbeddings.keySet()));
 
-    Transaction transaction =
-      new Transaction(adjacencyLists, codeEmbeddings, codeSiblings);
+    GSpanTransaction transaction =
+      new GSpanTransaction(adjacencyLists, codeEmbeddings, codeSiblings);
 
     for(int i = 2; i <= graphTransaction.getEdges().size(); i++) {
-      GSpan.growEmbeddings(transaction, true);
+      GSpan.growEmbeddings(transaction, fsmConfig);
     }
 
     return transaction.getSiblingGroups().iterator().next().iterator().next();

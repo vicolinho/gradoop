@@ -33,7 +33,7 @@ public class FSMConfig implements Serializable {
   /**
    * Direction mode, true for directed graphs and false for undirected.
    */
-  private final boolean  directed;
+  private final boolean directed;
 
   /**
    * Edge mode, true for multigraphs and false for simple graphs.

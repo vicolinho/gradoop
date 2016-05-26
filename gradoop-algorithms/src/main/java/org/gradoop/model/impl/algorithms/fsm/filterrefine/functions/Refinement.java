@@ -7,17 +7,17 @@ import org.apache.flink.api.common.functions.FlatJoinFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
-import org.gradoop.model.impl.algorithms.fsm.common.gspan.DfsCodeComparator;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyListEntry;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSCode;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSStep;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.filterrefine.pojos.StepPatternMapping;
-import org.gradoop.model.impl.algorithms.fsm.filterrefine.pojos.StepPattern;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.GSpanTransaction;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine.pojos.StepMappings;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.Transaction;
+import org.gradoop.model.impl.algorithms.fsm.filterrefine.pojos.StepPattern;
+import org.gradoop.model.impl.algorithms.fsm.filterrefine.pojos
+  .StepPatternMapping;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -29,20 +29,18 @@ import java.util.Set;
 
 public class Refinement implements
   FlatJoinFunction<Tuple2<Integer, Collection<CompressedDFSCode>>,
-    Tuple2<Integer, Map<Integer, Transaction>>, CompressedDFSCode> {
+    Tuple2<Integer, Map<Integer, GSpanTransaction>>, CompressedDFSCode> {
 
-  private final DfsCodeComparator comparator;
-  private final boolean directed;
+  private final FSMConfig fsmConfig;
 
   public Refinement(FSMConfig config) {
-    directed = config.isDirected();
-    this.comparator = new DfsCodeComparator(directed);
+    fsmConfig = config;
   }
 
   @Override
   public void join(
     Tuple2<Integer, Collection<CompressedDFSCode>> codePair,
-    Tuple2<Integer, Map<Integer, Transaction>> transactionPair,
+    Tuple2<Integer, Map<Integer, GSpanTransaction>> transactionPair,
     Collector<CompressedDFSCode> collector) throws Exception {
 
     List<CompressedDFSCode> compressedCodes = Lists.newArrayList();
@@ -82,7 +80,7 @@ public class Refinement implements
     }
 
     // for each graph
-    for(Transaction graph : transactionPair.f1.values()) {
+    for(GSpanTransaction graph : transactionPair.f1.values()) {
 
       // index step pattern mappings
       Map<StepPattern, Collection<StepPatternMapping>> stepPatternMappings =
@@ -188,9 +186,9 @@ public class Refinement implements
     return children;
   }
 
-
   private Map<StepPattern, Collection<StepPatternMapping>>
-  findStepPatternMappings( Transaction graph, Set<StepPattern> allStepPatterns)
+  findStepPatternMappings(
+    GSpanTransaction graph, Set<StepPattern> allStepPatterns)
   {
     // identify candidates
 
@@ -206,7 +204,7 @@ public class Refinement implements
 
       // for each (outgoing) edge
       for(AdjacencyListEntry edge : vertex.getEntries()) {
-        if (edge.isOutgoing() || !directed) {
+        if (edge.isOutgoing() || !fsmConfig.isDirected()) {
 
           StepPattern pattern = new StepPattern(
             vertex.getFromVertexLabel(),

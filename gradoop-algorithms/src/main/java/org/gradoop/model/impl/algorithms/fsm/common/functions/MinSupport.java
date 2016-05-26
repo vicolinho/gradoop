@@ -18,6 +18,7 @@
 package org.gradoop.model.impl.algorithms.fsm.common.functions;
 
 import org.apache.flink.api.common.functions.MapFunction;
+import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 
 /**
  * graphCount =[threshold]=> minimum support
@@ -31,10 +32,10 @@ public class MinSupport implements MapFunction<Long, Integer> {
 
   /**
    * constructor
-   * @param threshold minimum relative support
+   * @param fsmConfig mining configuration
    */
-  public MinSupport(float threshold) {
-    this.threshold = threshold;
+  public MinSupport(FSMConfig fsmConfig) {
+    this.threshold = fsmConfig.getThreshold();
   }
 
   @Override

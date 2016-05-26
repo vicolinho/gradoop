@@ -14,13 +14,15 @@ import org.gradoop.model.impl.algorithms.fsm.common.functions.IsActive;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.IsCollector;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.PostPruning;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.ReportPatterns;
+import org.gradoop.model.impl.algorithms.fsm.common.functions.SearchSpace;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.SupportPruning;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.FatEdge;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.IntegerLabeledEdgeTriple;
 import org.gradoop.model.impl.algorithms.fsm.iterative.functions
   .CreateCollector;
 import org.gradoop.model.impl.algorithms.fsm.iterative.functions.PatternGrowth;
-import org.gradoop.model.impl.algorithms.fsm.iterative.functions.SearchSpace;
+import org.gradoop.model.impl.algorithms.fsm.iterative.functions
+  .WrapInIterationItem;
 import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.IterationItem;
 
 
@@ -34,8 +36,8 @@ public class IterativeTransactionalFSMiner
 
   @Override
   public DataSet<CompressedDFSCode> mine(
-    DataSet<Tuple3<GradoopId, FatEdge, CompressedDFSCode>> fatEdges,
-    DataSet<Integer> minSupport, FSMConfig fsmConfig) {
+    DataSet<Tuple3<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>>
+      fatEdges, DataSet<Integer> minSupport, FSMConfig fsmConfig) {
 
     // determine 1-edge frequent DFS patterns
     DataSet<CompressedDFSCode> allFrequentDfsCodes =
@@ -53,6 +55,7 @@ public class IterativeTransactionalFSMiner
     DataSet<IterationItem> searchSpace = fatEdges
       .groupBy(0)
       .reduceGroup(new SearchSpace(fsmConfig))
+      .map(new WrapInIterationItem())
       .union(
         env.fromElements(true)
         .map(new CreateCollector())
@@ -60,7 +63,7 @@ public class IterativeTransactionalFSMiner
 
     // ITERATION HEAD
     int maxEdgeCount = fsmConfig.getMaxEdgeCount();
-    int maxIterations = (maxEdgeCount > 0 ? maxEdgeCount : MAX_EDGE_COUNT) -1;
+    int maxIterations = (maxEdgeCount > 0 ? maxEdgeCount : MAX_EDGE_COUNT) - 1;
 
     if(maxIterations > 0) {
       IterativeDataSet<IterationItem> workSet = searchSpace
@@ -84,11 +87,11 @@ public class IterativeTransactionalFSMiner
 
       // grow children of frequent DFS patterns
       DataSet<IterationItem> nextWorkSet = activeWorkSet
-        .map(new SupportPruning())    // drop embeddings of
+        .map(new SupportPruning())  // drop embeddings of
         // infrequent patterns
         .withBroadcastSet(
           currentFrequentPatterns, BroadcastNames.FREQUENT_PATTERNS)
-        .filter(new IsActive());      // active, if at least one frequent pattern
+        .filter(new IsActive());    // active, if at least one frequent pattern
 
       // ITERATION FOOTER
       DataSet<IterationItem> collector = workSet

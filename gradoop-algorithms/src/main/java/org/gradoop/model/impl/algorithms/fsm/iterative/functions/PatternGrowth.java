@@ -43,7 +43,7 @@ public class PatternGrowth
 
     if (! wrapper.isCollector()) {
       GSpan.growEmbeddings(
-        wrapper.getTransaction(), fsmConfig.isDirected());
+        wrapper.getTransaction(), fsmConfig);
     }
 
     return wrapper;

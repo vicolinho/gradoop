@@ -13,7 +13,7 @@ import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.gspan.GSpan;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.Transaction;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.GSpanTransaction;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class LocalTransactionalFSM implements FlatMapFunction
-  <Tuple2<Integer, Map<Integer, Transaction>>,
+  <Tuple2<Integer, Map<Integer, GSpanTransaction>>,
     Tuple3<CompressedDFSCode, Integer,  Boolean>> {
 
   private final FSMConfig fsmConfig;
@@ -35,7 +35,7 @@ public class LocalTransactionalFSM implements FlatMapFunction
 
   private float threshold;
 
-  private Map<Integer, Transaction> graphs;
+  private Map<Integer, GSpanTransaction> graphs;
   private Set<Integer> activeGraphIds;
 
   private final ArrayList<CompressedDFSCode> likelyFrequentDfsCodes = Lists
@@ -48,7 +48,7 @@ public class LocalTransactionalFSM implements FlatMapFunction
   }
 
   @Override
-  public void flatMap(Tuple2<Integer, Map<Integer, Transaction>> pair,
+  public void flatMap(Tuple2<Integer, Map<Integer, GSpanTransaction>> pair,
     Collector<Tuple3<CompressedDFSCode, Integer, Boolean>> collector
   ) throws Exception {
 
@@ -106,9 +106,9 @@ public class LocalTransactionalFSM implements FlatMapFunction
 
     for(Integer graphId : activeGraphIds) {
 
-      Transaction graph = graphs.get(graphId);
+      GSpanTransaction graph = graphs.get(graphId);
 
-      GSpan.growEmbeddings(graph, fsmConfig.isDirected());
+      GSpan.growEmbeddings(graph, fsmConfig);
 
       if(graph.getCodeEmbeddings().isEmpty()) {
         inactiveGraphs.add(graphId);
@@ -123,7 +123,7 @@ public class LocalTransactionalFSM implements FlatMapFunction
 
     for(Integer graphId : activeGraphIds) {
 
-      Transaction graph = graphs.get(graphId);
+      GSpanTransaction graph = graphs.get(graphId);
 
       for(CompressedDFSCode code : graph.getCodeEmbeddings().keySet()) {
         Integer support = currentDfsCodes.get(code);
@@ -161,7 +161,7 @@ public class LocalTransactionalFSM implements FlatMapFunction
 
     for(Integer graphId : activeGraphIds) {
 
-      Transaction graph = graphs.get(graphId);
+      GSpanTransaction graph = graphs.get(graphId);
 
       Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings =
         graph.getCodeEmbeddings();

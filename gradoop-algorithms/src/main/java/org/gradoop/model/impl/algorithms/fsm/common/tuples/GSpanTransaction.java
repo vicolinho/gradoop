@@ -26,13 +26,13 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.Map;
 
-public class Transaction implements Serializable {
+public class GSpanTransaction implements Serializable {
 
   private Map<Integer, AdjacencyList> adjacencyLists;
   private Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings;
   private Collection<Collection<CompressedDFSCode>> codeSiblings;
 
-  public Transaction(
+  public GSpanTransaction(
     Map<Integer, AdjacencyList> adjacencyLists,
     Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings,
     Collection<Collection<CompressedDFSCode>> codeSiblings) {

@@ -19,16 +19,15 @@ package org.gradoop.model.impl.algorithms.fsm.iterative.tuples;
 
 import com.google.common.collect.Lists;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.Transaction;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.GSpanTransaction;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Collections;
 
 public class IterationItem implements Serializable {
 
 
-  private final Transaction transaction;
+  private final GSpanTransaction transaction;
   private final Collection<CompressedDFSCode> collector;
   private boolean collectorUpdated = true;
 
@@ -37,7 +36,7 @@ public class IterationItem implements Serializable {
     this.collector = Lists.newArrayList();
   }
 
-  public IterationItem(Transaction transaction) {
+  public IterationItem(GSpanTransaction transaction) {
     this.transaction = transaction;
     this.collector = null;
   }
@@ -50,7 +49,7 @@ public class IterationItem implements Serializable {
     return isCollector() ? collectorUpdated : transaction.canGrow();
   }
 
-  public Transaction getTransaction() {
+  public GSpanTransaction getTransaction() {
     return this.transaction;
   }
 
