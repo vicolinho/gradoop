@@ -28,7 +28,7 @@ import java.util.List;
 /**
  * [(CompressedDFSCode, Support),..] => CompressedDFSCode[]
  */
-public class ConcatFrequentPatterns implements
+public class CollectFrequentSubgraphs implements
   GroupReduceFunction<CompressedDFSCode, Collection<CompressedDFSCode>> {
 
   @Override

@@ -18,12 +18,12 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-public class PostPruning
+public class PostPrune
   implements FlatMapFunction<CompressedDFSCode, CompressedDFSCode> {
 
   private final FSMConfig fsmConfig;
 
-  public PostPruning(FSMConfig fsmConfig) {
+  public PostPrune(FSMConfig fsmConfig) {
     this.fsmConfig = fsmConfig;
   }
 
@@ -36,11 +36,12 @@ public class PostPruning
     GSpanTransaction transaction = initTransaction(steps);
 
     for (int edgeCount = 2; edgeCount <= steps.size(); edgeCount++) {
-      GSpan.growEmbeddings(transaction, fsmConfig);
+      GSpan.growEmbeddings(transaction, null, fsmConfig);
     }
 
-    DFSCode minDfsCode = GSpan.findMinimumDfsCode(
-      transaction.getSiblingGroups().iterator().next(), fsmConfig);
+    DFSCode minDfsCode = GSpan.findMinimumSupportedFrequentDfsCode(
+      transaction.getSiblingGroups().iterator().next(), null,
+      fsmConfig);
 
     if(reportedCode.equals(minDfsCode)) {
       collector.collect(compressedDFSCode);

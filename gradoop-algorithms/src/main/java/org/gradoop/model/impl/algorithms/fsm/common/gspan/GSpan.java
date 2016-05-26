@@ -165,8 +165,8 @@ public class GSpan {
       minEdgePatternId, false, edgeId, edgeLabel, minId, minLabel));
   }
 
-  public static void growEmbeddings(
-    final GSpanTransaction transaction, FSMConfig fsmConfig) {
+  public static void growEmbeddings(final GSpanTransaction transaction,
+    Collection<CompressedDFSCode> frequentDfsCodes, FSMConfig fsmConfig) {
 
     Map<CompressedDFSCode, Collection<DFSEmbedding>> childCodeEmbeddings = null;
     Collection<Collection<CompressedDFSCode>> childSiblingGroups = null;
@@ -178,7 +178,8 @@ public class GSpan {
       if (!parentSiblings.isEmpty()) {
         Collection<CompressedDFSCode> childSiblings = null;
 
-        DFSCode parentCode = findMinimumDfsCode(parentSiblings, fsmConfig);
+        DFSCode parentCode = findMinimumSupportedFrequentDfsCode(
+          parentSiblings, frequentDfsCodes, fsmConfig);
 
         List<Integer> rightmostPath = parentCode.getRightMostPathVertexTimes();
 
@@ -264,18 +265,24 @@ public class GSpan {
 
   }
 
-  public static DFSCode findMinimumDfsCode(
-    final Collection<CompressedDFSCode> dfsCodes, final FSMConfig fsmConfig) {
+  public static DFSCode findMinimumSupportedFrequentDfsCode(
+    final Collection<CompressedDFSCode> dfsCodes,
+    Collection<CompressedDFSCode> frequentDfsCodes, final FSMConfig fsmConfig) {
 
     Iterator<CompressedDFSCode> iterator = dfsCodes.iterator();
 
     DFSCode minCode = iterator.next().getDfsCode();
 
-    while (iterator.hasNext()) {
-      DFSCode nextCode = iterator.next().getDfsCode();
+    for(CompressedDFSCode compressedDFSCode : dfsCodes) {
+      if(frequentDfsCodes == null ||
+        frequentDfsCodes.contains(compressedDFSCode)) {
 
-      if(getSiblingComparator(fsmConfig).compare(nextCode, minCode) < 0) {
-        minCode = nextCode;
+        DFSCode nextCode = compressedDFSCode.getDfsCode();
+
+        if(minCode == null ||
+          getSiblingComparator(fsmConfig).compare(nextCode, minCode) < 0) {
+          minCode = nextCode;
+        }
       }
     }
 

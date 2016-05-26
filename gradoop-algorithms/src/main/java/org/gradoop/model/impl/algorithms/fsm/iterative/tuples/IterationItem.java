@@ -17,7 +17,6 @@
 
 package org.gradoop.model.impl.algorithms.fsm.iterative.tuples;
 
-import com.google.common.collect.Lists;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.GSpanTransaction;
 
@@ -28,40 +27,39 @@ public class IterationItem implements Serializable {
 
 
   private final GSpanTransaction transaction;
-  private final Collection<CompressedDFSCode> collector;
-  private boolean collectorUpdated = true;
-
-  public IterationItem() {
-    this.transaction = null;
-    this.collector = Lists.newArrayList();
-  }
+  private final Collection<CompressedDFSCode> frequentSubgraphs;
+  private final boolean lastIteration;
 
   public IterationItem(GSpanTransaction transaction) {
     this.transaction = transaction;
-    this.collector = null;
+    this.frequentSubgraphs = null;
+    this.lastIteration = false;
+  }
+
+  public IterationItem(
+    Collection<CompressedDFSCode> frequentSubgraphs, boolean lastIteration) {
+    this.transaction = null;
+    this.frequentSubgraphs = frequentSubgraphs;
+    this.lastIteration = lastIteration;
+  }
+
+  public boolean isTransaction() {
+    return transaction != null;
   }
 
   public Boolean isCollector() {
-    return collector != null;
+    return frequentSubgraphs != null;
   }
 
-  public Boolean isActive() {
-    return isCollector() ? collectorUpdated : transaction.canGrow();
+  public boolean isLastIteration() {
+    return lastIteration;
   }
 
   public GSpanTransaction getTransaction() {
     return this.transaction;
   }
 
-  public Collection<CompressedDFSCode> getCollector() {
-    return this.collector;
-  }
-
-  public void collect(Collection<CompressedDFSCode> frequentDfsCodes) {
-    if(frequentDfsCodes.isEmpty()) {
-      collectorUpdated = false;
-    } else {
-      collector.addAll(frequentDfsCodes);
-    }
+  public Collection<CompressedDFSCode> getFrequentSubgraphs() {
+    return this.frequentSubgraphs;
   }
 }

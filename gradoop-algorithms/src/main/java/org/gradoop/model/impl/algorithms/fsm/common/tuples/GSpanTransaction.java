@@ -99,7 +99,7 @@ public class GSpanTransaction implements Serializable {
     this.codeSiblings = codeSiblings;
   }
 
-  public Boolean canGrow() {
+  public Boolean hasGrownSubgraphs() {
     return this.codeEmbeddings != null;
   }
 }

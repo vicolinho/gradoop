@@ -66,7 +66,7 @@ public class MinDfsCode
       new GSpanTransaction(adjacencyLists, codeEmbeddings, codeSiblings);
 
     for(int i = 2; i <= graphTransaction.getEdges().size(); i++) {
-      GSpan.growEmbeddings(transaction, fsmConfig);
+      GSpan.growEmbeddings(transaction, null, fsmConfig);
     }
 
     return transaction.getSiblingGroups().iterator().next().iterator().next();

@@ -24,12 +24,12 @@ import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.IterationItem;
 /**
  * Filters active search space items
  */
-public class IsActive
+public class HasGrownSubgraphs
   implements FilterFunction<IterationItem> {
 
   @Override
   public boolean filter(IterationItem iterationItem) throws Exception {
 
-    return iterationItem.isActive();
+    return iterationItem.getTransaction().hasGrownSubgraphs();
   }
 }

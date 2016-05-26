@@ -108,7 +108,7 @@ public class LocalTransactionalFSM implements FlatMapFunction
 
       GSpanTransaction graph = graphs.get(graphId);
 
-      GSpan.growEmbeddings(graph, fsmConfig);
+      GSpan.growEmbeddings(graph, null, fsmConfig);
 
       if(graph.getCodeEmbeddings().isEmpty()) {
         inactiveGraphs.add(graphId);

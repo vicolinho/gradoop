@@ -25,7 +25,7 @@ import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.IterationItem;
 /**
  * Graph => [(CompressedDFSCode, 1),..]
  */
-public class ReportPatterns implements
+public class ReportGrownSubgraphs implements
   FlatMapFunction<IterationItem, CompressedDFSCode> {
 
   @Override

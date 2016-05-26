@@ -30,10 +30,10 @@ public class FilterRefineTransactionalFSMiner
 
     // determine 1-edge frequent DFS codes
     DataSet<CompressedDFSCode> allFrequentDfsCodes =
-      find1EdgeFrequentDfsCodes(fatEdges, minSupport);
+      singleEdgeFrequentSubgraphs(fatEdges, minSupport);
 
     // filter edges by 1-edge DFS code
-    fatEdges = filterFatEdges(fatEdges, allFrequentDfsCodes);
+    fatEdges = frequent(fatEdges, allFrequentDfsCodes);
 
     if(fsmConfig.getMinEdgeCount() > 1) {
       allFrequentDfsCodes = allFrequentDfsCodes

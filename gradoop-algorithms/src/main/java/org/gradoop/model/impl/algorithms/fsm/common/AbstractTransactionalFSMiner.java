@@ -24,7 +24,7 @@ public abstract class AbstractTransactionalFSMiner
   public static final int MAX_EDGE_COUNT = 100;
   protected ExecutionEnvironment env;
 
-  protected DataSet<CompressedDFSCode> find1EdgeFrequentDfsCodes(
+  protected DataSet<CompressedDFSCode> singleEdgeFrequentSubgraphs(
     DataSet<Tuple3<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>> graphEdges,
     DataSet<Integer> minSupport) {
 
@@ -38,8 +38,7 @@ public abstract class AbstractTransactionalFSMiner
       .withBroadcastSet(minSupport, BroadcastNames.MIN_SUPPORT);
   }
 
-  protected DataSet<Tuple3<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>>
-  filterFatEdges(
+  protected DataSet<Tuple3<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>> frequent(
     DataSet<Tuple3<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>> fatEdges,
     DataSet<CompressedDFSCode> allFrequentDfsCodes) {
 

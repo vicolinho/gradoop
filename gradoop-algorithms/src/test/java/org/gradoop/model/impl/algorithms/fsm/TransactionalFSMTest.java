@@ -190,8 +190,8 @@ public class TransactionalFSMTest extends GradoopFlinkTestBase {
 //    System.out.println("RESULT");
 //    GradoopFlinkTestUtils.printDirectedCanonicalAdjacencyMatrix(result);
 
-//    FSMHelper.printMinDfsCodes(expectation);
-//    FSMHelper.printMinDfsCodes(result);
+//    FSMHelper.printMinDfsCodes(expectation, FSMConfig.forDirectedMultigraph(0));
+//    FSMHelper.printMinDfsCodes(result, FSMConfig.forDirectedMultigraph(0));
 
     collectAndAssertTrue(expectation.equalsByGraphElementData(result));
   }

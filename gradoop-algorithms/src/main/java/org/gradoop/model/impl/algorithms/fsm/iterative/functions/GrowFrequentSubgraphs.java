@@ -17,24 +17,46 @@
 
 package org.gradoop.model.impl.algorithms.fsm.iterative.functions;
 
-import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.common.functions.RichMapFunction;
+import org.apache.flink.configuration.Configuration;
+import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.gspan.GSpan;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.IterationItem;
+
+import java.util.Collection;
+import java.util.List;
 
 /**
  * Core of gSpan implementation. Grows embeddings of KnownToBeGloballyFrequent DFS codes.
  */
-public class PatternGrowth
-  implements MapFunction<IterationItem, IterationItem> {
+public class GrowFrequentSubgraphs
+  extends RichMapFunction<IterationItem, IterationItem> {
 
   private final FSMConfig fsmConfig;
+  /**
+   * frequent DFS codes
+   */
+  private Collection<CompressedDFSCode> frequentDfsCodes;
 
+  @Override
+  public void open(Configuration parameters) throws Exception {
+    super.open(parameters);
+    List<Collection<CompressedDFSCode>> broadcast = getRuntimeContext()
+      .getBroadcastVariable(BroadcastNames.LAST_FREQUENT_SUBGRAPHS);
+
+    if (broadcast.isEmpty()) {
+      this.frequentDfsCodes = null;
+    } else {
+      this.frequentDfsCodes = broadcast.get(0);
+    }
+  }
   /**
    * constructor
    * @param fsmConfig configuration
    */
-  public PatternGrowth(FSMConfig fsmConfig) {
+  public GrowFrequentSubgraphs(FSMConfig fsmConfig) {
     this.fsmConfig = fsmConfig;
   }
 
@@ -43,7 +65,7 @@ public class PatternGrowth
 
     if (! wrapper.isCollector()) {
       GSpan.growEmbeddings(
-        wrapper.getTransaction(), fsmConfig);
+        wrapper.getTransaction(), frequentDfsCodes, fsmConfig);
     }
 
     return wrapper;

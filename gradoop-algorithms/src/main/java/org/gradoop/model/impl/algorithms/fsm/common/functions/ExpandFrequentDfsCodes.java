@@ -34,7 +34,7 @@ public class ExpandFrequentDfsCodes implements
     Collector<CompressedDFSCode> collector) throws Exception {
 
     for (CompressedDFSCode compressedDfsCode :
-      iterationItem.getCollector()) {
+      iterationItem.getFrequentSubgraphs()) {
 
       collector.collect(compressedDfsCode);
     }
