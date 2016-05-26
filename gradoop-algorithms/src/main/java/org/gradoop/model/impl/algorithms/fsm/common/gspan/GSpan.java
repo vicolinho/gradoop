@@ -383,8 +383,7 @@ public class GSpan {
     }
 
     DFSCode minDfsCode = GSpan.findMinimumSupportedFrequentDfsCode(
-      transaction.getSiblingGroups().iterator().next(), null,
-      fsmConfig);
+      transaction.getSiblingGroups().iterator().next(), null, fsmConfig);
 
     return reportedCode.equals(minDfsCode);
   }
@@ -396,7 +395,7 @@ public class GSpan {
 
     Collection<DFSEmbedding> embeddings = Lists.newArrayList();
 
-    Map<Integer, AdjacencyList> adjacencyLists = com.google.common.collect.Maps.newHashMap();
+    Map<Integer, AdjacencyList> adjacencyLists = Maps.newHashMap();
 
     int edgeId = 0;
     for(DFSStep step : steps) {

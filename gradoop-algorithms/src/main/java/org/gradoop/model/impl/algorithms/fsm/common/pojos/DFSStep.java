@@ -143,7 +143,7 @@ public class DFSStep implements Serializable {
   }
 
   public Boolean isForward() {
-    return getFromTime() < getToTime() || getToTime() == 0;
+    return getFromTime() < getToTime();
   }
 
   public Boolean isBackward() {

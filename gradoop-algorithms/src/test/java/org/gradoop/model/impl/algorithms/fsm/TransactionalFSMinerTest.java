@@ -50,7 +50,7 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
     DataSet<CompressedDFSCode> iResult =
       iMiner.mine(fatEdges, encoder.getMinSupport(), fsmConfig);
 
-    Assert.assertEquals(62 * 3, iResult.count());
+    Assert.assertEquals(60 * 3, iResult.count());
   }
 
   @Test
@@ -72,26 +72,26 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
     DataSet<CompressedDFSCode> iResult =
       iMiner.mine(fatEdges, encoder.getMinSupport(), fsmConfig);
 
-    iResult.map(new PrintDfsCode())
-      .withBroadcastSet(encoder.getVertexLabelDictionary(), BroadcastNames.VERTEX_DICTIONARY)
-      .withBroadcastSet(encoder.getEdgeLabelDictionary(), BroadcastNames.EDGE_DICTIONARY)
-      .print();
+//    iResult.map(new PrintDfsCode())
+//      .withBroadcastSet(encoder.getVertexLabelDictionary(), BroadcastNames.VERTEX_DICTIONARY)
+//      .withBroadcastSet(encoder.getEdgeLabelDictionary(), BroadcastNames.EDGE_DICTIONARY)
+//      .print();
 
-//    Assert.assertEquals(62 * 3, iResult.count());
+    Assert.assertEquals(60 * 3, iResult.count());
   }
 
   @Test
   public void testIterativeVsFilterRefine() throws Exception {
     GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> input =
-      new PredictableFSMTransactionGenerator<>(getConfig(), 100)
-        .execute();
+      new PredictableFSMTransactionGenerator<>(getConfig(), 100).execute();
+
 
 //    getExecutionEnvironment().setParallelism(3);
 
-    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.95f);
-//    int edgeCount = 2;
-//    fsmConfig.setMinEdgeCount(edgeCount);
-//    fsmConfig.setMaxEdgeCount(edgeCount);
+    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.8f);
+    int edgeCount = 3;
+    fsmConfig.setMinEdgeCount(edgeCount);
+    fsmConfig.setMaxEdgeCount(edgeCount);
 
     GradoopTransactionalFSMEncoder<GraphHeadPojo, VertexPojo, EdgePojo>
       encoder = new GradoopTransactionalFSMEncoder<>();

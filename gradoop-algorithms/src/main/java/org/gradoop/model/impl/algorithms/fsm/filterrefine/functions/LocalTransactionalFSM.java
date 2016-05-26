@@ -31,9 +31,9 @@ public class LocalTransactionalFSM implements FlatMapFunction
     Collection<GSpanTransaction> transactions = pair.f1;
 
     int graphCount = transactions.size();
-    int minSupport = (int) (fsmConfig.getThreshold() * (float) graphCount);
+    int minSupport = (int) (fsmConfig.getThreshold() * (float) graphCount) - 1;
     int minLikelySupport =
-      (int) (fsmConfig.getLiklynessThreshold() * (float) graphCount);
+      (int) (fsmConfig.getLikelinessThreshold() * (float) graphCount) - 1;
 
     Collection<CompressedDFSCode> allLocallyFrequentSubgraphs =
       Lists.newArrayList();
@@ -41,6 +41,7 @@ public class LocalTransactionalFSM implements FlatMapFunction
       Lists.newArrayList();
     Collection<CompressedDFSCode> currentFrequentSubgraphs = null;
 
+    int edgeCount = 2;
     do {
       // grow and report frequent subgraphs
       Collection<CompressedDFSCode> reportedSubgraphs =
@@ -59,8 +60,9 @@ public class LocalTransactionalFSM implements FlatMapFunction
         minLikelySupport, likelyFrequentSubgraphs);
 
       allLocallyFrequentSubgraphs.addAll(currentFrequentSubgraphs);
-
-    } while (! currentFrequentSubgraphs.isEmpty());
+      edgeCount++;
+    } while (! currentFrequentSubgraphs.isEmpty()
+      && edgeCount <= fsmConfig.getMaxEdgeCount());
 
     collect(collector, pair.f0,
       allLocallyFrequentSubgraphs, likelyFrequentSubgraphs);
@@ -115,11 +117,11 @@ public class LocalTransactionalFSM implements FlatMapFunction
 
       if (support >= minSupport &&
         GSpan.isValidMinimumDfsCode(code, fsmConfig)) {
-
+        code.setSupport(support);
         currentFrequentSubgraphs.add(code);
       } else if (support >= minLikelySupport &&
         GSpan.isValidMinimumDfsCode(code, fsmConfig)) {
-
+        code.setSupport(support);
         likelyFrequentSubgraphs.add(code);
       }
     }

@@ -67,6 +67,7 @@ public class FilterRefineTransactionalFSMiner
 
       DataSet<Tuple3<CompressedDFSCode, Integer, Boolean>> filterResult =
         fsmResult
+          .map(new Print<Tuple3<CompressedDFSCode, Integer, Boolean>>("res"))
           // group reports by DFS code
           .groupBy("0.0")
           // keep if sure or likely globally frequent; drop otherwise
@@ -75,11 +76,12 @@ public class FilterRefineTransactionalFSMiner
           .withBroadcastSet(
             workerIdsGraphCount, BroadcastNames.WORKER_GRAPHCOUNT);
 
-//      filterResult = filterResult.map(
-//        new Print<Tuple3<CompressedDFSCode, Integer, Boolean>>("cand"));
+      filterResult = filterResult.map(
+        new Print<Tuple3<CompressedDFSCode, Integer, Boolean>>("can"));
 
       // add globally frequent DFS codes to result
       allFrequentDfsCodes = filterResult
+//        .map(new Print<Tuple3<CompressedDFSCode, Integer, Boolean>>("cand"))
         .filter(new KnownToBeGloballyFrequent())
         .map(new Value0Of3<CompressedDFSCode, Integer, Boolean>())
         .union(allFrequentDfsCodes);

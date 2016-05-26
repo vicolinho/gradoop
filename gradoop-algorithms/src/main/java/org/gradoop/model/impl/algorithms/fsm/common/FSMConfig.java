@@ -46,7 +46,7 @@ public class FSMConfig implements Serializable {
   private int maxEdgeCount;
 
   private int minEdgeCount;
-  private float reportThreshold = 0.05f;
+  private float likelinessThreshold = 0.05f;
 
   /**
    * valued constructor
@@ -99,7 +99,7 @@ public class FSMConfig implements Serializable {
     return new FSMConfig(threshold, true, true);
   }
 
-  public float getLiklynessThreshold() {
-    return reportThreshold;
+  public float getLikelinessThreshold() {
+    return likelinessThreshold;
   }
 }

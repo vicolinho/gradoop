@@ -42,7 +42,8 @@ public class EqualSupport
       left.getSupport().equals(right.getSupport());
 
     if(! equal) {
-      System.out.println(out);
+      System.out.println(out + " " +
+        (left == null ? right.getDfsCode() : left.getDfsCode()));
     }
 
     collector.collect(equal);
