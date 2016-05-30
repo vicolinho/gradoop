@@ -4,7 +4,7 @@ import org.apache.flink.api.common.functions.MapFunction;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.GSpanTransaction;
 import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.IterationItem;
 
-public class WrapInIterationItem
+public class WrapTransactionInIterationItem
   implements MapFunction<GSpanTransaction, IterationItem> {
 
   @Override

@@ -22,7 +22,7 @@ import org.apache.flink.api.java.DataSet;
 import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
-import org.gradoop.model.impl.GraphTransaction;
+import org.gradoop.model.impl.tuples.GraphTransaction;
 import org.gradoop.model.impl.LogicalGraph;
 import org.gradoop.model.impl.id.GradoopId;
 import org.gradoop.model.impl.id.GradoopIdSet;

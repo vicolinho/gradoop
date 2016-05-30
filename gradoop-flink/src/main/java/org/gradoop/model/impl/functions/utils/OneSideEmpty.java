@@ -14,8 +14,19 @@
  * You should have received a copy of the GNU General Public License
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
+package org.gradoop.model.impl.functions.utils;
+
+import org.apache.flink.api.common.functions.JoinFunction;
 
 /**
- * Contains join function implementations that are globally used.
+ * Evaluates to true, if one join partner is NULL.
+ * @param <L> left type
+ * @param <R> right type
  */
-package org.gradoop.model.impl.functions.join;
+public class OneSideEmpty<L, R> implements JoinFunction<L, R, Boolean> {
+
+  @Override
+  public Boolean join(L left, R right) throws Exception {
+    return left == null || right == null;
+  }
+}

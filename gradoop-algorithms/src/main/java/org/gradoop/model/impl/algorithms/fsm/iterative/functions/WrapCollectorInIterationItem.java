@@ -7,19 +7,14 @@ import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.IterationItem;
 import java.util.Collection;
 
 /**
- * Created by peet on 26.05.16.
+ * Created by peet on 30.05.16.
  */
-public class CreateCollector implements
-  MapFunction<Collection<CompressedDFSCode>, IterationItem> {
-  private final boolean lastIteration;
-
-  public CreateCollector(boolean lastIteration) {
-    this.lastIteration = lastIteration;
-  }
+public class WrapCollectorInIterationItem
+  implements MapFunction<Collection<CompressedDFSCode>, IterationItem> {
 
   @Override
   public IterationItem map(
     Collection<CompressedDFSCode> compressedDFSCodes) throws Exception {
-    return new IterationItem(compressedDFSCodes, lastIteration);
+    return new IterationItem(compressedDFSCodes);
   }
 }

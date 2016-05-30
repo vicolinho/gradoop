@@ -2,12 +2,13 @@ package org.gradoop.model.impl.algorithms.fsm;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.api.EPGMElement;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
-import org.gradoop.model.impl.GraphTransaction;
+import org.gradoop.model.impl.tuples.GraphTransaction;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.gspan.GSpan;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;
@@ -46,7 +47,7 @@ public class MinDfsCode
       (graphTransaction.getEdges());
 
     Map<GradoopId, Integer> vertexMap = Maps.newHashMap();
-    Map<Integer, AdjacencyList> adjacencyLists = Maps.newHashMap();
+    List<AdjacencyList> adjacencyLists = Lists.newArrayList();
 
     encodeVertices(graphTransaction.getVertices(),
       vertexLabelDictionary, vertexMap, adjacencyLists);
@@ -57,26 +58,26 @@ public class MinDfsCode
     encodeEdges(codeEmbeddings,
       graphTransaction.getEdges(), edgeLabelDictionary, vertexMap, adjacencyLists);
 
-    Collection<Collection<CompressedDFSCode>> codeSiblings =
+    Collection<Set<CompressedDFSCode>> codeSiblings =
       Lists.newArrayList();
 
-    codeSiblings.add(Lists.newArrayList(codeEmbeddings.keySet()));
+    codeSiblings.add(Sets.newHashSet(codeEmbeddings.keySet()));
 
     GSpanTransaction transaction =
-      new GSpanTransaction(adjacencyLists, codeEmbeddings, codeSiblings);
+      new GSpanTransaction(adjacencyLists, codeEmbeddings);
 
     for(int i = 2; i <= graphTransaction.getEdges().size(); i++) {
       GSpan.growFrequentSubgraphs(transaction, null, fsmConfig);
     }
 
-    return transaction.getSiblingGroups().iterator().next().iterator().next();
+    return transaction.getCodeEmbeddings().keySet().iterator().next();
   }
 
   private void encodeEdges(
     Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings,
     Set<E> edges,
     List<String> edgeLabelDictionary, Map<GradoopId, Integer> vertexMap,
-    Map<Integer, AdjacencyList> adjacencyLists) {
+    List<AdjacencyList> adjacencyLists) {
     int edgeId = 0;
     for(E edge : edges) {
 
@@ -90,11 +91,9 @@ public class MinDfsCode
 
       int label = edgeLabelDictionary.indexOf(edge.getLabel());
 
-      sourceAdjacencyList.getEntries().add(new AdjacencyListEntry(
-        0, true, edgeId, label, targetId, targetLabel));
+      sourceAdjacencyList.getEntries().add(new AdjacencyListEntry(true, edgeId, label, targetId, targetLabel));
 
-      targetAdjacencyList.getEntries().add(new AdjacencyListEntry(
-        0, false, edgeId, label, sourceId, sourceLabel));
+      targetAdjacencyList.getEntries().add(new AdjacencyListEntry(false, edgeId, label, sourceId, sourceLabel));
 
       DFSStep step;
       List<Integer> vertexTimes;
@@ -112,7 +111,7 @@ public class MinDfsCode
 
       CompressedDFSCode code = new CompressedDFSCode(new DFSCode(step));
       DFSEmbedding embedding =
-        new DFSEmbedding(0, vertexTimes, Lists.newArrayList(edgeId));
+        new DFSEmbedding(vertexTimes, Lists.newArrayList(edgeId));
 
       Collection<DFSEmbedding> embeddings = codeEmbeddings.get(code);
 
@@ -128,12 +127,12 @@ public class MinDfsCode
 
   private void encodeVertices(Set<V> vertices,
     List<String> vertexLabelDictionary, Map<GradoopId, Integer> vertexMap,
-    Map<Integer, AdjacencyList> adjacencyLists) {
+    List<AdjacencyList> adjacencyLists) {
     int vertexId = 0;
     for(V vertex : vertices) {
       vertexMap.put(vertex.getId(), vertexId);
 
-      adjacencyLists.put(vertexId, new AdjacencyList(vertexLabelDictionary
+      adjacencyLists.add(vertexId, new AdjacencyList(vertexLabelDictionary
         .indexOf(vertex.getLabel())));
 
       vertexId++;

@@ -34,6 +34,7 @@ public class DFSCode implements Serializable {
    * list of steps
    */
   private final List<DFSStep> steps;
+  private final int minVertexLabel;
 
   /**
    * constructor
@@ -42,6 +43,12 @@ public class DFSCode implements Serializable {
   public DFSCode(DFSStep step) {
     this.steps = new ArrayList<>();
     this.steps.add(step);
+    this.minVertexLabel = minVertexLabel(steps.get(0));
+  }
+
+  private Integer minVertexLabel(DFSStep step) {
+    return step.getFromLabel() < step.getToLabel() ?
+        step.getFromLabel() : step.getToLabel();
   }
 
   /**
@@ -50,6 +57,7 @@ public class DFSCode implements Serializable {
    */
   public DFSCode(ArrayList<DFSStep> steps) {
     this.steps = steps;
+    this.minVertexLabel = minVertexLabel(steps.get(0));
   }
 
   /**
@@ -57,6 +65,7 @@ public class DFSCode implements Serializable {
    */
   public DFSCode() {
     this.steps = new ArrayList<>();
+    minVertexLabel = -1;
   }
 
   /**
@@ -159,5 +168,9 @@ public class DFSCode implements Serializable {
 
   public DFSStep getLastStep() {
     return steps.get(steps.size() - 1);
+  }
+
+  public int getMinVertexLabel() {
+    return minVertexLabel;
   }
 }

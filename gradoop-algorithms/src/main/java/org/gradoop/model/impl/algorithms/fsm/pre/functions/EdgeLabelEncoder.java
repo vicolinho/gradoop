@@ -15,13 +15,14 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.impl.algorithms.fsm.common.functions;
+package org.gradoop.model.impl.algorithms.fsm.pre.functions;
 
 import org.apache.flink.api.common.functions.RichFlatMapFunction;
-import org.apache.flink.api.java.tuple.Tuple4;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.util.Collector;
+import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
+import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTripleWithoutVertexLabels;
 import org.gradoop.model.impl.id.GradoopId;
 
 import java.util.HashMap;
@@ -30,9 +31,8 @@ import java.util.HashMap;
  * (graphId, sourceIdId, targetValue, stringLabel) |><| (stringLabel, integerLabel)
  * => (graphId, sourceIdId, targetValue, integerLabel)
  */
-public class EdgeLabelEncoder extends RichFlatMapFunction
-  <Tuple4<GradoopId, GradoopId, GradoopId, String>,
-    Tuple4<GradoopId, GradoopId, GradoopId, Integer>> {
+public class EdgeLabelEncoder<E extends EPGMEdge>
+  extends RichFlatMapFunction<E, EdgeTripleWithoutVertexLabels> {
 
   private HashMap<String, Integer> dictionary;
 
@@ -46,14 +46,17 @@ public class EdgeLabelEncoder extends RichFlatMapFunction
   }
 
   @Override
-  public void flatMap(Tuple4<GradoopId, GradoopId, GradoopId, String> edge,
-    Collector<Tuple4<GradoopId, GradoopId, GradoopId, Integer>> collector)
-    throws Exception {
+  public void flatMap(
+    E edge, Collector<EdgeTripleWithoutVertexLabels> collector) throws
+    Exception {
 
-    Integer intLabel = dictionary.get(edge.f3);
+    Integer intLabel = dictionary.get(edge.getLabel());
 
     if(intLabel != null) {
-      collector.collect(new Tuple4<>(edge.f0, edge.f1, edge.f2, intLabel));
+      for(GradoopId graphId : edge.getGraphIds()) {
+        collector.collect(new EdgeTripleWithoutVertexLabels(
+          graphId, edge.getSourceId(), edge.getTargetId(), intLabel));
+      }
     }
   }
 }

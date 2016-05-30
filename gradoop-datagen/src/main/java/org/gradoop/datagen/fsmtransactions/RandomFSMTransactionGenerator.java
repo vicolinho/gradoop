@@ -25,7 +25,7 @@ import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
 import org.gradoop.model.api.operators.CollectionGenerator;
 import org.gradoop.model.impl.GraphCollection;
-import org.gradoop.model.impl.GraphTransaction;
+import org.gradoop.model.impl.tuples.GraphTransaction;
 import org.gradoop.model.impl.operators.count.Count;
 import org.gradoop.util.GradoopFlinkConfig;
 import scala.collection.mutable.StringBuilder;

@@ -41,25 +41,37 @@ public class LocalTransactionalFSM implements FlatMapFunction
       Lists.newArrayList();
     Collection<CompressedDFSCode> currentFrequentSubgraphs = null;
 
-    int edgeCount = 2;
+    int edgeCount = 1;
     do {
-      // grow and report frequent subgraphs
-      Collection<CompressedDFSCode> reportedSubgraphs =
-        growFrequentSubgraphs(transactions, currentFrequentSubgraphs);
+      // count support
+      Map<CompressedDFSCode, Integer> codeSupport = countSupport(transactions);
 
-      // reset
       currentFrequentSubgraphs = Lists.newArrayList();
 
-      // count support
-      Map<CompressedDFSCode, Integer> codeSupport =
-        countSupport(reportedSubgraphs);
+      for (Map.Entry<CompressedDFSCode, Integer> entry : codeSupport.entrySet())
+      {
+        CompressedDFSCode code = entry.getKey();
+        int support = entry.getValue();
 
-      // determine valid (likely) frequent subgraphs
-      postPruneSubgraphs(codeSupport,
-        minSupport, currentFrequentSubgraphs,
-        minLikelySupport, likelyFrequentSubgraphs);
+        if (support >= minSupport) {
+          if(GSpan.isValidMinimumDfsCode(code, fsmConfig)) {
+            code.setSupport(support);
+            currentFrequentSubgraphs.add(code);
+            allLocallyFrequentSubgraphs.add(code);
+          }
+        } else if (support >= minLikelySupport) {
+          if (GSpan.isValidMinimumDfsCode(code, fsmConfig)) {
+            code.setSupport(support);
+            likelyFrequentSubgraphs.add(code);
+          }
+        }
+      }
 
-      allLocallyFrequentSubgraphs.addAll(currentFrequentSubgraphs);
+      for (GSpanTransaction transaction : transactions) {
+        GSpan.growFrequentSubgraphs(
+          transaction, currentFrequentSubgraphs, fsmConfig);
+      }
+
       edgeCount++;
     } while (! currentFrequentSubgraphs.isEmpty()
       && edgeCount <= fsmConfig.getMaxEdgeCount());
@@ -68,64 +80,24 @@ public class LocalTransactionalFSM implements FlatMapFunction
       allLocallyFrequentSubgraphs, likelyFrequentSubgraphs);
   }
 
-  private Collection<CompressedDFSCode> growFrequentSubgraphs(
-    Collection<GSpanTransaction> transactions,
-    Collection<CompressedDFSCode> frequentSubgraphs) {
-    Collection<CompressedDFSCode> reportedSubgraphs = Lists.newArrayList();
-
-    for (GSpanTransaction transaction : transactions) {
-      // if transaction could grow last iteration
-      if(frequentSubgraphs == null || transaction.hasGrownSubgraphs()) {
-
-        // grow
-        GSpan.growFrequentSubgraphs(
-          transaction, frequentSubgraphs, fsmConfig);
-
-        // report
-        if(transaction.hasGrownSubgraphs()) {
-          reportedSubgraphs.addAll(transaction.getCodeEmbeddings().keySet());
-        }
-      }
-    }
-    return reportedSubgraphs;
-  }
-
   private Map<CompressedDFSCode, Integer> countSupport(
-    Collection<CompressedDFSCode> reportedSubgraphs) {
+    Collection<GSpanTransaction> transactions) {
+
     Map<CompressedDFSCode, Integer> codeSupport = Maps.newHashMap();
 
-    for(CompressedDFSCode code : reportedSubgraphs) {
+    for (GSpanTransaction transaction : transactions) {
+      for (CompressedDFSCode code : transaction.getCodeEmbeddings().keySet()) {
 
-      Integer support = codeSupport.get(code);
-      support = support == null ? 1 : support + 1;
+        Integer support = codeSupport.get(code);
+        support = support == null ? 1 : support + 1;
 
-      codeSupport.put(code, support);
+        codeSupport.put(code, support);
+      }
     }
+
     return codeSupport;
   }
 
-  private void postPruneSubgraphs(
-    Map<CompressedDFSCode, Integer> codeSupport, int minSupport,
-    Collection<CompressedDFSCode> currentFrequentSubgraphs,
-    int minLikelySupport,
-    Collection<CompressedDFSCode> likelyFrequentSubgraphs) {
-    for (
-      Map.Entry<CompressedDFSCode, Integer> entry : codeSupport.entrySet())
-    {
-      Integer support = entry.getValue();
-      CompressedDFSCode code = entry.getKey();
-
-      if (support >= minSupport &&
-        GSpan.isValidMinimumDfsCode(code, fsmConfig)) {
-        code.setSupport(support);
-        currentFrequentSubgraphs.add(code);
-      } else if (support >= minLikelySupport &&
-        GSpan.isValidMinimumDfsCode(code, fsmConfig)) {
-        code.setSupport(support);
-        likelyFrequentSubgraphs.add(code);
-      }
-    }
-  }
 
   private void collect(
     Collector<Tuple3<CompressedDFSCode, Integer, Boolean>> collector,

@@ -2,7 +2,6 @@ package org.gradoop.model.impl.algorithms.fsm;
 
 import org.apache.flink.api.common.functions.FilterFunction;
 import org.apache.flink.api.java.DataSet;
-import org.apache.flink.api.java.tuple.Tuple3;
 import org.gradoop.datagen.fsmtransactions.FSMTransactionGeneratorConfig;
 import org.gradoop.datagen.fsmtransactions.PredictableFSMTransactionGenerator;
 import org.gradoop.datagen.fsmtransactions.RandomFSMTransactionGenerator;
@@ -13,15 +12,13 @@ import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common
   .GradoopTransactionalFSMEncoder;
-import org.gradoop.model.impl.algorithms.fsm.common.PrintDfsCode;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.IntegerLabeledEdgeTriple;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine
   .FilterRefineTransactionalFSMiner;
 import org.gradoop.model.impl.algorithms.fsm.iterative
   .IterativeTransactionalFSMiner;
+import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTriple;
 import org.gradoop.model.impl.functions.bool.And;
-import org.gradoop.model.impl.id.GradoopId;
 import org.gradoop.model.impl.pojo.EdgePojo;
 import org.gradoop.model.impl.pojo.GraphHeadPojo;
 import org.gradoop.model.impl.pojo.VertexPojo;
@@ -36,19 +33,18 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
       new PredictableFSMTransactionGenerator<>(getConfig(), 100)
         .execute();
 
-    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.8f);
+    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(1.0f);
 
     GradoopTransactionalFSMEncoder<GraphHeadPojo, VertexPojo, EdgePojo>
       encoder = new GradoopTransactionalFSMEncoder<>();
 
-    DataSet<Tuple3<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>> fatEdges =
-      encoder.encode(input, fsmConfig);
+    DataSet<EdgeTriple> edges = encoder.encode(input, fsmConfig);
 
     TransactionalFSMiner iMiner = new IterativeTransactionalFSMiner();
     iMiner.setExecutionEnvironment(
       input.getConfig().getExecutionEnvironment());
     DataSet<CompressedDFSCode> iResult =
-      iMiner.mine(fatEdges, encoder.getMinSupport(), fsmConfig);
+      iMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
     Assert.assertEquals(60 * 3, iResult.count());
   }
@@ -64,13 +60,12 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
     GradoopTransactionalFSMEncoder<GraphHeadPojo, VertexPojo, EdgePojo>
       encoder = new GradoopTransactionalFSMEncoder<>();
 
-    DataSet<Tuple3<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>> fatEdges =
-      encoder.encode(input, fsmConfig);
+    DataSet<EdgeTriple> edges = encoder.encode(input, fsmConfig);
 
     TransactionalFSMiner iMiner = new FilterRefineTransactionalFSMiner();
 
     DataSet<CompressedDFSCode> iResult =
-      iMiner.mine(fatEdges, encoder.getMinSupport(), fsmConfig);
+      iMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
 //    iResult.map(new PrintDfsCode())
 //      .withBroadcastSet(encoder.getVertexLabelDictionary(), BroadcastNames.VERTEX_DICTIONARY)
@@ -88,26 +83,25 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
 
 //    getExecutionEnvironment().setParallelism(3);
 
-    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.8f);
-    int edgeCount = 3;
+    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.80f);
+    int edgeCount = 4;
     fsmConfig.setMinEdgeCount(edgeCount);
     fsmConfig.setMaxEdgeCount(edgeCount);
 
     GradoopTransactionalFSMEncoder<GraphHeadPojo, VertexPojo, EdgePojo>
       encoder = new GradoopTransactionalFSMEncoder<>();
 
-    DataSet<Tuple3<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>> fatEdges =
-      encoder.encode(input, fsmConfig);
+    DataSet<EdgeTriple> edges = encoder.encode(input, fsmConfig);
 
     TransactionalFSMiner iMiner = new IterativeTransactionalFSMiner();
     iMiner.setExecutionEnvironment(
       input.getConfig().getExecutionEnvironment());
     DataSet<CompressedDFSCode> iResult =
-      iMiner.mine(fatEdges, encoder.getMinSupport(), fsmConfig);
+      iMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
     TransactionalFSMiner frMiner = new FilterRefineTransactionalFSMiner();
     DataSet<CompressedDFSCode> frResult =
-      frMiner.mine(fatEdges, encoder.getMinSupport(), fsmConfig);
+      frMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
     collectAndAssertTrue(
       And.reduce(
@@ -152,18 +146,17 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
     GradoopTransactionalFSMEncoder<GraphHeadPojo, VertexPojo, EdgePojo>
       encoder = new GradoopTransactionalFSMEncoder<>();
 
-    DataSet<Tuple3<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>> fatEdges =
-      encoder.encode(input, fsmConfig);
+    DataSet<EdgeTriple> edges = encoder.encode(input, fsmConfig);
 
     TransactionalFSMiner iMiner = new IterativeTransactionalFSMiner();
     iMiner.setExecutionEnvironment(
       input.getConfig().getExecutionEnvironment());
     DataSet<CompressedDFSCode> iResult =
-      iMiner.mine(fatEdges, encoder.getMinSupport(), fsmConfig);
+      iMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
     TransactionalFSMiner frMiner = new FilterRefineTransactionalFSMiner();
     DataSet<CompressedDFSCode> frResult =
-      frMiner.mine(fatEdges, encoder.getMinSupport(), fsmConfig);
+      frMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
     collectAndAssertTrue(
       And.reduce(

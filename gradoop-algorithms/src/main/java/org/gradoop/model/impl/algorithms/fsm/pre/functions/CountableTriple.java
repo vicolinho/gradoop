@@ -14,29 +14,27 @@
  * You should have received a copy of the GNU General Public License
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
-package org.gradoop.model.impl.functions.join;
 
-import org.apache.flink.api.common.functions.FlatJoinFunction;
-import org.apache.flink.types.Either;
-import org.apache.flink.util.Collector;
+package org.gradoop.model.impl.algorithms.fsm.pre.functions;
 
-/**
- * Evaluates to true, if one join partner is NULL.
- * @param <L> left type
- * @param <R> right type
- */
-public class WithEmptySide<L, R>
-  implements FlatJoinFunction<L, R, Either<L, R>> {
+import org.apache.flink.api.common.functions.MapFunction;
+import org.apache.flink.api.java.tuple.Tuple4;
+import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTripleWithoutVertexIds;
 
+
+import org.gradoop.model.impl.algorithms.fsm.pre.tuples.LabelTripleWithSupport;
+
+public class CountableTriple implements MapFunction
+  <EdgeTripleWithoutVertexIds, LabelTripleWithSupport> {
 
   @Override
-  public void join(L left, R right, Collector<Either<L, R>> collector) throws
-    Exception {
-
-    if (right == null) {
-      collector.collect(Either.<L, R>Left(left));
-    } else if (left == null) {
-      collector.collect(Either.<L, R>Right(right));
-    }
+  public LabelTripleWithSupport map(
+    EdgeTripleWithoutVertexIds edge) throws Exception {
+    return new LabelTripleWithSupport(
+      edge.getEdgeLabel(),
+      edge.getSourceLabel(),
+      edge.getTargetLabel(),
+      1
+    );
   }
 }

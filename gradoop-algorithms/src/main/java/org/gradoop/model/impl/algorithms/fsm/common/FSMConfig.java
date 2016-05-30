@@ -25,7 +25,7 @@ import java.io.Serializable;
 public class FSMConfig implements Serializable {
 
   /**
-   * Minimum relative support of a subgraph.
+   * MinimumDfsCode relative support of a subgraph.
    * Subgraph containing above the threshold are considered to be frequent.
    */
   private final float threshold;

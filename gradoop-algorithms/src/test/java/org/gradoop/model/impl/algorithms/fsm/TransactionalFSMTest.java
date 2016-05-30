@@ -189,10 +189,10 @@ public class TransactionalFSMTest extends GradoopFlinkTestBase {
 //    System.out.println("RESULT");
 //    GradoopFlinkTestUtils.printDirectedCanonicalAdjacencyMatrix(result);
 
-//    System.out.println("EXPECTED");
-//    FSMHelper.printMinDfsCodes(expectation, FSMConfig.forDirectedMultigraph(0));
-//    System.out.println("RESULT");
-//    FSMHelper.printMinDfsCodes(result, FSMConfig.forDirectedMultigraph(0));
+    System.out.println("EXPECTED");
+    FSMHelper.printMinDfsCodes(expectation, FSMConfig.forDirectedMultigraph(0));
+    System.out.println("RESULT");
+    FSMHelper.printMinDfsCodes(result, FSMConfig.forDirectedMultigraph(0));
 
     collectAndAssertTrue(expectation.equalsByGraphElementData(result));
   }
@@ -208,8 +208,8 @@ public class TransactionalFSMTest extends GradoopFlinkTestBase {
     miners.add(
       new IterativeTransactionalFSM<GraphHeadPojo, VertexPojo, EdgePojo>(fsmConfig));
 
-    miners.add(
-      new FilterRefineTransactionalFSM<GraphHeadPojo, VertexPojo, EdgePojo>(fsmConfig));
+//    miners.add(
+//      new FilterRefineTransactionalFSM<GraphHeadPojo, VertexPojo, EdgePojo>(fsmConfig));
 
     return miners;
   }

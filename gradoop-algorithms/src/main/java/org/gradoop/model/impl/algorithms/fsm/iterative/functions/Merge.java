@@ -5,7 +5,7 @@ import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 
 import java.util.Collection;
 
-public class AddAll implements ReduceFunction<Collection<CompressedDFSCode>> {
+public class Merge implements ReduceFunction<Collection<CompressedDFSCode>> {
 
   @Override
   public Collection<CompressedDFSCode> reduce(

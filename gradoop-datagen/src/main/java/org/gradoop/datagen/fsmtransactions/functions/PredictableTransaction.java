@@ -13,7 +13,7 @@ import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMGraphHeadFactory;
 import org.gradoop.model.api.EPGMVertex;
 import org.gradoop.model.api.EPGMVertexFactory;
-import org.gradoop.model.impl.GraphTransaction;
+import org.gradoop.model.impl.tuples.GraphTransaction;
 import org.gradoop.model.impl.id.GradoopId;
 import org.gradoop.model.impl.id.GradoopIdSet;
 

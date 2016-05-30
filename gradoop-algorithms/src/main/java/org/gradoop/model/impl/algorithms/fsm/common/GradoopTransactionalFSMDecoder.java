@@ -21,6 +21,7 @@ import org.gradoop.model.impl.id.GradoopId;
 import org.gradoop.util.GradoopFlinkConfig;
 
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class GradoopTransactionalFSMDecoder
@@ -43,8 +44,8 @@ public class GradoopTransactionalFSMDecoder
   @Override
   public GraphCollection<G, V, E> decode(
     DataSet<CompressedDFSCode> frequentDfsCodes,
-    DataSet<ArrayList<String>> vertexLabelDictionary,
-    DataSet<ArrayList<String>> edgeLabelDictionary) {
+    DataSet<List<String>> vertexLabelDictionary,
+    DataSet<List<String>> edgeLabelDictionary) {
 
 
     DataSet<Tuple3<G, ArrayList<Tuple2<GradoopId, Integer>>,

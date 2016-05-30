@@ -15,17 +15,16 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.impl.algorithms.fsm.common.functions;
+package org.gradoop.model.impl.algorithms.fsm.pre.functions;
 
 import com.google.common.collect.Lists;
 import org.apache.flink.api.common.functions.GroupReduceFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.util.Collector;
 
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.List;
 
 /**
  * creates a label dictionary based on support (max support = label 1)
@@ -33,11 +32,11 @@ import java.util.List;
  * (label, support),.. => (label, 1), (label, 2)
  */
 public class Dictionary implements
-  GroupReduceFunction<Tuple2<String, Integer>, ArrayList<String>> {
+  GroupReduceFunction<Tuple2<String, Integer>, List<String>> {
 
   @Override
   public void reduce(Iterable<Tuple2<String, Integer>> iterable,
-    Collector<ArrayList<String>> collector) throws Exception {
+    Collector<List<String>> collector) throws Exception {
 
     List<Tuple2<String, Integer>> list = Lists.newArrayList();
 
@@ -62,7 +61,7 @@ public class Dictionary implements
       }
     });
 
-    ArrayList<String> intStringDictionary = Lists
+    List<String> intStringDictionary = Lists
       .newArrayListWithCapacity(list.size());
 
     for (Tuple2<String, Integer> entry : list) {

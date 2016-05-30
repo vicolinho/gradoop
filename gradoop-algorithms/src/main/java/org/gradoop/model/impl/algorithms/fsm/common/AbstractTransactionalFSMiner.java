@@ -5,9 +5,13 @@ import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMiner;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.Frequent;
+import org.gradoop.model.impl.algorithms.fsm.common.functions.SearchSpace;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.IntegerLabeledEdgeTriple;
-import org.gradoop.model.impl.functions.join.LeftSide;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.GSpanTransaction;
+import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTriple;
+import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTripleWithSupport;
+import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTripleWithoutTargetLabel;
+import org.gradoop.model.impl.functions.utils.LeftSide;
 import org.gradoop.model.impl.functions.tuple.Project3To0And2;
 import org.gradoop.model.impl.functions.tuple.Value1Of2;
 import org.gradoop.model.impl.id.GradoopId;
@@ -21,35 +25,34 @@ public abstract class AbstractTransactionalFSMiner
   /**
    * maximum iteration, if no maximum edge count provided
    */
-  public static final int MAX_EDGE_COUNT = 100;
   protected ExecutionEnvironment env;
 
-  protected DataSet<CompressedDFSCode> singleEdgeFrequentSubgraphs(
-    DataSet<Tuple3<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>> graphEdges,
-    DataSet<Integer> minSupport) {
+  protected FSMConfig fsmConfig;
 
-    return graphEdges
-      .map(new Project3To0And2<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>())
-      .distinct()
-      .map(new Value1Of2<GradoopId, CompressedDFSCode>())
-      .groupBy(0)
-      .sum(1)
-      .filter(new Frequent())
-      .withBroadcastSet(minSupport, BroadcastNames.MIN_SUPPORT);
-  }
 
-  protected DataSet<Tuple3<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>> frequent(
-    DataSet<Tuple3<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>> fatEdges,
+  protected DataSet<Tuple3<GradoopId, EdgeTripleWithoutTargetLabel, CompressedDFSCode>> frequent(
+    DataSet<Tuple3<GradoopId, EdgeTripleWithoutTargetLabel, CompressedDFSCode>> fatEdges,
     DataSet<CompressedDFSCode> allFrequentDfsCodes) {
 
     return fatEdges
       .join(allFrequentDfsCodes)
       .where("2.0").equalTo(0)
-      .with(new LeftSide<Tuple3<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>, CompressedDFSCode>());
+      .with(new LeftSide<Tuple3<GradoopId, EdgeTripleWithoutTargetLabel, CompressedDFSCode>, CompressedDFSCode>());
   }
 
   @Override
   public void setExecutionEnvironment(ExecutionEnvironment env) {
     this.env = env;
+  }
+
+  public void setFsmConfig(FSMConfig fsmConfig) {
+    this.fsmConfig = fsmConfig;
+  }
+
+  protected DataSet<GSpanTransaction> createTransactions(
+    DataSet<EdgeTriple> edges) {
+    return edges
+      .groupBy(0)
+      .reduceGroup(new SearchSpace());
   }
 }

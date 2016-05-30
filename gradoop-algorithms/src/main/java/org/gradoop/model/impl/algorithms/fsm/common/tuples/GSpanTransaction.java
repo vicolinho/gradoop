@@ -17,32 +17,28 @@
 
 package org.gradoop.model.impl.algorithms.fsm.common.tuples;
 
-import org.apache.commons.lang3.StringUtils;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;
-import scala.collection.mutable.StringBuilder;
 
 import java.io.Serializable;
 import java.util.Collection;
+import java.util.List;
 import java.util.Map;
 
 public class GSpanTransaction implements Serializable {
 
-  private Map<Integer, AdjacencyList> adjacencyLists;
+  private List<AdjacencyList> adjacencyLists;
   private Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings;
-  private Collection<Collection<CompressedDFSCode>> codeSiblings;
 
   public GSpanTransaction(
-    Map<Integer, AdjacencyList> adjacencyLists,
-    Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings,
-    Collection<Collection<CompressedDFSCode>> codeSiblings) {
+    List<AdjacencyList> adjacencyLists,
+    Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings) {
 
     this.adjacencyLists = adjacencyLists;
     this.codeEmbeddings = codeEmbeddings;
-    this.codeSiblings = codeSiblings;
   }
 
-  public Map<Integer, AdjacencyList> getAdjacencyLists() {
+  public List<AdjacencyList> getAdjacencyLists() {
     return adjacencyLists;
   }
 
@@ -56,47 +52,6 @@ public class GSpanTransaction implements Serializable {
     Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings) {
 
     this.codeEmbeddings = codeEmbeddings;
-  }
-
-  public Collection<Collection<CompressedDFSCode>> getSiblingGroups() {
-    return codeSiblings;
-  }
-
-  @Override
-  public String toString() {
-
-    StringBuilder builder = new StringBuilder("IterationItem");
-
-
-    builder.append(" (Graph)\n\tAdjacency lists");
-
-    int vertexIndex = 0;
-    for (AdjacencyList entry : getAdjacencyLists().values()) {
-
-      builder.append("\n\t\t(" + entry.getFromVertexLabel() + ":" +
-        vertexIndex + ") : " +
-        StringUtils.join(entry.getEntries(), " | "));
-
-      vertexIndex++;
-    }
-
-    builder.append("\n\tDFS codes and embeddings");
-
-    for (Map.Entry<CompressedDFSCode, Collection<DFSEmbedding>> entry :
-      getCodeEmbeddings().entrySet()) {
-
-      builder.append("\n\t\t" + entry.getKey().getDfsCode());
-
-      for (DFSEmbedding embedding : entry.getValue()) {
-        builder.append(embedding);
-      }
-    }
-
-    return builder.toString();
-  }
-
-  public void setCodeSiblings(Collection<Collection<CompressedDFSCode>> codeSiblings) {
-    this.codeSiblings = codeSiblings;
   }
 
   public Boolean hasGrownSubgraphs() {

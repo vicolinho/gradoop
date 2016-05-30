@@ -21,8 +21,6 @@ package org.gradoop.model.impl.algorithms.fsm.common.pojos;
  * pojo representing an adjacency list entry
  */
 public class AdjacencyListEntry {
-  private final int minEdgePatternId;
-
   /**
    * true, if edge is outgoing
    */
@@ -46,37 +44,18 @@ public class AdjacencyListEntry {
 
   /**
    * constructor
-   * @param minEdgePatternId
    * @param outgoing true, if edge is outgoing
    * @param edgeId edge id
    * @param edgeLabel edge label
    * @param vertexId connected vertex id
    * @param toVertexLabel connected vertex label
    */
-  public AdjacencyListEntry(int minEdgePatternId, boolean outgoing,
-    int edgeId, int edgeLabel, int vertexId, int toVertexLabel) {
-
-    this.minEdgePatternId = minEdgePatternId;
+  public AdjacencyListEntry(boolean outgoing, int edgeId, int edgeLabel, int vertexId, int toVertexLabel) {
     this.outgoing = outgoing;
     this.edgeId = edgeId;
     this.edgeLabel = edgeLabel;
     this.vertexId = vertexId;
     this.toVertexLabel = toVertexLabel;
-  }
-
-  public AdjacencyListEntry(boolean outgoing,
-    int edgeId, int edgeLabel, int vertexId, int toVertexLabel) {
-
-    this.minEdgePatternId = 0;
-    this.outgoing = outgoing;
-    this.edgeId = edgeId;
-    this.edgeLabel = edgeLabel;
-    this.vertexId = vertexId;
-    this.toVertexLabel = toVertexLabel;
-  }
-
-  public int getMinEdgePatternId() {
-    return minEdgePatternId;
   }
 
   public int getToVertexLabel() {

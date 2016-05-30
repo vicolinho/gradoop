@@ -4,7 +4,7 @@ public class BroadcastNames {
   /**
    * broadcasting dataset name
    */
-  public static final String LAST_FREQUENT_SUBGRAPHS = "compressedDfsCodes";
+  public static final String FREQUENT_SUBGRAPHS = "compressedDfsCodes";
   /**
    * name of broadcast data set for minimum support
    */

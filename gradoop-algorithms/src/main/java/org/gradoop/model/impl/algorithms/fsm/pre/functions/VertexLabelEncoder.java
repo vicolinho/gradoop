@@ -15,14 +15,14 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.impl.algorithms.fsm.common.functions;
+package org.gradoop.model.impl.algorithms.fsm.pre.functions;
 
 import org.apache.flink.api.common.functions.RichFlatMapFunction;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.util.Collector;
 import org.gradoop.model.api.EPGMVertex;
 import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.VertexIdLabel;
+import org.gradoop.model.impl.algorithms.fsm.pre.tuples.VertexIdLabel;
 
 import java.util.HashMap;
 

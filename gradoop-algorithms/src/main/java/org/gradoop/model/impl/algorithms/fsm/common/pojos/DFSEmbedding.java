@@ -34,23 +34,13 @@ public class DFSEmbedding {
    * discovery times of edges (index is time)
    */
   private final List<Integer> edgeTimes;
-  private final int minEdgePatternId;
 
   /**
    * constructor
-   * @param minEdgePatternId
    * @param vertexTimes initial vertex discovery times
    * @param edgeTimes initial edge discovery times
    */
-  public DFSEmbedding(
-    int minEdgePatternId, List<Integer> vertexTimes, List<Integer> edgeTimes) {
-    this.minEdgePatternId = minEdgePatternId;
-    this.vertexTimes = vertexTimes;
-    this.edgeTimes = edgeTimes;
-  }
-
   public DFSEmbedding(List<Integer> vertexTimes, List<Integer> edgeTimes) {
-    this.minEdgePatternId = 0;
     this.vertexTimes = vertexTimes;
     this.edgeTimes = edgeTimes;
   }
@@ -58,10 +48,6 @@ public class DFSEmbedding {
   @Override
   public String toString() {
     return "(tv=" + vertexTimes + ", " + "te=" + edgeTimes + ")";
-  }
-
-  public int getMinEdgePatternId() {
-    return minEdgePatternId;
   }
 
   public List<Integer> getVertexTimes() {
@@ -79,7 +65,6 @@ public class DFSEmbedding {
    */
   public static DFSEmbedding deepCopy(DFSEmbedding embedding) {
     return new DFSEmbedding(
-      embedding.getMinEdgePatternId(),
       Lists.newArrayList(embedding.getVertexTimes()),
       Lists.newArrayList(embedding.getEdgeTimes())
     );

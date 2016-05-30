@@ -1,24 +1,23 @@
 package org.gradoop.model.impl.algorithms.fsm.api;
 
 import org.apache.flink.api.java.DataSet;
-import org.apache.flink.api.java.tuple.Tuple3;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.IntegerLabeledEdgeTriple;
-import org.gradoop.model.impl.id.GradoopId;
+import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTriple;
+import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTripleWithSupport;
 
-import java.util.ArrayList;
+import java.util.List;
 
 public interface TransactionalFSMEncoder<T> {
 
 
 
-  DataSet<Tuple3<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>> encode(
-    T input, FSMConfig fsmConfig);
+  DataSet<EdgeTriple> encode(T input, FSMConfig fsmConfig);
 
   DataSet<Integer> getMinSupport();
 
-  DataSet<ArrayList<String>> getVertexLabelDictionary();
+  DataSet<List<String>> getVertexLabelDictionary();
 
-  DataSet<ArrayList<String>> getEdgeLabelDictionary();
+  DataSet<List<String>> getEdgeLabelDictionary();
+
 }

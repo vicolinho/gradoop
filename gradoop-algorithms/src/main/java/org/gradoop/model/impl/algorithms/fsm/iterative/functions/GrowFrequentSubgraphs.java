@@ -44,7 +44,7 @@ public class GrowFrequentSubgraphs
   public void open(Configuration parameters) throws Exception {
     super.open(parameters);
     List<Collection<CompressedDFSCode>> broadcast = getRuntimeContext()
-      .getBroadcastVariable(BroadcastNames.LAST_FREQUENT_SUBGRAPHS);
+      .getBroadcastVariable(BroadcastNames.FREQUENT_SUBGRAPHS);
 
     if (broadcast.isEmpty()) {
       this.frequentDfsCodes = null;

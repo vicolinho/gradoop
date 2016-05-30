@@ -3,19 +3,19 @@ package org.gradoop.model.impl.algorithms.fsm.common.functions;
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.shaded.com.google.common.collect.Maps;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class FlipDictionary implements
-  MapFunction<ArrayList<String>, HashMap<String, Integer>> {
+  MapFunction<List<String>, Map<String, Integer>> {
 
   @Override
-  public HashMap<String, Integer> map(ArrayList<String> intStringDictionary)
+  public Map<String, Integer> map(List<String> intStringDictionary)
     throws Exception {
 
     int labelCount = intStringDictionary.size();
 
-    HashMap<String, Integer> stringIntDictionary = Maps
+    Map<String, Integer> stringIntDictionary = Maps
       .newHashMapWithExpectedSize(labelCount);
 
     for(int i = 0; i < labelCount; i++) {

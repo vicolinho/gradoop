@@ -76,7 +76,7 @@ public class Refinement implements
         vertexTimes.add(null);
       }
 
-      emptyEmbeddings.add(new DFSEmbedding(0, vertexTimes, edgeTimes));
+      emptyEmbeddings.add(new DFSEmbedding(vertexTimes, edgeTimes));
     }
 
     // for each graph
@@ -196,11 +196,8 @@ public class Refinement implements
       .newHashMapWithExpectedSize(allStepPatterns.size());
 
     // for each vertex
-    for(Map.Entry<Integer, AdjacencyList> entry :
-      graph.getAdjacencyLists().entrySet()) {
-
-      int sourceVertexId = entry.getKey();
-      AdjacencyList vertex = entry.getValue();
+    int sourceVertexId = 0;
+    for(AdjacencyList vertex : graph.getAdjacencyLists()) {
 
       // for each (outgoing) edge
       for(AdjacencyListEntry edge : vertex.getEntries()) {
@@ -229,6 +226,7 @@ public class Refinement implements
           }
         }
       }
+      sourceVertexId++;
     }
     return stepPatternMappings;
   }

@@ -28,7 +28,8 @@ import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMDecoder;
 import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMEncoder;
 import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMiner;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.IntegerLabeledEdgeTriple;
+import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTriple;
+import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTripleWithoutTargetLabel;
 import org.gradoop.model.impl.id.GradoopId;
 
 /**
@@ -69,11 +70,10 @@ public abstract class TransactionalFSM
 
     decoder = new GradoopTransactionalFSMDecoder<>(collection.getConfig());
 
-    DataSet<Tuple3<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>> fatEdges =
-      encoder.encode(collection, fsmConfig);
+    DataSet<EdgeTriple> edges = encoder.encode(collection, fsmConfig);
 
     DataSet<CompressedDFSCode> frequentDfsCodes = miner
-      .mine(fatEdges, encoder.getMinSupport(), fsmConfig);
+      .mine(edges, encoder.getMinSupport(), fsmConfig);
 
     return decoder.decode(
       frequentDfsCodes,

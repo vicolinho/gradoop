@@ -1,5 +1,6 @@
 package org.gradoop.model.impl.algorithms.fsm.filterrefine.functions;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.flink.api.common.functions.RichGroupReduceFunction;
 import org.apache.flink.api.java.tuple.Tuple3;
@@ -9,6 +10,7 @@ import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 
@@ -49,6 +51,9 @@ public class FrequentOrRefinementCandidate
     Collector<Tuple3<CompressedDFSCode, Integer, Boolean>> collector) throws
     Exception {
 
+    ArrayList<Tuple3<CompressedDFSCode, Integer, Boolean>> x =
+      Lists.newArrayList(iterable);
+
     // copy list of all workers
     Collection<Integer> workerIdsWithoutReport = Sets
       .newHashSet(workerGraphCount.keySet());
@@ -57,10 +62,10 @@ public class FrequentOrRefinementCandidate
     boolean first = true;
     CompressedDFSCode code = null;
     int support = 0;
-    boolean altLeastOnceLocallyFrequent = false;
+    boolean atLeastOnceLocallyFrequent = false;
 
     // for each worker report
-    for(Tuple3<CompressedDFSCode, Integer, Boolean> triple : iterable) {
+    for(Tuple3<CompressedDFSCode, Integer, Boolean> triple : x) {
       code = triple.f0;
 
       Integer reportedWorkerId = triple.f1;
@@ -68,16 +73,17 @@ public class FrequentOrRefinementCandidate
 
       support += code.getSupport();
 
-      if(!altLeastOnceLocallyFrequent && locallyFrequent) {
-        altLeastOnceLocallyFrequent = true;
+      if(!atLeastOnceLocallyFrequent && locallyFrequent) {
+        atLeastOnceLocallyFrequent = true;
       }
 
       workerIdsWithoutReport.remove(reportedWorkerId);
     }
 
+
     // CANDIDATE SELECTION
 
-    if(altLeastOnceLocallyFrequent) {
+    if(atLeastOnceLocallyFrequent) {
       // remember known support
       code.setSupport(support);
 

@@ -15,29 +15,29 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.impl.algorithms.fsm.common.functions;
+package org.gradoop.model.impl.algorithms.fsm.pre.functions;
 
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.util.Collector;
-import org.gradoop.model.api.EPGMVertex;
+import org.gradoop.model.api.EPGMGraphElement;
 import org.gradoop.model.impl.id.GradoopId;
 
 /**
  * EPGMVertex => (graphId, vertexId, vertexLabel),..
- * @param <V> vertex type
+ * @param <EL> vertex type
  */
-public class GraphIdVertexIdLabel<V extends EPGMVertex>
-  implements FlatMapFunction<V, Tuple2<GradoopId, String>> {
+public class GraphIdElementIdLabel<EL extends EPGMGraphElement>
+  implements FlatMapFunction<EL, Tuple2<GradoopId, String>> {
 
   @Override
-  public void flatMap(V vertex,
+  public void flatMap(EL element,
     Collector<Tuple2<GradoopId, String>> collector) throws
     Exception {
 
-    String label = vertex.getLabel();
+    String label = element.getLabel();
 
-    for (GradoopId graphId : vertex.getGraphIds()) {
+    for (GradoopId graphId : element.getGraphIds()) {
       collector.collect(
         new Tuple2<>(graphId, label));
     }

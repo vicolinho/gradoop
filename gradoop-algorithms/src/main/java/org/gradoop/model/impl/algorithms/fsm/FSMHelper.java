@@ -5,7 +5,7 @@ import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
 import org.gradoop.model.impl.GraphCollection;
-import org.gradoop.model.impl.GraphTransaction;
+import org.gradoop.model.impl.tuples.GraphTransaction;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
 

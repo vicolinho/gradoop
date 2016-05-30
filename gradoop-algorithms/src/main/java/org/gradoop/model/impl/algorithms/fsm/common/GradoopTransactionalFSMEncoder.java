@@ -1,23 +1,35 @@
 package org.gradoop.model.impl.algorithms.fsm.common;
 
 import org.apache.flink.api.java.DataSet;
-import org.apache.flink.api.java.tuple.Tuple3;
-import org.apache.flink.api.java.tuple.Tuple4;
 import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
 import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMEncoder;
-import org.gradoop.model.impl.algorithms.fsm.common.functions.*;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.IntegerLabeledEdgeTriple;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.VertexIdLabel;
-import org.gradoop.model.impl.functions.tuple.Project4To0And3;
-import org.gradoop.model.impl.id.GradoopId;
+import org.gradoop.model.impl.algorithms.fsm.common.functions.CountableLabel;
+import org.gradoop.model.impl.algorithms.fsm.common.functions.FlipDictionary;
+import org.gradoop.model.impl.algorithms.fsm.common.functions.FrequentLabel;
+import org.gradoop.model.impl.algorithms.fsm.common.functions.MinSupport;
+import org.gradoop.model.impl.algorithms.fsm.pre.functions.AppendSourceLabel;
+import org.gradoop.model.impl.algorithms.fsm.pre.functions.AppendTargetLabel;
+import org.gradoop.model.impl.algorithms.fsm.pre.functions.CountableTriple;
+import org.gradoop.model.impl.algorithms.fsm.pre.functions.Dictionary;
+import org.gradoop.model.impl.algorithms.fsm.pre.functions.EdgeLabelEncoder;
+import org.gradoop.model.impl.algorithms.fsm.pre.functions.FrequentLabelTriple;
+import org.gradoop.model.impl.algorithms.fsm.pre.functions
+  .GraphIdElementIdLabel;
+import org.gradoop.model.impl.algorithms.fsm.pre.functions.VertexLabelEncoder;
+import org.gradoop.model.impl.algorithms.fsm.pre.functions.WithoutVertexIds;
+import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTriple;
+import org.gradoop.model.impl.algorithms.fsm.pre.tuples
+  .EdgeTripleWithoutVertexLabels;
+import org.gradoop.model.impl.algorithms.fsm.pre.tuples.LabelTripleWithSupport;
+import org.gradoop.model.impl.algorithms.fsm.pre.tuples.VertexIdLabel;
+import org.gradoop.model.impl.functions.utils.RightSide;
 import org.gradoop.model.impl.operators.count.Count;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class GradoopTransactionalFSMEncoder
   <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge>
@@ -31,11 +43,11 @@ public class GradoopTransactionalFSMEncoder
   /**
    * edge label dictionary
    */
-  private DataSet<ArrayList<String>> edgeLabelDictionary;
+  private DataSet<List<String>> edgeLabelDictionary;
   /**
    * vertex label dictionary
    */
-  private DataSet<ArrayList<String>> vertexLabelDictionary;
+  private DataSet<List<String>> vertexLabelDictionary;
 
   /**
    * determines edge label frequency and prunes by minimum support;
@@ -45,17 +57,20 @@ public class GradoopTransactionalFSMEncoder
    * @return pruned and relabelled edges
    */
   @Override
-  public DataSet<Tuple3<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>> encode(
+  public DataSet<EdgeTriple> encode(
     GraphCollection<G, V, E> collection, FSMConfig fsmConfig) {
 
     setMinSupport(collection, fsmConfig);
 
-    DataSet<VertexIdLabel> encodedVertices = encodeVertices(collection.getVertices());
+    DataSet<VertexIdLabel> encodedVertices =
+      encodeVertices(collection.getVertices());
 
-    DataSet<Tuple4<GradoopId, GradoopId, GradoopId, String>> encodedEdges =
+    DataSet<EdgeTripleWithoutVertexLabels> encodedEdges =
       encodeEdges(collection.getEdges());
 
-    return combine(encodedVertices, encodedEdges);
+    DataSet<EdgeTriple> triples = combine(encodedVertices, encodedEdges);
+
+    return frequent(triples);
   }
 
   private void setMinSupport(GraphCollection<G, V, E> collection,
@@ -65,14 +80,11 @@ public class GradoopTransactionalFSMEncoder
       .map(new MinSupport(fsmConfig));
   }
 
-  private DataSet<Tuple4<GradoopId, GradoopId, GradoopId, String>> encodeEdges(
+  private DataSet<EdgeTripleWithoutVertexLabels> encodeEdges(
     DataSet<E> edges) {
-
-    DataSet<Tuple4<GradoopId, GradoopId, GradoopId, String>> gidSidTidLabel =
-      edges.flatMap(new GraphIdSourceIdTargetIdLabel<E>());
-
-    edgeLabelDictionary = gidSidTidLabel
-      .map(new Project4To0And3<GradoopId, GradoopId, GradoopId, String>())
+    
+    edgeLabelDictionary = edges
+      .flatMap(new GraphIdElementIdLabel<E>())
       .distinct()
       .map(new CountableLabel())
       .groupBy(0)
@@ -81,7 +93,12 @@ public class GradoopTransactionalFSMEncoder
       .withBroadcastSet(minSupport, BroadcastNames.MIN_SUPPORT)
       .reduceGroup(new Dictionary());
 
-    return gidSidTidLabel;
+    DataSet<Map<String, Integer>> reverseDictionary = edgeLabelDictionary
+      .map(new FlipDictionary());
+
+    return edges
+      .flatMap(new EdgeLabelEncoder<E>())
+      .withBroadcastSet(reverseDictionary, BroadcastNames.EDGE_DICTIONARY);
   }
 
   /**
@@ -92,11 +109,10 @@ public class GradoopTransactionalFSMEncoder
    * @param vertices input vertex collection
    * @return pruned and relabelled edges
    */
-  private DataSet<VertexIdLabel> encodeVertices(
-    DataSet<V> vertices) {
+  private DataSet<VertexIdLabel> encodeVertices(DataSet<V> vertices) {
 
     vertexLabelDictionary = vertices
-      .flatMap(new GraphIdVertexIdLabel<V>())
+      .flatMap(new GraphIdElementIdLabel<V>())
       .distinct()
       .map(new CountableLabel())
       .groupBy(0)
@@ -105,7 +121,7 @@ public class GradoopTransactionalFSMEncoder
       .withBroadcastSet(minSupport, BroadcastNames.MIN_SUPPORT)
       .reduceGroup(new Dictionary());
 
-    DataSet<HashMap<String, Integer>> reverseDictionary = vertexLabelDictionary
+    DataSet<Map<String, Integer>> reverseDictionary = vertexLabelDictionary
       .map(new FlipDictionary());
 
     return vertices
@@ -113,19 +129,28 @@ public class GradoopTransactionalFSMEncoder
       .withBroadcastSet(reverseDictionary, BroadcastNames.VERTEX_DICTIONARY);
   }
 
-  private DataSet<Tuple3<GradoopId, IntegerLabeledEdgeTriple, CompressedDFSCode>> combine(
-    DataSet<VertexIdLabel> encodedVertices,
-    DataSet<Tuple4<GradoopId, GradoopId, GradoopId, String>> encodedEdges) {
-
-    DataSet<HashMap<String, Integer>> reverseDictionary = edgeLabelDictionary
-      .map(new FlipDictionary());
+  private DataSet<EdgeTriple> combine(DataSet<VertexIdLabel> encodedVertices,
+    DataSet<EdgeTripleWithoutVertexLabels> encodedEdges) {
 
     return encodedEdges
-      .flatMap(new EdgeLabelEncoder())
-      .withBroadcastSet(reverseDictionary, BroadcastNames.EDGE_DICTIONARY)
-      .join(encodedVertices).where(1).equalTo(0).with(new AppendSourceLabel())
+      .join(encodedVertices).where(1).equalTo(0)
+      .with(new AppendSourceLabel())
       .join(encodedVertices).where(2).equalTo(0)
-      .with(new AppendTargetLabelAndInitialDfsCode());
+      .with(new AppendTargetLabel());
+  }
+
+  private DataSet<EdgeTriple> frequent(DataSet<EdgeTriple> triples) {
+    return triples
+      .map(new WithoutVertexIds())
+      .distinct()
+      .map(new CountableTriple())
+      .groupBy(0, 1, 2)
+      .sum(3)
+      .filter(new FrequentLabelTriple())
+      .withBroadcastSet(minSupport, BroadcastNames.MIN_SUPPORT)
+      .join(triples)
+      .where(0, 1, 2).equalTo(1, 2, 3)
+      .with(new RightSide<LabelTripleWithSupport, EdgeTriple>());
   }
 
   @Override
@@ -134,12 +159,12 @@ public class GradoopTransactionalFSMEncoder
   }
 
   @Override
-  public DataSet<ArrayList<String>> getEdgeLabelDictionary() {
-    return edgeLabelDictionary;
+  public DataSet<List<String>> getVertexLabelDictionary() {
+    return vertexLabelDictionary;
   }
 
   @Override
-  public DataSet<ArrayList<String>> getVertexLabelDictionary() {
-    return vertexLabelDictionary;
+  public DataSet<List<String>> getEdgeLabelDictionary() {
+    return edgeLabelDictionary;
   }
 }
