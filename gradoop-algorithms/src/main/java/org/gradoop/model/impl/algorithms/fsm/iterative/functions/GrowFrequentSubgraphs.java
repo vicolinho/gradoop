@@ -22,11 +22,10 @@ import org.apache.flink.configuration.Configuration;
 import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.gspan.GSpan;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
 import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.IterationItem;
 
 import java.util.Collection;
-import java.util.List;
 
 /**
  * Core of gSpan implementation. Grows embeddings of KnownToBeGloballyFrequent DFS codes.
@@ -38,19 +37,13 @@ public class GrowFrequentSubgraphs
   /**
    * frequent DFS codes
    */
-  private Collection<CompressedDFSCode> frequentDfsCodes;
+  private Collection<CompressedDfsCode> frequentSubgraphs;
 
   @Override
   public void open(Configuration parameters) throws Exception {
     super.open(parameters);
-    List<Collection<CompressedDFSCode>> broadcast = getRuntimeContext()
+    this.frequentSubgraphs = getRuntimeContext()
       .getBroadcastVariable(BroadcastNames.FREQUENT_SUBGRAPHS);
-
-    if (broadcast.isEmpty()) {
-      this.frequentDfsCodes = null;
-    } else {
-      this.frequentDfsCodes = broadcast.get(0);
-    }
   }
   /**
    * constructor
@@ -65,7 +58,7 @@ public class GrowFrequentSubgraphs
 
     if (! wrapper.isCollector()) {
       GSpan.growFrequentSubgraphs(
-        wrapper.getTransaction(), frequentDfsCodes, fsmConfig);
+        wrapper.getTransaction(), frequentSubgraphs, fsmConfig);
     }
 
     return wrapper;

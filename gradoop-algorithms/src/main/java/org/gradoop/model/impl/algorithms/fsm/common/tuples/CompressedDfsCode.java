@@ -19,7 +19,7 @@ package org.gradoop.model.impl.algorithms.fsm.common.tuples;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSCode;
+import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -33,19 +33,19 @@ import java.util.zip.GZIPOutputStream;
  * tuple-representation fo a compressed DFS code including its support.
  * (bytes,support)
  */
-public class CompressedDFSCode extends Tuple2<byte[], Integer> {
+public class CompressedDfsCode extends Tuple2<byte[], Integer> {
 
   /**
    * default constructor
    */
-  public CompressedDFSCode() {
+  public CompressedDfsCode() {
   }
 
   /**
    * valued constructor
    * @param dfsCode DFS code to compress
    */
-  public CompressedDFSCode(DFSCode dfsCode) {
+  public CompressedDfsCode(DfsCode dfsCode) {
     this.f1 = 1;
     try {
       ByteArrayOutputStream byteArrayOS = new ByteArrayOutputStream();
@@ -63,17 +63,17 @@ public class CompressedDFSCode extends Tuple2<byte[], Integer> {
    * uncompressing the store DFS code
    * @return uncompressed DFS code
    */
-  public DFSCode getDfsCode() {
-    DFSCode dfsCode;
+  public DfsCode getDfsCode() {
+    DfsCode dfsCode;
 
     try {
       ByteArrayInputStream byteArrayIS = new ByteArrayInputStream(this.f0);
       GZIPInputStream gzipIn = new GZIPInputStream(byteArrayIS);
       ObjectInputStream objectIn = new ObjectInputStream(gzipIn);
-      dfsCode = (DFSCode) objectIn.readObject();
+      dfsCode = (DfsCode) objectIn.readObject();
       objectIn.close();
     } catch (IOException | ClassNotFoundException e) {
-      dfsCode = new DFSCode();
+      dfsCode = new DfsCode();
     }
 
     return dfsCode;
@@ -103,7 +103,7 @@ public class CompressedDFSCode extends Tuple2<byte[], Integer> {
 
     if (equals) {
       byte[] ownBytes = this.getBytes();
-      byte[] otherBytes = ((CompressedDFSCode) o).getBytes();
+      byte[] otherBytes = ((CompressedDfsCode) o).getBytes();
 
       equals = ownBytes.length == otherBytes.length;
 
@@ -130,5 +130,13 @@ public class CompressedDFSCode extends Tuple2<byte[], Integer> {
 
   public byte[] getBytes() {
     return this.f0;
+  }
+
+  public int getMinVertexLabel() {
+    return this.f1;
+  }
+
+  public void setMinVertexLabel(int minVertexLabel) {
+    this.f1 = minVertexLabel;
   }
 }

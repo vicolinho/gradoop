@@ -15,10 +15,9 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.impl.algorithms.fsm.common.tuples;
+package org.gradoop.model.impl.algorithms.fsm.common.pojos;
 
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -28,11 +27,11 @@ import java.util.Map;
 public class GSpanTransaction implements Serializable {
 
   private List<AdjacencyList> adjacencyLists;
-  private Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings;
+  private Map<CompressedDfsCode, Collection<DFSEmbedding>> codeEmbeddings;
 
   public GSpanTransaction(
     List<AdjacencyList> adjacencyLists,
-    Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings) {
+    Map<CompressedDfsCode, Collection<DFSEmbedding>> codeEmbeddings) {
 
     this.adjacencyLists = adjacencyLists;
     this.codeEmbeddings = codeEmbeddings;
@@ -42,19 +41,34 @@ public class GSpanTransaction implements Serializable {
     return adjacencyLists;
   }
 
-  public Map<CompressedDFSCode, Collection<DFSEmbedding>>
+  public Map<CompressedDfsCode, Collection<DFSEmbedding>>
   getCodeEmbeddings() {
 
     return codeEmbeddings;
   }
 
   public void setCodeEmbeddings(
-    Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings) {
+    Map<CompressedDfsCode, Collection<DFSEmbedding>> codeEmbeddings) {
 
     this.codeEmbeddings = codeEmbeddings;
   }
 
   public Boolean hasGrownSubgraphs() {
     return this.codeEmbeddings != null;
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder builder = new StringBuilder();
+
+    int listId = 0;
+
+    for (AdjacencyList adjacencyList : adjacencyLists) {
+      builder.append("(" + listId + ":" + adjacencyList.getFromVertexLabel()+
+        ")" + adjacencyList.getEntries() + "\n");
+      listId++;
+    }
+
+    return builder.toString();
   }
 }

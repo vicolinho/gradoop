@@ -5,25 +5,25 @@ import org.apache.flink.api.common.functions.GroupReduceFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.util.Collector;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
 
 import java.util.Collection;
 
 public class RefinementCalls implements
-  GroupReduceFunction<Tuple3<CompressedDFSCode, Integer, Boolean>, Tuple2<Integer, Collection<CompressedDFSCode>>> {
+  GroupReduceFunction<Tuple3<CompressedDfsCode, Integer, Boolean>, Tuple2<Integer, Collection<CompressedDfsCode>>> {
 
   @Override
   public void reduce(
-    Iterable<Tuple3<CompressedDFSCode, Integer, Boolean>> iterable,
-    Collector<Tuple2<Integer, Collection<CompressedDFSCode>>> collector) throws
+    Iterable<Tuple3<CompressedDfsCode, Integer, Boolean>> iterable,
+    Collector<Tuple2<Integer, Collection<CompressedDfsCode>>> collector) throws
     Exception {
 
     boolean first = true;
     Integer workerId = null;
 
-    Collection<CompressedDFSCode> codes = Lists.newArrayList();
+    Collection<CompressedDfsCode> codes = Lists.newArrayList();
 
-    for(Tuple3<CompressedDFSCode, Integer, Boolean> triple : iterable) {
+    for(Tuple3<CompressedDfsCode, Integer, Boolean> triple : iterable) {
       if (first) {
         workerId = triple.f1;
         first = false;
@@ -32,7 +32,7 @@ public class RefinementCalls implements
       codes.add(triple.f0);
     }
 
-    Tuple2<Integer, Collection<CompressedDFSCode>> call =
+    Tuple2<Integer, Collection<CompressedDfsCode>> call =
       new Tuple2<>(workerId, codes);
 
     collector.collect(call);

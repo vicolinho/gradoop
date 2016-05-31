@@ -15,7 +15,7 @@ import org.gradoop.model.impl.algorithms.fsm.common.functions.ExpandVertices;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.FullEdge;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.FullVertex;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.VertexLabelDecoder;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
 import org.gradoop.model.impl.functions.tuple.Value0Of3;
 import org.gradoop.model.impl.id.GradoopId;
 import org.gradoop.util.GradoopFlinkConfig;
@@ -43,7 +43,7 @@ public class GradoopTransactionalFSMDecoder
    */
   @Override
   public GraphCollection<G, V, E> decode(
-    DataSet<CompressedDFSCode> frequentDfsCodes,
+    DataSet<CompressedDfsCode> frequentDfsCodes,
     DataSet<List<String>> vertexLabelDictionary,
     DataSet<List<String>> edgeLabelDictionary) {
 

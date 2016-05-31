@@ -19,25 +19,25 @@ package org.gradoop.model.impl.algorithms.fsm.common.functions;
 
 import org.apache.flink.api.common.functions.GroupReduceFunction;
 import org.apache.flink.util.Collector;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 /**
- * [(CompressedDFSCode, Support),..] => CompressedDFSCode[]
+ * [(CompressedDfsCode, Support),..] => CompressedDfsCode[]
  */
 public class CollectFrequentSubgraphs implements
-  GroupReduceFunction<CompressedDFSCode, Collection<CompressedDFSCode>> {
+  GroupReduceFunction<CompressedDfsCode, Collection<CompressedDfsCode>> {
 
   @Override
-  public void reduce(Iterable<CompressedDFSCode> iterable,
-    Collector<Collection<CompressedDFSCode>> collector) throws Exception {
+  public void reduce(Iterable<CompressedDfsCode> iterable,
+    Collector<Collection<CompressedDfsCode>> collector) throws Exception {
 
-    List<CompressedDFSCode> codes = new ArrayList<>();
+    List<CompressedDfsCode> codes = new ArrayList<>();
 
-    for (CompressedDFSCode code : iterable) {
+    for (CompressedDfsCode code : iterable) {
       codes.add(code);
     }
 

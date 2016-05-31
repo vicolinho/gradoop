@@ -1,21 +1,21 @@
 package org.gradoop.model.impl.algorithms.fsm.iterative.functions;
 
 import org.apache.flink.api.common.functions.MapFunction;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
 
 /**
  * Created by peet on 30.05.16.
  */
 public class SetSupportToBranchNumber
-  implements MapFunction<CompressedDFSCode, CompressedDFSCode> {
+  implements MapFunction<CompressedDfsCode, CompressedDfsCode> {
 
   @Override
-  public CompressedDFSCode map(CompressedDFSCode compressedDFSCode) throws
+  public CompressedDfsCode map(CompressedDfsCode subgraph) throws
     Exception {
 
-    compressedDFSCode.setSupport(
-      compressedDFSCode.getDfsCode().getMinVertexLabel());
+    subgraph.setMinVertexLabel(
+      subgraph.getDfsCode().getMinVertexLabel());
 
-    return compressedDFSCode;
+    return subgraph;
   }
 }

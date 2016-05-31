@@ -7,7 +7,6 @@ public class EdgeTripleWithoutTargetLabel
   extends Tuple5<GradoopId, GradoopId, GradoopId, Integer, Integer> {
 
   public EdgeTripleWithoutTargetLabel() {
-
   }
 
   public EdgeTripleWithoutTargetLabel(GradoopId graphId, GradoopId sourceId,

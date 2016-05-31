@@ -4,16 +4,12 @@ import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMiner;
-import org.gradoop.model.impl.algorithms.fsm.common.functions.Frequent;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.SearchSpace;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.GSpanTransaction;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
+import org.gradoop.model.impl.algorithms.fsm.common.pojos.GSpanTransaction;
 import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTriple;
-import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTripleWithSupport;
 import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTripleWithoutTargetLabel;
 import org.gradoop.model.impl.functions.utils.LeftSide;
-import org.gradoop.model.impl.functions.tuple.Project3To0And2;
-import org.gradoop.model.impl.functions.tuple.Value1Of2;
 import org.gradoop.model.impl.id.GradoopId;
 
 /**
@@ -30,14 +26,14 @@ public abstract class AbstractTransactionalFSMiner
   protected FSMConfig fsmConfig;
 
 
-  protected DataSet<Tuple3<GradoopId, EdgeTripleWithoutTargetLabel, CompressedDFSCode>> frequent(
-    DataSet<Tuple3<GradoopId, EdgeTripleWithoutTargetLabel, CompressedDFSCode>> fatEdges,
-    DataSet<CompressedDFSCode> allFrequentDfsCodes) {
+  protected DataSet<Tuple3<GradoopId, EdgeTripleWithoutTargetLabel, CompressedDfsCode>> frequent(
+    DataSet<Tuple3<GradoopId, EdgeTripleWithoutTargetLabel, CompressedDfsCode>> fatEdges,
+    DataSet<CompressedDfsCode> allFrequentDfsCodes) {
 
     return fatEdges
       .join(allFrequentDfsCodes)
       .where("2.0").equalTo(0)
-      .with(new LeftSide<Tuple3<GradoopId, EdgeTripleWithoutTargetLabel, CompressedDFSCode>, CompressedDFSCode>());
+      .with(new LeftSide<Tuple3<GradoopId, EdgeTripleWithoutTargetLabel, CompressedDfsCode>, CompressedDfsCode>());
   }
 
   @Override

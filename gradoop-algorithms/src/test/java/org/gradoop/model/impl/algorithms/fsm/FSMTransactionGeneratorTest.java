@@ -10,7 +10,7 @@ import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMiner;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common
   .GradoopTransactionalFSMEncoder;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine
   .FilterRefineTransactionalFSMiner;
 import org.gradoop.model.impl.algorithms.fsm.iterative
@@ -40,16 +40,16 @@ public class FSMTransactionGeneratorTest extends GradoopFlinkTestBase {
     TransactionalFSMiner iMiner = new IterativeTransactionalFSMiner();
     iMiner.setExecutionEnvironment(
       input.getConfig().getExecutionEnvironment());
-    DataSet<CompressedDFSCode> iResult =
+    DataSet<CompressedDfsCode> iResult =
       iMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
     TransactionalFSMiner frMiner = new FilterRefineTransactionalFSMiner();
-    DataSet<CompressedDFSCode> frResult =
+    DataSet<CompressedDfsCode> frResult =
       frMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
     iResult.fullOuterJoin(frResult)
       .where(0).equalTo(0)
-      .with(new WithEmptySide<CompressedDFSCode, CompressedDFSCode>())
+      .with(new WithEmptySide<CompressedDfsCode, CompressedDfsCode>())
       .print();
   }
 
@@ -86,16 +86,16 @@ public class FSMTransactionGeneratorTest extends GradoopFlinkTestBase {
     TransactionalFSMiner iMiner = new IterativeTransactionalFSMiner();
     iMiner.setExecutionEnvironment(
       input.getConfig().getExecutionEnvironment());
-    DataSet<CompressedDFSCode> iResult =
+    DataSet<CompressedDfsCode> iResult =
       iMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
     TransactionalFSMiner frMiner = new FilterRefineTransactionalFSMiner();
-    DataSet<CompressedDFSCode> frResult =
+    DataSet<CompressedDfsCode> frResult =
       frMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
     iResult.fullOuterJoin(frResult)
       .where(0).equalTo(0)
-      .with(new WithEmptySide<CompressedDFSCode, CompressedDFSCode>())
+      .with(new WithEmptySide<CompressedDfsCode, CompressedDfsCode>())
       .print();
   }
 

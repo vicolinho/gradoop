@@ -1,19 +1,19 @@
 package org.gradoop.model.impl.algorithms.fsm.iterative.functions;
 
 import org.apache.flink.api.common.functions.ReduceFunction;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
 
 import java.util.Collection;
 
-public class Merge implements ReduceFunction<Collection<CompressedDFSCode>> {
+public class Merge implements ReduceFunction<Collection<CompressedDfsCode>> {
 
   @Override
-  public Collection<CompressedDFSCode> reduce(
-    Collection<CompressedDFSCode> firstCollection,
-    Collection<CompressedDFSCode> secondCollection) throws Exception {
+  public Collection<CompressedDfsCode> reduce(
+    Collection<CompressedDfsCode> firstCollection,
+    Collection<CompressedDfsCode> secondCollection) throws Exception {
 
 
-    Collection<CompressedDFSCode> mergedCollection;
+    Collection<CompressedDfsCode> mergedCollection;
 
     if(firstCollection.size() >= firstCollection.size()) {
       firstCollection.addAll(secondCollection);

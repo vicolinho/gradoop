@@ -33,15 +33,15 @@ public class DFSStep implements Serializable {
   /**
    * label of traversal start vertex
    */
-  private final Integer fromLabel;
+  private final int fromLabel;
   /**
    * true, if edge was traversed in direction
    */
-  private final Boolean outgoing;
+  private final boolean outgoing;
   /**
    * label of the traversed edge
    */
-  private final Integer edgeLabel;
+  private final int edgeLabel;
   /**
    * discovery time of traversal end vertex
    */
@@ -49,7 +49,7 @@ public class DFSStep implements Serializable {
   /**
    * label of traversal end vertex
    */
-  private final Integer toLabel;
+  private final int toLabel;
 
   /**
    * constructor
@@ -148,5 +148,9 @@ public class DFSStep implements Serializable {
 
   public Boolean isBackward() {
     return !isForward();
+  }
+
+  public int getMinVertexLabel() {
+    return fromLabel < toLabel ? fromLabel : toLabel;
   }
 }

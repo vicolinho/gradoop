@@ -2,10 +2,9 @@ package org.gradoop.model.impl.algorithms.fsm.filterrefine.functions;
 
 import org.apache.flink.api.common.functions.MapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.GSpanTransaction;
+import org.gradoop.model.impl.algorithms.fsm.common.pojos.GSpanTransaction;
 
 import java.util.Collection;
-import java.util.Map;
 
 
 public class WorkerIdGraphCount

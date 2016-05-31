@@ -51,7 +51,7 @@ public class AdjacencyList {
 
   @Override
   public String toString() {
-    return fromVertexLabel + ":" + entries;
+    return entries.toString();
   }
 
   public Integer getFromVertexLabel() {

@@ -149,7 +149,7 @@ public class GradoopTransactionalFSMEncoder
       .filter(new FrequentLabelTriple())
       .withBroadcastSet(minSupport, BroadcastNames.MIN_SUPPORT)
       .join(triples)
-      .where(0, 1, 2).equalTo(1, 2, 3)
+      .where(0, 1, 2).equalTo(3, 4, 5)
       .with(new RightSide<LabelTripleWithSupport, EdgeTriple>());
   }
 

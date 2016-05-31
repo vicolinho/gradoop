@@ -2,9 +2,9 @@ package org.gradoop.model.impl.algorithms.fsm.common;
 
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.configuration.Configuration;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
 
-public class PrintDfsCode extends RichMapFunction<CompressedDFSCode, String> {
+public class PrintDfsCode extends RichMapFunction<CompressedDfsCode, String> {
 
   private DfsCodeTranslator translator;
 
@@ -16,10 +16,10 @@ public class PrintDfsCode extends RichMapFunction<CompressedDFSCode, String> {
 
 
   @Override
-  public String map(CompressedDFSCode compressedDFSCode) throws Exception {
-    return compressedDFSCode.getSupport() + ";" +
-      translator.translate(compressedDFSCode.getDfsCode())
-//      + compressedDFSCode.getDfsCode()
+  public String map(CompressedDfsCode subgraph) throws Exception {
+    return subgraph.getSupport() + ";" +
+      translator.translate(subgraph.getDfsCode())
+//      + subgraph.getDfsCode()
       ;
   }
 }

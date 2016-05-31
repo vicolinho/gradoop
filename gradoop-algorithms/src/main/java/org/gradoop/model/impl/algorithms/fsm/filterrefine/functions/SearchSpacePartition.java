@@ -4,7 +4,7 @@ import com.google.common.collect.Lists;
 import org.apache.flink.api.common.functions.RichMapPartitionFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.util.Collector;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.GSpanTransaction;
+import org.gradoop.model.impl.algorithms.fsm.common.pojos.GSpanTransaction;
 
 import java.util.Collection;
 

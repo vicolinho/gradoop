@@ -29,43 +29,34 @@ import java.util.List;
 /**
  * pojo representing a gSpan DFS code
  */
-public class DFSCode implements Serializable {
+public class DfsCode implements Serializable {
   /**
    * list of steps
    */
   private final List<DFSStep> steps;
-  private final int minVertexLabel;
 
   /**
    * constructor
    * @param step initial step
    */
-  public DFSCode(DFSStep step) {
+  public DfsCode(DFSStep step) {
     this.steps = new ArrayList<>();
     this.steps.add(step);
-    this.minVertexLabel = minVertexLabel(steps.get(0));
-  }
-
-  private Integer minVertexLabel(DFSStep step) {
-    return step.getFromLabel() < step.getToLabel() ?
-        step.getFromLabel() : step.getToLabel();
   }
 
   /**
    * constructor
    * @param steps initial steps
    */
-  public DFSCode(ArrayList<DFSStep> steps) {
+  public DfsCode(ArrayList<DFSStep> steps) {
     this.steps = steps;
-    this.minVertexLabel = minVertexLabel(steps.get(0));
   }
 
   /**
    * empty constructor
    */
-  public DFSCode() {
+  public DfsCode() {
     this.steps = new ArrayList<>();
-    minVertexLabel = -1;
   }
 
   /**
@@ -133,9 +124,9 @@ public class DFSCode implements Serializable {
 
     Boolean equals = this == other;
 
-    if (!equals && other != null && other instanceof DFSCode) {
+    if (!equals && other != null && other instanceof DfsCode) {
 
-      DFSCode otherCode = (DFSCode) other;
+      DfsCode otherCode = (DfsCode) other;
 
       if (this.getSteps().size() == otherCode.getSteps().size()) {
 
@@ -158,8 +149,8 @@ public class DFSCode implements Serializable {
    * @param dfsCode input DFS code
    * @return deep copy of input
    */
-  public static DFSCode deepCopy(DFSCode dfsCode) {
-    return new DFSCode(Lists.newArrayList(dfsCode.getSteps()));
+  public static DfsCode deepCopy(DfsCode dfsCode) {
+    return new DfsCode(Lists.newArrayList(dfsCode.getSteps()));
   }
 
   public int size() {
@@ -171,6 +162,6 @@ public class DFSCode implements Serializable {
   }
 
   public int getMinVertexLabel() {
-    return minVertexLabel;
+    return steps.isEmpty() ? 0 : steps.get(0).getMinVertexLabel();
   }
 }

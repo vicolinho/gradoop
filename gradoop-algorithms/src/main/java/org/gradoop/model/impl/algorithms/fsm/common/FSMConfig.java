@@ -58,7 +58,7 @@ public class FSMConfig implements Serializable {
     this.threshold = threshold;
     this.directed = directed;
     this.multiGraph = multiGraph;
-    this.maxEdgeCount = 0;
+    this.maxEdgeCount = 1000;
     this.minEdgeCount = 0;
   }
 

@@ -9,11 +9,11 @@ import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyListEntry;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSCode;
+import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSStep;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.GSpanTransaction;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
+import org.gradoop.model.impl.algorithms.fsm.common.pojos.GSpanTransaction;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine.pojos.StepMappings;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine.pojos.StepPattern;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine.pojos
@@ -28,8 +28,8 @@ import java.util.Map;
 import java.util.Set;
 
 public class Refinement implements
-  FlatJoinFunction<Tuple2<Integer, Collection<CompressedDFSCode>>,
-    Tuple2<Integer, Collection<GSpanTransaction>>, CompressedDFSCode> {
+  FlatJoinFunction<Tuple2<Integer, Collection<CompressedDfsCode>>,
+    Tuple2<Integer, Collection<GSpanTransaction>>, CompressedDfsCode> {
 
   private final FSMConfig fsmConfig;
 
@@ -39,19 +39,19 @@ public class Refinement implements
 
   @Override
   public void join(
-    Tuple2<Integer, Collection<CompressedDFSCode>> codePair,
+    Tuple2<Integer, Collection<CompressedDfsCode>> codePair,
     Tuple2<Integer, Collection<GSpanTransaction>> transactionPair,
-    Collector<CompressedDFSCode> collector) throws Exception {
+    Collector<CompressedDfsCode> collector) throws Exception {
 
-    List<CompressedDFSCode> compressedCodes = Lists.newArrayList();
-    List<DFSCode> codes = Lists.newArrayList();
+    List<CompressedDfsCode> compressedCodes = Lists.newArrayList();
+    List<DfsCode> codes = Lists.newArrayList();
     List<DFSEmbedding> emptyEmbeddings = Lists.newArrayList();
     Set<StepPattern> allStepPatterns = Sets.newHashSet();
 
-    for(CompressedDFSCode compressedDFSCode : codePair.f1) {
-      compressedCodes.add(compressedDFSCode);
+    for(CompressedDfsCode subgraph : codePair.f1) {
+      compressedCodes.add(subgraph);
 
-      DFSCode code = compressedDFSCode.getDfsCode();
+      DfsCode code = subgraph.getDfsCode();
       codes.add(code);
 
       ArrayList<Integer> edgeTimes = Lists
@@ -88,7 +88,7 @@ public class Refinement implements
 
       // for each DFS code
       int codeIndex = 0;
-      for(DFSCode code : codes) {
+      for(DfsCode code : codes) {
         boolean matchPossible = true;
 
         // check, if candidates are available for each step
@@ -130,15 +130,15 @@ public class Refinement implements
 
           // match
           if(! embeddings.isEmpty()) {
-            CompressedDFSCode compressedDFSCode =
+            CompressedDfsCode subgraph =
               compressedCodes.get(codeIndex);
-            compressedDFSCode.setSupport(compressedDFSCode.getSupport() + 1);
+            subgraph.setSupport(subgraph.getSupport() + 1);
           }
         }
         codeIndex++;
       }
     }
-    for(CompressedDFSCode code : compressedCodes) {
+    for(CompressedDfsCode code : compressedCodes) {
       if(code.getSupport() > 0) {
         collector.collect(code);
       }

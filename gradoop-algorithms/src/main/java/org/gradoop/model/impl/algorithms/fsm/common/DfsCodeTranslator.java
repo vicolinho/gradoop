@@ -1,7 +1,7 @@
 package org.gradoop.model.impl.algorithms.fsm.common;
 
 import org.apache.flink.api.common.functions.RuntimeContext;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSCode;
+import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSStep;
 
 import java.util.List;
@@ -19,7 +19,7 @@ public class DfsCodeTranslator {
         BroadcastNames.EDGE_DICTIONARY).get(0);
   }
 
-  public String translate(DFSCode dfsCode) {
+  public String translate(DfsCode dfsCode) {
     StringBuilder builder = new StringBuilder();
 
     builder.append("[");

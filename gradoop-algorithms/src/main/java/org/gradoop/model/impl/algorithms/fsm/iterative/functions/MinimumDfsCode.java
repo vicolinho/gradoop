@@ -5,13 +5,13 @@ import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.gspan
   .DfsCodeSiblingComparator;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
+import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
 
 import java.util.Iterator;
 
 public class MinimumDfsCode
-  implements GroupReduceFunction<CompressedDFSCode, CompressedDFSCode> {
+  implements GroupReduceFunction<CompressedDfsCode, CompressedDfsCode> {
 
   private final DfsCodeSiblingComparator comparator;
 
@@ -20,20 +20,23 @@ public class MinimumDfsCode
   }
 
   @Override
-  public void reduce(Iterable<CompressedDFSCode> iterable,
-    Collector<CompressedDFSCode> collector) throws Exception {
-    Iterator<CompressedDFSCode> iterator = iterable.iterator();
+  public void reduce(Iterable<CompressedDfsCode> iterable,
+    Collector<CompressedDfsCode> collector) throws Exception {
+    Iterator<CompressedDfsCode> iterator = iterable.iterator();
 
-    DFSCode minDfsCode = iterator.next().getDfsCode();
+    CompressedDfsCode minCompressedDfsCode = iterator.next();
+    DfsCode minDfsCode = minCompressedDfsCode.getDfsCode();
 
     while (iterator.hasNext()) {
-      DFSCode dfsCode = iterator.next().getDfsCode();
+      CompressedDfsCode subgraph = iterator.next();
+      DfsCode dfsCode = subgraph.getDfsCode();
 
       if(comparator.compare(dfsCode, minDfsCode) < 0) {
         minDfsCode = dfsCode;
+        minCompressedDfsCode = subgraph;
       }
     }
 
-    collector.collect(new CompressedDFSCode(minDfsCode));
+    collector.collect(minCompressedDfsCode);
   }
 }

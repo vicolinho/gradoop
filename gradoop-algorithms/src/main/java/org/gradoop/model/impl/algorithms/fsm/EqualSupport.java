@@ -4,13 +4,13 @@ import org.apache.flink.api.common.functions.RichFlatJoinFunction;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.common.DfsCodeTranslator;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
 
 /**
  * Created by peet on 20.05.16.
  */
 public class EqualSupport
-  extends RichFlatJoinFunction<CompressedDFSCode, CompressedDFSCode, Boolean> {
+  extends RichFlatJoinFunction<CompressedDfsCode, CompressedDfsCode, Boolean> {
 
   private DfsCodeTranslator translator;
 
@@ -23,7 +23,7 @@ public class EqualSupport
 
   @Override
   public void join(
-    CompressedDFSCode left, CompressedDFSCode right, Collector<Boolean> collector
+    CompressedDfsCode left, CompressedDfsCode right, Collector<Boolean> collector
   ) throws Exception {
 
     String out;

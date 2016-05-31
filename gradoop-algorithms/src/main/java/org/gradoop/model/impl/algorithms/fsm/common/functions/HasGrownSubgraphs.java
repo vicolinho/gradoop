@@ -29,7 +29,6 @@ public class HasGrownSubgraphs
 
   @Override
   public boolean filter(IterationItem iterationItem) throws Exception {
-
     return iterationItem.getTransaction().hasGrownSubgraphs();
   }
 }

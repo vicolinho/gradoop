@@ -94,6 +94,13 @@ public class GSpanEdge
     return comparison;
   }
 
+  @Override
+  public String toString() {
+    return "(" + getSourceId() + ":" + getSourceLabel() + ")-[" +
+      getEdgeId() + ":" + getLabel() +
+      "]->(" + getTargetId() + ":" + getTargetLabel() + ")";
+  }
+
   public boolean sourceIsMinimumLabel() {
     return sourceLabel <= targetLabel;
   }

@@ -19,7 +19,7 @@ package org.gradoop.model.impl.algorithms.fsm.common.gspan;
 
 
 
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSCode;
+import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSStep;
 
 import java.io.Serializable;
@@ -29,7 +29,7 @@ import java.util.Iterator;
 /**
  * Step-wise comparator for DFS codes.
  */
-public class DfsCodeComparator implements Comparator<DFSCode>, Serializable {
+public class DfsCodeComparator implements Comparator<DfsCode>, Serializable {
 
   /**
    * step comparator
@@ -45,7 +45,7 @@ public class DfsCodeComparator implements Comparator<DFSCode>, Serializable {
   }
 
   @Override
-  public int compare(DFSCode c1, DFSCode c2) {
+  public int compare(DfsCode c1, DfsCode c2) {
     int comparison = 0;
 
     Iterator<DFSStep> i1 = c1.getSteps().iterator();

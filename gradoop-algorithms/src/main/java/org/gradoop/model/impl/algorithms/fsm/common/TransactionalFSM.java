@@ -18,7 +18,6 @@
 package org.gradoop.model.impl.algorithms.fsm.common;
 
 import org.apache.flink.api.java.DataSet;
-import org.apache.flink.api.java.tuple.Tuple3;
 import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
@@ -27,10 +26,8 @@ import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMDecoder;
 import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMEncoder;
 import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMiner;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
 import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTriple;
-import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTripleWithoutTargetLabel;
-import org.gradoop.model.impl.id.GradoopId;
 
 /**
  * abstract superclass of different implementations of the gSpan frequent
@@ -72,7 +69,7 @@ public abstract class TransactionalFSM
 
     DataSet<EdgeTriple> edges = encoder.encode(collection, fsmConfig);
 
-    DataSet<CompressedDFSCode> frequentDfsCodes = miner
+    DataSet<CompressedDfsCode> frequentDfsCodes = miner
       .mine(edges, encoder.getMinSupport(), fsmConfig);
 
     return decoder.decode(

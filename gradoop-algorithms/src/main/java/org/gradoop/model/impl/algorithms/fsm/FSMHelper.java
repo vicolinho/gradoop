@@ -7,7 +7,7 @@ import org.gradoop.model.api.EPGMVertex;
 import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.tuples.GraphTransaction;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
 
 public class FSMHelper
 {
@@ -20,7 +20,7 @@ public class FSMHelper
     DataSet<GraphTransaction<G, V, E>> transactions = collection
       .toTransactions();
 
-    DataSet<CompressedDFSCode> minDfsCodes = transactions
+    DataSet<CompressedDfsCode> minDfsCodes = transactions
       .map(new MinDfsCode<G, V, E>(fsmConfig));
 
     System.out.println("\n");

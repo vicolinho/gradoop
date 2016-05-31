@@ -8,8 +8,8 @@ import org.gradoop.model.impl.algorithms.fsm.common
 import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.Frequent;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.GSpanTransaction;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
+import org.gradoop.model.impl.algorithms.fsm.common.pojos.GSpanTransaction;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine.functions.*;
 import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTriple;
 import org.gradoop.model.impl.functions.tuple.Value0Of3;
@@ -23,7 +23,7 @@ public class FilterRefineTransactionalFSMiner
 
 
   @Override
-  public DataSet<CompressedDFSCode> mine(DataSet<EdgeTriple> edges,
+  public DataSet<CompressedDfsCode> mine(DataSet<EdgeTriple> edges,
     DataSet<Integer> minSupport, FSMConfig fsmConfig) {
 
     setFsmConfig(fsmConfig);
@@ -41,12 +41,12 @@ public class FilterRefineTransactionalFSMiner
       .reduceGroup(new WorkerIdsGraphCounts());
 
     // FILTER round
-    DataSet<Tuple3<CompressedDFSCode, Integer, Boolean>> fsmResult =
+    DataSet<Tuple3<CompressedDfsCode, Integer, Boolean>> fsmResult =
       partitions
         // run local FSM
         .flatMap(new LocalTransactionalFSM(fsmConfig));
 
-    DataSet<Tuple3<CompressedDFSCode, Integer, Boolean>> filterResult =
+    DataSet<Tuple3<CompressedDfsCode, Integer, Boolean>> filterResult =
       fsmResult
         // group reports by DFS code
         .groupBy("0.0")
@@ -56,23 +56,23 @@ public class FilterRefineTransactionalFSMiner
         .withBroadcastSet(workerIdsGraphCount, BroadcastNames.WORKER_GRAPHCOUNT);
 
     // add globally frequent DFS codes to result
-    DataSet<CompressedDFSCode> frequentDfsCodes = filterResult
+    DataSet<CompressedDfsCode> frequentDfsCodes = filterResult
       .filter(new KnownToBeGloballyFrequent())
-      .map(new Value0Of3<CompressedDFSCode, Integer, Boolean>());
+      .map(new Value0Of3<CompressedDfsCode, Integer, Boolean>());
 
     // REFINEMENT
 
-    DataSet<Tuple3<CompressedDFSCode, Integer, Boolean>> refinementCandidates =
+    DataSet<Tuple3<CompressedDfsCode, Integer, Boolean>> refinementCandidates =
       filterResult
         .filter(new NeedsRefinement());
 
     // remember incomplete results
-    DataSet<CompressedDFSCode> incompleteResults = refinementCandidates
+    DataSet<CompressedDfsCode> incompleteResults = refinementCandidates
       .filter(new IncompleteResult())
-      .map(new Value0Of3<CompressedDFSCode, Integer, Boolean>());
+      .map(new Value0Of3<CompressedDfsCode, Integer, Boolean>());
 
     // get refined results
-    DataSet<CompressedDFSCode> refinementResults = refinementCandidates
+    DataSet<CompressedDfsCode> refinementResults = refinementCandidates
       .filter(new RefinementCall())
       .groupBy(1)
       .reduceGroup(new RefinementCalls())

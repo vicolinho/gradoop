@@ -7,13 +7,11 @@ public class EdgeTripleWithoutVertexIds
   extends Tuple4<GradoopId, Integer, Integer, Integer> {
 
   public EdgeTripleWithoutVertexIds() {
-
   }
 
   public EdgeTripleWithoutVertexIds(GradoopId graphId,
     Integer edgeLabel, Integer sourceLabel, Integer targetLabel) {
     super(graphId, edgeLabel, sourceLabel, targetLabel);
-
   }
 
   public Integer getEdgeLabel() {

@@ -1,13 +1,13 @@
 package org.gradoop.model.impl.algorithms.fsm.common.gspan;
 
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSCode;
+import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSStep;
 
 import java.io.Serializable;
 import java.util.Comparator;
 
 public class DfsCodeSiblingComparator
-  implements Comparator<DFSCode>, Serializable {
+  implements Comparator<DfsCode>, Serializable {
 
   private final boolean directed;
 
@@ -16,7 +16,7 @@ public class DfsCodeSiblingComparator
   }
 
   @Override
-  public int compare(DFSCode c1, DFSCode c2) {
+  public int compare(DfsCode c1, DfsCode c2) {
 
     DFSStep e1 = c1.getLastStep();
     DFSStep e2 = c2.getLastStep();

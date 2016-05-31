@@ -8,7 +8,7 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -19,8 +19,8 @@ import java.util.Map;
  */
 public class FrequentOrRefinementCandidate
   extends RichGroupReduceFunction
-  <Tuple3<CompressedDFSCode, Integer, Boolean>,
-    Tuple3<CompressedDFSCode, Integer, Boolean>> {
+  <Tuple3<CompressedDfsCode, Integer, Boolean>,
+    Tuple3<CompressedDfsCode, Integer, Boolean>> {
 
   private final float threshold;
   /**
@@ -47,11 +47,11 @@ public class FrequentOrRefinementCandidate
 
   @Override
   public void reduce(
-    Iterable<Tuple3<CompressedDFSCode, Integer, Boolean>> iterable,
-    Collector<Tuple3<CompressedDFSCode, Integer, Boolean>> collector) throws
+    Iterable<Tuple3<CompressedDfsCode, Integer, Boolean>> iterable,
+    Collector<Tuple3<CompressedDfsCode, Integer, Boolean>> collector) throws
     Exception {
 
-    ArrayList<Tuple3<CompressedDFSCode, Integer, Boolean>> x =
+    ArrayList<Tuple3<CompressedDfsCode, Integer, Boolean>> x =
       Lists.newArrayList(iterable);
 
     // copy list of all workers
@@ -60,12 +60,12 @@ public class FrequentOrRefinementCandidate
 
     // init aggregate variables
     boolean first = true;
-    CompressedDFSCode code = null;
+    CompressedDfsCode code = null;
     int support = 0;
     boolean atLeastOnceLocallyFrequent = false;
 
     // for each worker report
-    for(Tuple3<CompressedDFSCode, Integer, Boolean> triple : x) {
+    for(Tuple3<CompressedDfsCode, Integer, Boolean> triple : x) {
       code = triple.f0;
 
       Integer reportedWorkerId = triple.f1;

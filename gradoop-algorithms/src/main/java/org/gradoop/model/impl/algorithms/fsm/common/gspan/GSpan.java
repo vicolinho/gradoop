@@ -6,12 +6,12 @@ import org.apache.flink.hadoop.shaded.com.google.common.collect.Maps;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyListEntry;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSCode;
+import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSStep;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.GSpanEdge;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.GSpanTransaction;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
+import org.gradoop.model.impl.algorithms.fsm.common.pojos.GSpanTransaction;
 import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTriple;
 
 
@@ -37,34 +37,36 @@ public class GSpan {
     Iterable<EdgeTriple> triples) {
 
     // replace GradoopIds by Integer Ids
-    List<GSpanEdge> edges = convertEdges(triples);
+    List<GSpanEdge> edges = Lists.newArrayList();
+    List<AdjacencyList> adjacencyLists = Lists.newArrayList();
+    createAdjacencyListsAndEdges(triples, adjacencyLists, edges);
 
-    return createTransaction(edges);
+    return createTransaction(adjacencyLists, edges);
   }
 
-  private static GSpanTransaction createTransaction(CompressedDFSCode dfsCode) {
+  public static GSpanTransaction createTransaction(CompressedDfsCode dfsCode) {
 
     // turn DFS edges into gSpan edges
-    List<GSpanEdge> edges = convertEdges(dfsCode.getDfsCode().getSteps());
+    List<DFSStep> steps = dfsCode.getDfsCode().getSteps();
+    List<AdjacencyList> adjacencyLists = Lists.newArrayList();
+    List<GSpanEdge> edges = Lists.newArrayListWithExpectedSize(steps.size());
+    createAdjacencyListsAndEdges(steps, adjacencyLists, edges);
 
-    return createTransaction(edges);
+    return createTransaction(adjacencyLists, edges);
   }
 
-  private static GSpanTransaction createTransaction(List<GSpanEdge> edges) {
+  private static GSpanTransaction createTransaction(
+    List<AdjacencyList> adjacencyLists, List<GSpanEdge> edges) {
     // sort by min vertex label
     Collections.sort(edges);
 
     // create adjacency lists and 1-edge DFS codes with their embeddings
 
-    List<AdjacencyList> adjacencyLists = Lists.newArrayList();
-
-    Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings =
+    Map<CompressedDfsCode, Collection<DFSEmbedding>> codeEmbeddings =
       Maps.newHashMap();
 
     Iterator<GSpanEdge> iterator = edges.iterator();
     GSpanEdge lastEdge = iterator.next();
-
-    update(adjacencyLists, lastEdge);
 
     Collection<DFSEmbedding> embeddings =
       createNewDfsCodeEmbeddings(codeEmbeddings, lastEdge);
@@ -72,10 +74,8 @@ public class GSpan {
     while (iterator.hasNext()){
       GSpanEdge edge = iterator.next();
 
-      update(adjacencyLists, edge);
-
       // add embedding of 1-edge code
-      if (edge.equals(lastEdge)) {
+      if (edge.compareTo(lastEdge) == 0) {
         embeddings.add(initDfsEmbedding(edge));
       } else {
         embeddings = createNewDfsCodeEmbeddings(codeEmbeddings, edge);
@@ -86,27 +86,30 @@ public class GSpan {
     return new GSpanTransaction(adjacencyLists, codeEmbeddings);
   }
 
-
   /**
    * turns edge triples into gSpan edges,
    * i.e., replaces GradoopIds by local integer ids
    *
    * @param iterable edge triples with GradoopIds
-   * @return gSpan edges
+   * @param adjacencyLists
+   *@param edges  @return gSpan edges
    */
-  private static List<GSpanEdge> convertEdges(
-    final Iterable<EdgeTriple> iterable) {
-
-    List<GSpanEdge> edges = Lists.newArrayList();
+  private static void createAdjacencyListsAndEdges(
+    final Iterable<EdgeTriple> iterable,
+    final List<AdjacencyList> adjacencyLists, final List<GSpanEdge> edges) {
 
     Map<GradoopId, Integer> vertexIdMap = new HashMap<>();
     int vertexId = 0;
-    int edgeId = 0;
 
+    int edgeId = 0;
     for(EdgeTriple triple : iterable) {
+
+      Integer edgeLabel = triple.getEdgeLabel();
 
       GradoopId sourceGradoopId = triple.getSourceId();
       Integer sourceId = vertexIdMap.get(sourceGradoopId);
+      Integer sourceLabel = triple.getSourceLabel();
+
       if(sourceId == null) {
         sourceId = vertexId;
         vertexIdMap.put(sourceGradoopId, sourceId);
@@ -115,64 +118,105 @@ public class GSpan {
 
       GradoopId targetGradoopId = triple.getTargetId();
       Integer targetId = vertexIdMap.get(targetGradoopId);
+      Integer targetLabel = triple.getTargetLabel();
+
       if(targetId == null) {
         targetId = vertexId;
         vertexIdMap.put(targetGradoopId, targetId);
+
         vertexId++;
       }
 
-      edges.add(new GSpanEdge(
-        sourceId, triple.getSourceLabel(),
-        edgeId, triple.getEdgeLabel(),
-        targetId, triple.getTargetLabel()
-      ));
+      addEntries(edges, adjacencyLists,
+        sourceId, sourceLabel, edgeId, edgeLabel, targetId, targetLabel);
 
       edgeId++;
     }
-
-    return edges;
   }
 
-  private static List<GSpanEdge> convertEdges(List<DFSStep> steps) {
+  private static void addEntries(
+    final List<GSpanEdge> edges,
+    final List<AdjacencyList> adjacencyLists,
+    int sourceId, int sourceLabel,
+    int edgeId, int edgeLabel,
+    int targetId, int targetLabel) {
 
-    List<GSpanEdge> edges = Lists.newArrayListWithExpectedSize(steps.size());
+    edges.add(new GSpanEdge(
+      sourceId, sourceLabel, edgeId, edgeLabel, targetId, targetLabel));
+
+    if(sourceId <= targetId) {
+      addEntry(adjacencyLists,
+        sourceId, sourceLabel, true, edgeId, edgeLabel, targetId, targetLabel);
+
+      addEntry(adjacencyLists,
+        targetId, targetLabel, false, edgeId, edgeLabel, sourceId, sourceLabel);
+    } else {
+      addEntry(adjacencyLists,
+        sourceId, sourceLabel, true, edgeId, edgeLabel, targetId, targetLabel);
+
+      addEntry(adjacencyLists,
+        targetId, targetLabel, false, edgeId, edgeLabel, sourceId, sourceLabel);
+    }
+  }
+
+  private static void addEntry(final List<AdjacencyList> adjacencyLists,
+    int fromId, int fromLabel,
+    boolean outgoing, int edgeId, int edgeLabel,
+    int toId, int toLabel) {
+
+    AdjacencyList adjacencyList;
+
+    if (fromId >= adjacencyLists.size() ) {
+      adjacencyList = new AdjacencyList(fromLabel);
+      adjacencyLists.add(adjacencyList);
+    } else {
+      adjacencyList = adjacencyLists.get(fromId);
+    }
+
+    adjacencyList.getEntries().add(new AdjacencyListEntry(
+      outgoing, edgeId, edgeLabel, toId, toLabel));
+  }
+
+  private static void createAdjacencyListsAndEdges(final List<DFSStep> steps,
+    final List<AdjacencyList> adjacencyLists, final List<GSpanEdge> edges) {
 
     int edgeId = 0;
-
     for(DFSStep step : steps) {
-      int fromTime = step.getFromTime();
-      int fromLabel = step.getFromLabel();
-      int edgeLabel = step.getEdgeLabel();
-      int toTime = step.getToTime();
-      int toLabel = step.getToLabel();
 
-      GSpanEdge edge;
+      Integer edgeLabel = step.getEdgeLabel();
 
-      if (step.isLoop()) {
-        edge = new GSpanEdge(
-          fromTime, fromLabel, edgeId, edgeLabel, fromTime, fromLabel);
-      } else if (step.isOutgoing()) {
-        edge = new GSpanEdge(
-          fromTime, fromLabel, edgeId, edgeLabel, toTime, toLabel);
+      Integer sourceId;
+      Integer sourceLabel;
+
+      Integer targetId;
+      Integer targetLabel;
+
+      if (step.isOutgoing()) {
+        sourceId = step.getFromTime();
+        sourceLabel = step.getFromLabel();
+        targetId = step.getToTime();
+        targetLabel = step.getToLabel();
       } else {
-        edge = new GSpanEdge(
-          toTime, toLabel, edgeId, edgeLabel, fromTime, fromLabel);
+        sourceId = step.getToTime();
+        sourceLabel = step.getToLabel();
+        targetId = step.getFromTime();
+        targetLabel = step.getFromLabel();
       }
 
-      edges.add(edge);
+      addEntries(edges, adjacencyLists,
+        sourceId, sourceLabel, edgeId, edgeLabel, targetId, targetLabel);
 
       edgeId++;
     }
 
-    return edges;
   }
 
 
   private static Collection<DFSEmbedding> createNewDfsCodeEmbeddings(
-    Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings,
+    Map<CompressedDfsCode, Collection<DFSEmbedding>> codeEmbeddings,
     GSpanEdge edge) {
 
-    CompressedDFSCode code = initDfsCode(edge);
+    CompressedDfsCode code = initDfsCode(edge);
     DFSEmbedding embedding = initDfsEmbedding(edge);
     Collection<DFSEmbedding> embeddings = Lists.newArrayList(embedding);
     codeEmbeddings.put(code, embeddings);
@@ -184,15 +228,17 @@ public class GSpan {
     List<Integer> vertexTimes;
 
     if (edge.isLoop()) {
-      vertexTimes = Lists.newArrayList(0);
+      vertexTimes = Lists.newArrayList(edge.getSourceId());
+    } else if (edge.getSourceLabel() <= edge.getTargetLabel()) {
+      vertexTimes = Lists.newArrayList(edge.getSourceId(), edge.getTargetId());
     } else {
-      vertexTimes = Lists.newArrayList(0, 1);
+      vertexTimes = Lists.newArrayList(edge.getTargetId(), edge.getSourceId());
     }
 
-    return new DFSEmbedding(vertexTimes, Lists.newArrayList(0));
+    return new DFSEmbedding(vertexTimes, Lists.newArrayList(edge.getEdgeId()));
   }
 
-  private static CompressedDFSCode initDfsCode(final GSpanEdge edge) {
+  private static CompressedDfsCode initDfsCode(final GSpanEdge edge) {
 
     int sourceLabel = edge.getSourceLabel();
     int edgeLabel = edge.getLabel();
@@ -208,31 +254,33 @@ public class GSpan {
       step = new DFSStep(0, targetLabel, false, edgeLabel, 1, sourceLabel);
     }
 
-    return new CompressedDFSCode(new DFSCode(step));
+    return new CompressedDfsCode(new DfsCode(step));
   }
 
 
 
-  private static void update(
+  private static void createAdjacencyListEntries(
     List<AdjacencyList> adjacencyLists, GSpanEdge edge) {
+
+    System.out.println(adjacencyLists);
 
     int sourceId = edge.getSourceId();
     int sourceLabel = edge.getSourceLabel();
 
     int edgeId = edge.getEdgeId();
-    boolean loop = edge.isLoop();
     int edgeLabel = edge.getLabel();
 
     int targetId = edge.getTargetId();
     int targetLabel = edge.getTargetLabel();
 
+    AdjacencyList sourceAdjacencyList;
 
-    AdjacencyList sourceAdjacencyList =
+    sourceAdjacencyList =
       getOrCreateAdjacencyList(adjacencyLists, sourceId, sourceLabel);
 
     AdjacencyList targetAdjacencyList;
 
-    if(loop) {
+    if(edge.isLoop()) {
       targetAdjacencyList = sourceAdjacencyList;
     } else {
       targetAdjacencyList =
@@ -244,34 +292,36 @@ public class GSpan {
 
     targetAdjacencyList.getEntries().add(
       new AdjacencyListEntry(false, edgeId, edgeLabel, sourceId, sourceLabel));
+
+    System.out.println(adjacencyLists);
+
   }
 
   private static AdjacencyList getOrCreateAdjacencyList(
-    List<AdjacencyList> adjacencyLists, int sourceId, int sourceLabel) {
-    AdjacencyList sourceAdjacencyList;
+    final List<AdjacencyList> adjacencyLists, final int id, final int label) {
 
-    if(adjacencyLists.size() < sourceId) {
-      sourceAdjacencyList = new AdjacencyList(sourceLabel);
-      adjacencyLists.add(sourceId, sourceAdjacencyList);
-    } else {
-      sourceAdjacencyList = adjacencyLists.get(sourceId);
+    AdjacencyList adjacencyList = adjacencyLists.get(id);
+
+    if (adjacencyList == null) {
+      adjacencyList = new AdjacencyList(label);
+      adjacencyLists.add(id, adjacencyList);
     }
-    return sourceAdjacencyList;
+
+    return adjacencyList;
   }
 
   public static void growFrequentSubgraphs(final GSpanTransaction transaction,
-    Collection<CompressedDFSCode> frequentParentSubgraphs, FSMConfig fsmConfig)
+    Collection<CompressedDfsCode> frequentParentSubgraphs, FSMConfig fsmConfig)
   {
-    Map<CompressedDFSCode, Collection<DFSEmbedding>> childCodeEmbeddings = null;
+    Map<CompressedDfsCode, Collection<DFSEmbedding>> childCodeEmbeddings = null;
 
-    for(CompressedDFSCode compressedParentCode : frequentParentSubgraphs) {
+    for(CompressedDfsCode frequentSubgraph : frequentParentSubgraphs) {
       Collection<DFSEmbedding> parentEmbeddings =
-        transaction.getCodeEmbeddings().get(compressedParentCode);
+        transaction.getCodeEmbeddings().get(frequentSubgraph);
 
       if (parentEmbeddings != null) {
-        DFSCode parentCode = compressedParentCode.getDfsCode();
-
-        int minVertexLabel = parentCode.getMinVertexLabel();
+        DfsCode parentCode = frequentSubgraph.getDfsCode();
+        int minVertexLabel = frequentSubgraph.getMinVertexLabel();
 
         List<Integer> rightmostPath = parentCode.getRightMostPathVertexTimes();
 
@@ -280,16 +330,21 @@ public class GSpan {
 
           // first iterated vertex is rightmost
           Boolean rightMostVertex = true;
-          List<Integer> vertexTimes = parentEmbedding.getVertexTimes();
+
+          Set<Integer> visitedEdges =
+            Sets.newHashSet(parentEmbedding.getEdgeTimes());
+
+          Map<Integer, Integer> vertexIdTime = mapVertexTimes(parentEmbedding);
 
           // for each time on rightmost path
           for (Integer fromVertexTime : rightmostPath) {
-            Integer fromVertexId = vertexTimes.get(fromVertexTime);
-
+            Integer fromVertexId =
+              parentEmbedding.getVertexTimes().get(fromVertexTime);
 
             // query fromVertex data
             AdjacencyList adjacencyList =
               transaction.getAdjacencyLists().get(fromVertexId);
+
             Integer fromVertexLabel = adjacencyList.getFromVertexLabel();
 
             // for each incident edge
@@ -303,12 +358,13 @@ public class GSpan {
                 Integer edgeId = entry.getEdgeId();
 
                 // if edge not already contained
-                if (!parentEmbedding.getEdgeTimes().contains(edgeId)) {
+                if (!visitedEdges.contains(edgeId)) {
 
                   // query toVertexData
                   Integer toVertexId = entry.getToVertexId();
-                  Integer toVertexTime = vertexTimes.indexOf(toVertexId);
-                  boolean forward = toVertexTime < 0;
+                  Integer toVertexTime = vertexIdTime.get(toVertexId);
+
+                  boolean forward = toVertexTime == null;
 
                   // PRUNING : grow only forward
                   // or backward from rightmost vertex
@@ -316,12 +372,12 @@ public class GSpan {
 
                     DFSEmbedding childEmbedding =
                       DFSEmbedding.deepCopy(parentEmbedding);
-                    DFSCode childCode = DFSCode.deepCopy(parentCode);
+                    DfsCode childCode = DfsCode.deepCopy(parentCode);
 
                     // add new vertex to embedding for forward steps
                     if (forward) {
                       childEmbedding.getVertexTimes().add(toVertexId);
-                      toVertexTime = childEmbedding.getVertexTimes().size() - 1;
+                      toVertexTime = vertexIdTime.size();
                     }
 
                     childCode.getSteps().add(new DFSStep(
@@ -329,13 +385,14 @@ public class GSpan {
                       fromVertexLabel,
                       entry.isOutgoing(),
                       entry.getEdgeLabel(),
-                      toVertexTime, toVertexLabel
+                      toVertexTime,
+                      toVertexLabel
                     ));
 
                     childEmbedding.getEdgeTimes().add(edgeId);
 
-                    CompressedDFSCode compressedChildCode =
-                      new CompressedDFSCode(childCode);
+                    CompressedDfsCode compressedChildCode =
+                      new CompressedDfsCode(childCode);
 
                     childCodeEmbeddings = addCodeEmbedding(
                       childCodeEmbeddings, compressedChildCode, childEmbedding);
@@ -353,22 +410,37 @@ public class GSpan {
     transaction.setCodeEmbeddings(childCodeEmbeddings);
   }
 
-  private static CompressedDFSCode minimumDfsCode(
-    final Collection<CompressedDFSCode> dfsCodes, final FSMConfig fsmConfig) {
+  private static Map<Integer, Integer> mapVertexTimes(DFSEmbedding embedding) {
+    Map<Integer, Integer> vertexTimes = Maps.newHashMapWithExpectedSize(
+        embedding.getVertexTimes().size());
 
-    Iterator<CompressedDFSCode> iterator = dfsCodes.iterator();
+    int vertexTime = 0;
+    for(int vertexId : embedding.getVertexTimes()) {
+      vertexTimes.put(vertexId, vertexTime);
+      vertexTime++;
+    }
+    return vertexTimes;
+  }
 
-    DFSCode minCode = iterator.next().getDfsCode();
+  public static CompressedDfsCode minimumDfsCode(
+    final Collection<CompressedDfsCode> dfsCodes, final FSMConfig fsmConfig) {
 
-    for(CompressedDFSCode compressedDFSCode : dfsCodes) {
-      DFSCode nextCode = compressedDFSCode.getDfsCode();
+    Iterator<CompressedDfsCode> iterator = dfsCodes.iterator();
+
+    DfsCode minCode = iterator.next().getDfsCode();
+
+    for(CompressedDfsCode subgraph : dfsCodes) {
+      DfsCode nextCode = subgraph.getDfsCode();
 
       if(getSiblingComparator(fsmConfig).compare(nextCode, minCode) < 0) {
         minCode = nextCode;
       }
     }
 
-    return new CompressedDFSCode(minCode);
+    CompressedDfsCode minSubgraph = new CompressedDfsCode(minCode);
+    minSubgraph.setMinVertexLabel(minCode.getMinVertexLabel());
+
+    return minSubgraph;
   }
 
   private static DfsCodeSiblingComparator getSiblingComparator(
@@ -376,36 +448,10 @@ public class GSpan {
     return new DfsCodeSiblingComparator(fsmConfig.isDirected());
   }
 
-  private static Set<CompressedDFSCode> addSibling(
-    Set<CompressedDFSCode> siblings, CompressedDFSCode code) {
-
-    if (siblings == null) {
-      siblings = Sets.newHashSet(code);
-    } else {
-      siblings.add(code);
-    }
-
-    return siblings;
-  }
-
-  private static Collection<Set<CompressedDFSCode>> addSiblings(
-    Collection<Set<CompressedDFSCode>> siblingGroups,
-    Set<CompressedDFSCode> siblings) {
-
-    if(siblings != null) {
-      if (siblingGroups == null) {
-        siblingGroups = Lists.newArrayList();
-      }
-      siblingGroups.add(siblings);
-    }
-
-    return siblingGroups;
-  }
-
-  private static Map<CompressedDFSCode, Collection<DFSEmbedding>>
+  private static Map<CompressedDfsCode, Collection<DFSEmbedding>>
   addCodeEmbedding(
-    Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings,
-    CompressedDFSCode code, DFSEmbedding embedding) {
+    Map<CompressedDfsCode, Collection<DFSEmbedding>> codeEmbeddings,
+    CompressedDfsCode code, DFSEmbedding embedding) {
 
     Collection<DFSEmbedding> embeddings;
 
@@ -424,85 +470,30 @@ public class GSpan {
     return codeEmbeddings;
   }
 
-  public static boolean isValidMinimumDfsCode(
-    CompressedDFSCode compressedDFSCode, FSMConfig fsmConfig) {
+  public static boolean isMinimumDfsCode(
+    CompressedDfsCode subgraph, FSMConfig fsmConfig) {
 
-    GSpanTransaction transaction = createTransaction(compressedDFSCode);
+    GSpanTransaction transaction = createTransaction(subgraph);
+    CompressedDfsCode minDfsCode = getMinimumDFSCode(transaction, fsmConfig);
 
-    CompressedDFSCode minDfsCode = null;
+    return subgraph.equals(minDfsCode);
+  }
+
+  public static CompressedDfsCode getMinimumDFSCode(
+    GSpanTransaction transaction, FSMConfig fsmConfig) {
+    CompressedDfsCode minDfsCode = null;
 
     while (transaction.hasGrownSubgraphs()) {
-      minDfsCode = minimumDfsCode(
-        transaction.getCodeEmbeddings().keySet(), fsmConfig);
+      Set<CompressedDfsCode> grownSubgraphs =
+        transaction.getCodeEmbeddings().keySet();
+
+      minDfsCode = minimumDfsCode(grownSubgraphs, fsmConfig);
+
 
       growFrequentSubgraphs(
         transaction, Lists.newArrayList(minDfsCode), fsmConfig);
+
     }
-
-    return compressedDFSCode.equals(minDfsCode);
-  }
-
-  private static void addEmbedding(Collection<DFSEmbedding> embeddings,
-    int edgeId, DFSStep step, boolean inverse) {
-
-    List<Integer> vertexTimes;
-
-    if (step.isLoop()) {
-      vertexTimes = Lists.newArrayList(step.getFromTime());
-    } else if(!inverse) {
-      vertexTimes = Lists.newArrayList(step.getFromTime(), step.getToTime());
-    } else {
-      vertexTimes = Lists.newArrayList(step.getToTime(), step.getFromTime());
-    }
-
-    List<Integer> edgeTimes = Lists.newArrayList(edgeId);
-    embeddings.add(new DFSEmbedding(vertexTimes, edgeTimes));
-  }
-
-  private static boolean inversePattern(DFSStep firstStep, DFSStep secondStep) {
-    return ! secondStep.isOutgoing().equals(firstStep.isOutgoing()) &&
-      secondStep.isLoop().equals(firstStep.isLoop()) &&
-      secondStep.getFromLabel().equals(firstStep.getToLabel()) &&
-      secondStep.getToLabel().equals(firstStep.getFromLabel());
-  }
-
-  private static boolean samePattern(DFSStep firstStep, DFSStep secondStep) {
-    return secondStep.isOutgoing().equals(firstStep.isOutgoing()) &&
-      secondStep.isLoop().equals(firstStep.isLoop()) &&
-      secondStep.getFromLabel().equals(firstStep.getFromLabel()) &&
-      secondStep.getToLabel().equals(firstStep.getToLabel());
-  }
-
-  private static void addEntry(List<AdjacencyList> adjacencyLists,
-    int fromId, int fromLabel, boolean outgoing, int edgeId, int edgeLabel,
-    int toId, int toLabel) {
-
-    AdjacencyList adjacencyList = adjacencyLists.get(fromId);
-
-    AdjacencyListEntry entry =
-      new AdjacencyListEntry(outgoing, edgeId, edgeLabel, toId, toLabel);
-
-    if(adjacencyList == null) {
-      adjacencyLists.add(fromId, new AdjacencyList(fromLabel, entry));
-    } else {
-      adjacencyList.getEntries().add(entry);
-    }
-  }
-
-  private static Collection<Set<CompressedDFSCode>> initCodeSiblings(
-    CompressedDFSCode startCode) {
-    Set<CompressedDFSCode> siblings = Sets.newHashSet(startCode);
-    Collection<Set<CompressedDFSCode>> codeSiblings =
-      Lists.newArrayListWithExpectedSize(1);
-    codeSiblings.add(siblings);
-    return codeSiblings;
-  }
-
-  private static Map<CompressedDFSCode, Collection<DFSEmbedding>> initCodeEmbeddings(
-    CompressedDFSCode startCode, Collection<DFSEmbedding> embeddings) {
-    Map<CompressedDFSCode, Collection<DFSEmbedding>> codeEmbeddings =
-      Maps.newHashMap();
-    codeEmbeddings.put(startCode, embeddings);
-    return codeEmbeddings;
+    return minDfsCode;
   }
 }

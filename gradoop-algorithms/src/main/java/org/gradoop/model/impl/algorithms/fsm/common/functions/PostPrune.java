@@ -4,10 +4,10 @@ import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.gspan.GSpan;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
 
 public class PostPrune
-  implements FlatMapFunction<CompressedDFSCode, CompressedDFSCode> {
+  implements FlatMapFunction<CompressedDfsCode, CompressedDfsCode> {
 
   private final FSMConfig fsmConfig;
 
@@ -16,11 +16,11 @@ public class PostPrune
   }
 
   @Override
-  public void flatMap(CompressedDFSCode compressedDFSCode,
-    Collector<CompressedDFSCode> collector) throws Exception {
+  public void flatMap(CompressedDfsCode subgraph,
+    Collector<CompressedDfsCode> collector) throws Exception {
 
-    if (GSpan.isValidMinimumDfsCode(compressedDFSCode, fsmConfig)) {
-      collector.collect(compressedDFSCode);
+    if (GSpan.isMinimumDfsCode(subgraph, fsmConfig)) {
+      collector.collect(subgraph);
     }
   }
 }

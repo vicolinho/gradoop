@@ -17,9 +17,9 @@
 
 package org.gradoop.model.impl.algorithms.fsm.iterative.tuples;
 
-import com.google.common.collect.Lists;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDFSCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.GSpanTransaction;
+import org.apache.commons.lang.StringUtils;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
+import org.gradoop.model.impl.algorithms.fsm.common.pojos.GSpanTransaction;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -28,14 +28,14 @@ public class IterationItem implements Serializable {
 
 
   private final GSpanTransaction transaction;
-  private final Collection<CompressedDFSCode> frequentSubgraphs;
+  private final Collection<CompressedDfsCode> frequentSubgraphs;
 
   public IterationItem(GSpanTransaction transaction) {
     this.transaction = transaction;
     this.frequentSubgraphs = null;
   }
 
-  public IterationItem(Collection<CompressedDFSCode> frequentSubgraphs) {
+  public IterationItem(Collection<CompressedDfsCode> frequentSubgraphs) {
     this.transaction = null;
     this.frequentSubgraphs = frequentSubgraphs;
   }
@@ -45,7 +45,7 @@ public class IterationItem implements Serializable {
     return transaction != null;
   }
 
-  public Boolean isCollector() {
+  public boolean isCollector() {
     return frequentSubgraphs != null;
   }
 
@@ -53,7 +53,14 @@ public class IterationItem implements Serializable {
     return this.transaction;
   }
 
-  public Collection<CompressedDFSCode> getFrequentSubgraphs() {
+  public Collection<CompressedDfsCode> getFrequentSubgraphs() {
     return this.frequentSubgraphs;
+  }
+
+  @Override
+  public String toString() {
+    return isCollector() ?
+      "Collector:\n" +  StringUtils.join(frequentSubgraphs, "\n") :
+      "Transaction:\n" + transaction.toString();
   }
 }
