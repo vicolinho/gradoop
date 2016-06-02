@@ -16,6 +16,7 @@ import org.gradoop.model.impl.algorithms.fsm.common.functions.FullEdge;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.FullVertex;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.VertexLabelDecoder;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.Supportable;
 import org.gradoop.model.impl.functions.tuple.Value0Of3;
 import org.gradoop.model.impl.id.GradoopId;
 import org.gradoop.util.GradoopFlinkConfig;
@@ -38,19 +39,18 @@ public class GradoopTransactionalFSMDecoder
 
   /**
    * turns a data set of DFS codes into a graph collection
-   * @param frequentDfsCodes DFS code data set
    * @return graph collection
    */
   @Override
   public GraphCollection<G, V, E> decode(
-    DataSet<CompressedDfsCode> frequentDfsCodes,
+    DataSet<Supportable<CompressedDfsCode>> codes,
     DataSet<List<String>> vertexLabelDictionary,
     DataSet<List<String>> edgeLabelDictionary) {
 
 
     DataSet<Tuple3<G, ArrayList<Tuple2<GradoopId, Integer>>,
       ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>> frequentSubgraphs =
-      frequentDfsCodes
+      codes
         .map(new DfsDecoder<>(gradoopConfig.getGraphHeadFactory()));
 
     DataSet<G> graphHeads = frequentSubgraphs

@@ -5,12 +5,13 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.common.DfsCodeTranslator;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.Supportable;
 
 /**
  * Created by peet on 20.05.16.
  */
 public class EqualSupport
-  extends RichFlatJoinFunction<CompressedDfsCode, CompressedDfsCode, Boolean> {
+  extends RichFlatJoinFunction<Supportable<CompressedDfsCode>, Supportable<CompressedDfsCode>, Boolean> {
 
   private DfsCodeTranslator translator;
 
@@ -23,18 +24,18 @@ public class EqualSupport
 
   @Override
   public void join(
-    CompressedDfsCode left, CompressedDfsCode right, Collector<Boolean> collector
+    Supportable<CompressedDfsCode> left, Supportable<CompressedDfsCode> right, Collector<Boolean> collector
   ) throws Exception {
 
     String out;
 
     if(right == null) {
       out = translator.translate(
-        left.getDfsCode()) + " " + left.getSupport() + "/-";
+        left.getObject().getDfsCode()) + " " + left.getSupport() + "/-";
     } else if(left == null) {
-      out = translator.translate(right.getDfsCode()) + " -/" + right.getSupport();
+      out = translator.translate(right.getObject().getDfsCode()) + " -/" + right.getSupport();
     } else {
-      out = translator.translate(left.getDfsCode()) +
+      out = translator.translate(left.getObject().getDfsCode()) +
         " "  + left.getSupport() + "/" + right.getSupport();
     }
 
@@ -43,7 +44,7 @@ public class EqualSupport
 
     if(! equal) {
       System.out.println(out + " " +
-        (left == null ? right.getDfsCode() : left.getDfsCode()));
+        (left == null ? right.getObject().getDfsCode() : left.getObject().getDfsCode()));
     }
 
     collector.collect(equal);

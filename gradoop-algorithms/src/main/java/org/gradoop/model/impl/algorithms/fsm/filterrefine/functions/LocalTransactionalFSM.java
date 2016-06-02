@@ -4,19 +4,20 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.gspan.GSpan;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
+import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.GSpanTransaction;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.Supportable;
+import org.gradoop.model.impl.algorithms.fsm.filterrefine.tuples.SubgraphMessage;
 
 import java.util.Collection;
 import java.util.Map;
 
 public class LocalTransactionalFSM implements FlatMapFunction
-  <Tuple2<Integer, Collection<GSpanTransaction>>,
-    Tuple3<CompressedDfsCode, Integer,  Boolean>> {
+  <Tuple2<Integer, Collection<GSpanTransaction>>, SubgraphMessage> {
 
   private final FSMConfig fsmConfig;
 
@@ -26,7 +27,7 @@ public class LocalTransactionalFSM implements FlatMapFunction
 
   @Override
   public void flatMap(Tuple2<Integer, Collection<GSpanTransaction>> pair,
-    Collector<Tuple3<CompressedDfsCode, Integer, Boolean>> collector
+    Collector<SubgraphMessage> collector
   ) throws Exception {
     Collection<GSpanTransaction> transactions = pair.f1;
 
@@ -35,41 +36,40 @@ public class LocalTransactionalFSM implements FlatMapFunction
     int minLikelySupport =
       (int) (fsmConfig.getLikelinessThreshold() * (float) graphCount) - 1;
 
-    Collection<CompressedDfsCode> allLocallyFrequentSubgraphs =
+    Collection<Supportable<DfsCode>> allLocallyFrequentSubgraphs =
       Lists.newArrayList();
-    Collection<CompressedDfsCode> likelyFrequentSubgraphs =
+    Collection<Supportable<DfsCode>> likelyFrequentSubgraphs =
       Lists.newArrayList();
-    Collection<CompressedDfsCode> currentFrequentSubgraphs = null;
+    Collection<Supportable<DfsCode>> currentFrequentSubgraphs = null;
 
     int edgeCount = 1;
     do {
       // count support
-      Map<CompressedDfsCode, Integer> codeSupport = countSupport(transactions);
+      Map<DfsCode, Integer> codeSupport = countSupport(transactions);
 
       currentFrequentSubgraphs = Lists.newArrayList();
 
-      for (Map.Entry<CompressedDfsCode, Integer> entry : codeSupport.entrySet())
+      for (Map.Entry<DfsCode, Integer> entry : codeSupport.entrySet())
       {
-        CompressedDfsCode code = entry.getKey();
+        DfsCode code = entry.getKey();
         int support = entry.getValue();
 
         if (support >= minSupport) {
           if(GSpan.isMinimumDfsCode(code, fsmConfig)) {
-            code.setSupport(support);
-            currentFrequentSubgraphs.add(code);
-            allLocallyFrequentSubgraphs.add(code);
+            Supportable<DfsCode> supportable = new Supportable<>(code, support);
+            currentFrequentSubgraphs.add(supportable);
+            allLocallyFrequentSubgraphs.add(supportable);
           }
         } else if (support >= minLikelySupport) {
           if (GSpan.isMinimumDfsCode(code, fsmConfig)) {
-            code.setSupport(support);
-            likelyFrequentSubgraphs.add(code);
+            likelyFrequentSubgraphs.add(new Supportable<>(code, support));
           }
         }
       }
 
       for (GSpanTransaction transaction : transactions) {
         GSpan.growFrequentSubgraphs(
-          transaction, currentFrequentSubgraphs, fsmConfig);
+          transaction, unwrap(currentFrequentSubgraphs), fsmConfig);
       }
 
       edgeCount++;
@@ -80,13 +80,25 @@ public class LocalTransactionalFSM implements FlatMapFunction
       allLocallyFrequentSubgraphs, likelyFrequentSubgraphs);
   }
 
-  private Map<CompressedDfsCode, Integer> countSupport(
+  private Collection<DfsCode> unwrap(Collection<Supportable<DfsCode>> wrappedCodes) {
+
+    Collection<DfsCode> codes = Lists.newArrayListWithExpectedSize(wrappedCodes.size());
+
+
+    for (Supportable<DfsCode> wrappedCode : wrappedCodes) {
+      codes.add(wrappedCode.getObject());
+    }
+
+    return codes;
+  }
+
+  private Map<DfsCode, Integer> countSupport(
     Collection<GSpanTransaction> transactions) {
 
-    Map<CompressedDfsCode, Integer> codeSupport = Maps.newHashMap();
+    Map<DfsCode, Integer> codeSupport = Maps.newHashMap();
 
     for (GSpanTransaction transaction : transactions) {
-      for (CompressedDfsCode code : transaction.getCodeEmbeddings().keySet()) {
+      for (DfsCode code : transaction.getCodeEmbeddings().keySet()) {
 
         Integer support = codeSupport.get(code);
         support = support == null ? 1 : support + 1;
@@ -100,16 +112,20 @@ public class LocalTransactionalFSM implements FlatMapFunction
 
 
   private void collect(
-    Collector<Tuple3<CompressedDfsCode, Integer, Boolean>> collector,
-    int workerId, Collection<CompressedDfsCode> locallyFrequentDfsCodes,
-    Collection<CompressedDfsCode> likelyFrequentDfsCodes) {
-    for(CompressedDfsCode subgraph : locallyFrequentDfsCodes)
+    Collector<SubgraphMessage> collector,
+    int workerId, Collection<Supportable<DfsCode>> locallyFrequentDfsCodes,
+    Collection<Supportable<DfsCode>> likelyFrequentDfsCodes) {
+    for(Supportable<DfsCode> subgraph : locallyFrequentDfsCodes)
     {
-      collector.collect(new Tuple3<>(subgraph, workerId, true));
+      collector.collect(new SubgraphMessage(
+        new CompressedDfsCode(subgraph.getObject()),
+        subgraph.getSupport(), workerId, true));
     }
-    for(CompressedDfsCode subgraph : likelyFrequentDfsCodes)
+    for(Supportable<DfsCode> subgraph : likelyFrequentDfsCodes)
     {
-      collector.collect(new Tuple3<>(subgraph, workerId, false));
+      collector.collect(new SubgraphMessage(
+        new CompressedDfsCode(subgraph.getObject()),
+        subgraph.getSupport(), workerId, false));
     }
   }
 }

@@ -27,9 +27,10 @@ import org.apache.flink.api.java.typeutils.TupleTypeInfo;
 import org.apache.flink.api.java.typeutils.TypeExtractor;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMGraphHeadFactory;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSStep;
+import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.Supportable;
 import org.gradoop.model.impl.id.GradoopId;
 
 import java.util.ArrayList;
@@ -37,14 +38,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * CompressedDfsCode => (Graph, Vertex, Edge)
+ * Supportable<CompressedDfsCode> => (Graph, Vertex, Edge)
  * @param <G> graph type
  */
 public class DfsDecoder<G extends EPGMGraphHead> implements
   ResultTypeQueryable<Tuple3<G,
       ArrayList<Tuple2<GradoopId, Integer>>,
       ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>>,
-  MapFunction<CompressedDfsCode,Tuple3<G,
+  MapFunction<Supportable<CompressedDfsCode>,Tuple3<G,
       ArrayList<Tuple2<GradoopId, Integer>>,
       ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>> {
 
@@ -56,11 +57,11 @@ public class DfsDecoder<G extends EPGMGraphHead> implements
   @Override
   public Tuple3<G, ArrayList<Tuple2<GradoopId, Integer>>,
     ArrayList<Tuple3<GradoopId, GradoopId, Integer>>> map(
-    CompressedDfsCode compressedDfsCode) throws  Exception {
+    Supportable<CompressedDfsCode> compressedDfsCode) throws  Exception {
 
 //    System.out.println(compressedDfsCode);
 
-    DfsCode dfsCode = compressedDfsCode.getDfsCode();
+    DfsCode dfsCode = compressedDfsCode.getObject().getDfsCode();
 
     G graphHead = graphHeadFactory.createGraphHead();
 

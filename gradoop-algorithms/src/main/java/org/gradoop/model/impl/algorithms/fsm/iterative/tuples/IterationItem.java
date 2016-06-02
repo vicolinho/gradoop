@@ -20,6 +20,7 @@ package org.gradoop.model.impl.algorithms.fsm.iterative.tuples;
 import org.apache.commons.lang.StringUtils;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.GSpanTransaction;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.Supportable;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -28,14 +29,14 @@ public class IterationItem implements Serializable {
 
 
   private final GSpanTransaction transaction;
-  private final Collection<CompressedDfsCode> frequentSubgraphs;
+  private final Collection<Supportable<CompressedDfsCode>> frequentSubgraphs;
 
   public IterationItem(GSpanTransaction transaction) {
     this.transaction = transaction;
     this.frequentSubgraphs = null;
   }
 
-  public IterationItem(Collection<CompressedDfsCode> frequentSubgraphs) {
+  public IterationItem(Collection<Supportable<CompressedDfsCode>> frequentSubgraphs) {
     this.transaction = null;
     this.frequentSubgraphs = frequentSubgraphs;
   }
@@ -53,7 +54,7 @@ public class IterationItem implements Serializable {
     return this.transaction;
   }
 
-  public Collection<CompressedDfsCode> getFrequentSubgraphs() {
+  public Collection<Supportable<CompressedDfsCode>> getFrequentSubgraphs() {
     return this.frequentSubgraphs;
   }
 

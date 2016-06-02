@@ -8,28 +8,18 @@ import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.api.EPGMElement;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
-import org.gradoop.model.impl.tuples.GraphTransaction;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.gspan.GSpan;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyListEntry;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSStep;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.GSpanTransaction;
+import org.gradoop.model.impl.algorithms.fsm.common.pojos.*;
 import org.gradoop.model.impl.id.GradoopId;
+import org.gradoop.model.impl.tuples.GraphTransaction;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 
 public class MinDfsCode
   <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge>
-  implements MapFunction<GraphTransaction<G, V, E>, CompressedDfsCode> {
+  implements MapFunction<GraphTransaction<G, V, E>, DfsCode> {
 
   private final FSMConfig fsmConfig;
 
@@ -38,7 +28,7 @@ public class MinDfsCode
   }
 
   @Override
-  public CompressedDfsCode map(GraphTransaction<G, V, E> graphTransaction
+  public DfsCode map(GraphTransaction<G, V, E> graphTransaction
   ) throws Exception {
     List<String> vertexLabelDictionary = createDictionary
       (graphTransaction.getVertices());
@@ -52,13 +42,13 @@ public class MinDfsCode
     encodeVertices(graphTransaction.getVertices(),
       vertexLabelDictionary, vertexMap, adjacencyLists);
 
-    Map<CompressedDfsCode, Collection<DFSEmbedding>> codeEmbeddings =
+    Map<DfsCode, Collection<DFSEmbedding>> codeEmbeddings =
       Maps.newHashMap();
 
     encodeEdges(codeEmbeddings,
       graphTransaction.getEdges(), edgeLabelDictionary, vertexMap, adjacencyLists);
 
-    Collection<Set<CompressedDfsCode>> codeSiblings =
+    Collection<Set<DfsCode>> codeSiblings =
       Lists.newArrayList();
 
     codeSiblings.add(Sets.newHashSet(codeEmbeddings.keySet()));
@@ -70,7 +60,7 @@ public class MinDfsCode
   }
 
   private void encodeEdges(
-    Map<CompressedDfsCode, Collection<DFSEmbedding>> codeEmbeddings,
+    Map<DfsCode, Collection<DFSEmbedding>> codeEmbeddings,
     Set<E> edges,
     List<String> edgeLabelDictionary, Map<GradoopId, Integer> vertexMap,
     List<AdjacencyList> adjacencyLists) {
@@ -105,7 +95,7 @@ public class MinDfsCode
         vertexTimes = Lists.newArrayList(targetId, sourceId);
       }
 
-      CompressedDfsCode code = new CompressedDfsCode(new DfsCode(step));
+      DfsCode code = new DfsCode(step);
       DFSEmbedding embedding =
         new DFSEmbedding(vertexTimes, Lists.newArrayList(edgeId));
 

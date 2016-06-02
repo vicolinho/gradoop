@@ -20,6 +20,7 @@ package org.gradoop.model.impl.algorithms.fsm.common.functions;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.Supportable;
 import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.IterationItem;
 
 
@@ -27,14 +28,14 @@ import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.IterationItem;
  * Collector => [CompressedDfsCode,..]
  */
 public class ExpandFrequentDfsCodes implements
-  FlatMapFunction<IterationItem, CompressedDfsCode> {
+  FlatMapFunction<IterationItem, Supportable<CompressedDfsCode>> {
 
   @Override
   public void flatMap(IterationItem iterationItem,
-    Collector<CompressedDfsCode> collector) throws Exception {
+    Collector<Supportable<CompressedDfsCode>> collector) throws Exception {
 
 
-    for (CompressedDfsCode compressedDfsCode :
+    for (Supportable<CompressedDfsCode> compressedDfsCode :
       iterationItem.getFrequentSubgraphs()) {
 
       collector.collect(compressedDfsCode);

@@ -32,7 +32,7 @@ public abstract class AbstractTransactionalFSMiner
 
     return fatEdges
       .join(allFrequentDfsCodes)
-      .where("2.0").equalTo(0)
+      .where(2).equalTo(0)
       .with(new LeftSide<Tuple3<GradoopId, EdgeTripleWithoutTargetLabel, CompressedDfsCode>, CompressedDfsCode>());
   }
 

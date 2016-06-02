@@ -17,8 +17,6 @@
 
 package org.gradoop.model.impl.algorithms.fsm.common.pojos;
 
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
@@ -27,11 +25,11 @@ import java.util.Map;
 public class GSpanTransaction implements Serializable {
 
   private List<AdjacencyList> adjacencyLists;
-  private Map<CompressedDfsCode, Collection<DFSEmbedding>> codeEmbeddings;
+  private Map<DfsCode, Collection<DFSEmbedding>> codeEmbeddings;
 
   public GSpanTransaction(
     List<AdjacencyList> adjacencyLists,
-    Map<CompressedDfsCode, Collection<DFSEmbedding>> codeEmbeddings) {
+    Map<DfsCode, Collection<DFSEmbedding>> codeEmbeddings) {
 
     this.adjacencyLists = adjacencyLists;
     this.codeEmbeddings = codeEmbeddings;
@@ -41,14 +39,14 @@ public class GSpanTransaction implements Serializable {
     return adjacencyLists;
   }
 
-  public Map<CompressedDfsCode, Collection<DFSEmbedding>>
+  public Map<DfsCode, Collection<DFSEmbedding>>
   getCodeEmbeddings() {
 
     return codeEmbeddings;
   }
 
   public void setCodeEmbeddings(
-    Map<CompressedDfsCode, Collection<DFSEmbedding>> codeEmbeddings) {
+    Map<DfsCode, Collection<DFSEmbedding>> codeEmbeddings) {
 
     this.codeEmbeddings = codeEmbeddings;
   }

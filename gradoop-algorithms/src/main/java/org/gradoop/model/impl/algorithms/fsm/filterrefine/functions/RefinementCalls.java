@@ -6,15 +6,16 @@ import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.api.java.tuple.Tuple3;
 import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
+import org.gradoop.model.impl.algorithms.fsm.filterrefine.tuples.SubgraphMessage;
 
 import java.util.Collection;
 
 public class RefinementCalls implements
-  GroupReduceFunction<Tuple3<CompressedDfsCode, Integer, Boolean>, Tuple2<Integer, Collection<CompressedDfsCode>>> {
+  GroupReduceFunction<SubgraphMessage, Tuple2<Integer, Collection<CompressedDfsCode>>> {
 
   @Override
   public void reduce(
-    Iterable<Tuple3<CompressedDfsCode, Integer, Boolean>> iterable,
+    Iterable<SubgraphMessage> iterable,
     Collector<Tuple2<Integer, Collection<CompressedDfsCode>>> collector) throws
     Exception {
 
@@ -23,7 +24,7 @@ public class RefinementCalls implements
 
     Collection<CompressedDfsCode> codes = Lists.newArrayList();
 
-    for(Tuple3<CompressedDfsCode, Integer, Boolean> triple : iterable) {
+    for(SubgraphMessage triple : iterable) {
       if (first) {
         workerId = triple.f1;
         first = false;

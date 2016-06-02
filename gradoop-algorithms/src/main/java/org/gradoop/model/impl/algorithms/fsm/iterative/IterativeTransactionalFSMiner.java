@@ -14,10 +14,11 @@ import org.gradoop.model.impl.algorithms.fsm.common.functions
   .ExpandFrequentDfsCodes;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.Frequent;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.HasGrownSubgraphs;
-import org.gradoop.model.impl.algorithms.fsm.common.functions.PostPrune;
+import org.gradoop.model.impl.algorithms.fsm.common.functions.PostPruneAndCompress;
 import org.gradoop.model.impl.algorithms.fsm.common.functions
   .ReportGrownSubgraphs;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.Supportable;
 import org.gradoop.model.impl.algorithms.fsm.iterative.functions.*;
 import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTriple;
 import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.IterationItem;
@@ -28,7 +29,7 @@ public class IterativeTransactionalFSMiner
   extends AbstractTransactionalFSMiner {
 
   @Override
-  public DataSet<CompressedDfsCode> mine(DataSet<EdgeTriple> edges,
+  public DataSet<Supportable<CompressedDfsCode>> mine(DataSet<EdgeTriple> edges,
     DataSet<Integer> minSupport, FSMConfig fsmConfig) {
 
     setFsmConfig(fsmConfig);
@@ -38,7 +39,7 @@ public class IterativeTransactionalFSMiner
 
     // create search space with collector
 
-    Collection<CompressedDfsCode> emptySubgraphList =
+    Collection<Supportable<CompressedDfsCode>> emptySubgraphList =
       Lists.newArrayListWithExpectedSize(0);
 
     DataSet<IterationItem> searchSpace = transactions
@@ -59,17 +60,17 @@ public class IterativeTransactionalFSMiner
       .filter(new IsTransaction());
 
     // report ,filter and validate frequent subgraphs
-    DataSet<CompressedDfsCode> currentFrequentSubgraphs = transactions
+    DataSet<Supportable<CompressedDfsCode>> currentFrequentSubgraphs = transactions
       .flatMap(new ReportGrownSubgraphs())  // report patterns
+      .flatMap(new PostPruneAndCompress(fsmConfig))
       .groupBy(0)                           // group by pattern
       .sum(1)                               // count support
       .filter(new Frequent())               // filter by min support
       .withBroadcastSet(minSupport, BroadcastNames.MIN_SUPPORT)
-      .flatMap(new PostPrune(fsmConfig))
       ;   // filter false positives
 
     // get all frequent subgraphs
-    DataSet<Collection<CompressedDfsCode>> collector = workSet
+    DataSet<Collection<Supportable<CompressedDfsCode>>> collector = workSet
       .filter(new IsCollector())
       .map(new AllFrequentSubgraphs())
       .union(
@@ -78,11 +79,11 @@ public class IterativeTransactionalFSMiner
       )
       .reduce(new Merge());
 
-    // determine leftmost branches (Pre-Pruning)
-    currentFrequentSubgraphs = currentFrequentSubgraphs
-      .map(new SetSupportToBranchNumber()) // (ab-) reuse of integer field
-      .groupBy(1) // group by (min vertex label) branch number
-      .reduceGroup(new MinimumDfsCode(fsmConfig));
+//    // determine leftmost branches (Pre-Pruning)
+//    currentFrequentSubgraphs = currentFrequentSubgraphs
+//      .map(new SetSupportToBranchNumber()) // (ab-) reuse of integer field
+//      .groupBy(1) // group by (min vertex label) branch number
+//      .reduceGroup(new MinimumDfsCode(fsmConfig));
 
     // grow frequent subgraphs
     DataSet<IterationItem> nextWorkSet = transactions

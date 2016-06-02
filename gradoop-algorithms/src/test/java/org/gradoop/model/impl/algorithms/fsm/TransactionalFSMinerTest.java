@@ -13,6 +13,7 @@ import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common
   .GradoopTransactionalFSMEncoder;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.Supportable;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine
   .FilterRefineTransactionalFSMiner;
 import org.gradoop.model.impl.algorithms.fsm.iterative
@@ -30,10 +31,10 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
   @Test
   public void testIterative() throws Exception {
     GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> input =
-      new PredictableFSMTransactionGenerator<>(getConfig(), 1000)
+      new PredictableFSMTransactionGenerator<>(getConfig(), 100)
         .execute();
 
-    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.8f);
+    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(1.0f);
 
     GradoopTransactionalFSMEncoder<GraphHeadPojo, VertexPojo, EdgePojo>
       encoder = new GradoopTransactionalFSMEncoder<>();
@@ -43,11 +44,11 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
     TransactionalFSMiner iMiner = new IterativeTransactionalFSMiner();
     iMiner.setExecutionEnvironment(
       input.getConfig().getExecutionEnvironment());
-    DataSet<CompressedDfsCode> iResult =
+    DataSet<Supportable<CompressedDfsCode>> iResult =
       iMiner.mine(edges, encoder.getMinSupport(), fsmConfig)
-      .map(new Print<CompressedDfsCode>(""));
+      .map(new Print<Supportable<CompressedDfsCode>>(""));
 
-    Assert.assertEquals(29 * 3, iResult.count());
+    Assert.assertEquals(702, iResult.count());
   }
 
   @Test
@@ -65,7 +66,7 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
 
     TransactionalFSMiner iMiner = new FilterRefineTransactionalFSMiner();
 
-    DataSet<CompressedDfsCode> iResult =
+    DataSet<Supportable<CompressedDfsCode>> iResult =
       iMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
 //    iResult.map(new PrintDfsCode())
@@ -97,11 +98,11 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
     TransactionalFSMiner iMiner = new IterativeTransactionalFSMiner();
     iMiner.setExecutionEnvironment(
       input.getConfig().getExecutionEnvironment());
-    DataSet<CompressedDfsCode> iResult =
+    DataSet<Supportable<CompressedDfsCode>> iResult =
       iMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
     TransactionalFSMiner frMiner = new FilterRefineTransactionalFSMiner();
-    DataSet<CompressedDfsCode> frResult =
+    DataSet<Supportable<CompressedDfsCode>> frResult =
       frMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
     collectAndAssertTrue(
@@ -152,11 +153,11 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
     TransactionalFSMiner iMiner = new IterativeTransactionalFSMiner();
     iMiner.setExecutionEnvironment(
       input.getConfig().getExecutionEnvironment());
-    DataSet<CompressedDfsCode> iResult =
+    DataSet<Supportable<CompressedDfsCode>> iResult =
       iMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
     TransactionalFSMiner frMiner = new FilterRefineTransactionalFSMiner();
-    DataSet<CompressedDfsCode> frResult =
+    DataSet<Supportable<CompressedDfsCode>> frResult =
       frMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
     collectAndAssertTrue(
@@ -174,9 +175,9 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
     );
   }
 
-  private class WrongCount implements FilterFunction<CompressedDfsCode> {
+  private class WrongCount implements FilterFunction<Supportable<CompressedDfsCode>> {
     @Override
-    public boolean filter(CompressedDfsCode subgraph) throws
+    public boolean filter(Supportable<CompressedDfsCode> subgraph) throws
       Exception {
       return subgraph.getSupport() % 10 != 0;
     }

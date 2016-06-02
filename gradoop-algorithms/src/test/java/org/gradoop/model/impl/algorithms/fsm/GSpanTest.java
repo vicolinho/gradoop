@@ -45,9 +45,9 @@ public class GSpanTest extends GradoopFlinkTestBase {
     DfsCode wrongCode = new DfsCode(Lists.newArrayList(firstStep, branchStep));
 
     assertTrue(
-      GSpan.isMinimumDfsCode(new CompressedDfsCode(minCode), fsmConfig));
+      GSpan.isMinimumDfsCode(minCode, fsmConfig));
     assertFalse(
-      GSpan.isMinimumDfsCode(new CompressedDfsCode(wrongCode), fsmConfig));
+      GSpan.isMinimumDfsCode(wrongCode, fsmConfig));
   }
 
   @Test
@@ -92,38 +92,31 @@ public class GSpanTest extends GradoopFlinkTestBase {
       transaction.getCodeEmbeddings().values().iterator().next().size());
 
     // N=1
-    Collection<CompressedDfsCode> singleEdgeCodes =
+    Collection<DfsCode> singleEdgeCodes =
       transaction.getCodeEmbeddings().keySet();
 
     assertEquals(singleEdgeCodes.size(), 1);
 
-    CompressedDfsCode compressedSingleEdgeCode =
-      singleEdgeCodes.iterator().next();
     DfsCode singleEdgeCode =
-      compressedSingleEdgeCode.getDfsCode();
+      singleEdgeCodes.iterator().next();
 
     assertEquals(singleEdgeCode, new DfsCode(new DFSStep(0, 0, true, 0, 1, 0)));
 
     // N=2
     assertEquals(0, singleEdgeCode.getMinVertexLabel());
 
-    compressedSingleEdgeCode.setMinVertexLabel(
-      singleEdgeCode.getMinVertexLabel());
-
-    assertEquals(0, compressedSingleEdgeCode.getMinVertexLabel());
-
     GSpan.growFrequentSubgraphs(transaction, singleEdgeCodes,fsmConfig);
 
-    Collection<CompressedDfsCode> twoEdgeCodes =
+    Collection<DfsCode> twoEdgeCodes =
       transaction.getCodeEmbeddings().keySet();
 
     assertEquals(4, twoEdgeCodes.size());
 
     // post pruning
-    Iterator<CompressedDfsCode> iterator = twoEdgeCodes.iterator();
+    Iterator<DfsCode> iterator = twoEdgeCodes.iterator();
 
     while (iterator.hasNext()) {
-      CompressedDfsCode subgraph = iterator.next();
+      DfsCode subgraph = iterator.next();
 
       if (!GSpan.isMinimumDfsCode(subgraph, fsmConfig)) {
         iterator.remove();
@@ -134,13 +127,13 @@ public class GSpanTest extends GradoopFlinkTestBase {
 
     // N=3
 
-    CompressedDfsCode minSubgraph =
+    DfsCode minSubgraph =
       GSpan.minimumDfsCode(twoEdgeCodes, fsmConfig);
 
     GSpan.growFrequentSubgraphs(
       transaction, Lists.newArrayList(minSubgraph), fsmConfig);
 
-    Collection<CompressedDfsCode> threeEdgeCodes =
+    Collection<DfsCode> threeEdgeCodes =
       transaction.getCodeEmbeddings().keySet();
 
     assertEquals(2, threeEdgeCodes.size());
@@ -149,7 +142,7 @@ public class GSpanTest extends GradoopFlinkTestBase {
     iterator = threeEdgeCodes.iterator();
 
     while (iterator.hasNext()) {
-      CompressedDfsCode subgraph = iterator.next();
+      DfsCode subgraph = iterator.next();
 
       if (!GSpan.isMinimumDfsCode(subgraph, fsmConfig)) {
         iterator.remove();
@@ -165,10 +158,8 @@ public class GSpanTest extends GradoopFlinkTestBase {
     GSpan.growFrequentSubgraphs(
       transaction, Lists.newArrayList(minSubgraph), fsmConfig);
 
-    Collection<CompressedDfsCode> fourEdgeCodes =
+    Collection<DfsCode> fourEdgeCodes =
       transaction.getCodeEmbeddings().keySet();
-
-    System.out.println(fourEdgeCodes);
 
     assertEquals(1, fourEdgeCodes.size());
   }

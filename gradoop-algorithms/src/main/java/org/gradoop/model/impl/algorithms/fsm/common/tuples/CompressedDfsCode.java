@@ -18,14 +18,10 @@
 package org.gradoop.model.impl.algorithms.fsm.common.tuples;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.apache.flink.api.java.tuple.Tuple2;
+import org.apache.flink.api.java.tuple.Tuple1;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
@@ -33,8 +29,8 @@ import java.util.zip.GZIPOutputStream;
  * tuple-representation fo a compressed DFS code including its support.
  * (bytes,support)
  */
-public class CompressedDfsCode extends Tuple2<byte[], Integer> {
-
+public class CompressedDfsCode extends Tuple1<byte[]> {
+  
   /**
    * default constructor
    */
@@ -46,7 +42,6 @@ public class CompressedDfsCode extends Tuple2<byte[], Integer> {
    * @param dfsCode DFS code to compress
    */
   public CompressedDfsCode(DfsCode dfsCode) {
-    this.f1 = 1;
     try {
       ByteArrayOutputStream byteArrayOS = new ByteArrayOutputStream();
       GZIPOutputStream gzipOS = new GZIPOutputStream(byteArrayOS);
@@ -81,7 +76,7 @@ public class CompressedDfsCode extends Tuple2<byte[], Integer> {
 
   @Override
   public String toString() {
-    return getSupport() + ";" + getDfsCode().toString();
+    return getDfsCode().toString();
   }
 
   @Override
@@ -120,23 +115,8 @@ public class CompressedDfsCode extends Tuple2<byte[], Integer> {
     return equals;
   }
 
-  public Integer getSupport() {
-    return this.f1;
-  }
-
-  public void setSupport(Integer support) {
-    this.f1 = support;
-  }
-
-  public byte[] getBytes() {
+  private byte[] getBytes() {
     return this.f0;
   }
 
-  public int getMinVertexLabel() {
-    return this.f1;
-  }
-
-  public void setMinVertexLabel(int minVertexLabel) {
-    this.f1 = minVertexLabel;
-  }
 }

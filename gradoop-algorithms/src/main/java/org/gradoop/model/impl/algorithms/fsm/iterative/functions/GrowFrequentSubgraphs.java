@@ -17,12 +17,15 @@
 
 package org.gradoop.model.impl.algorithms.fsm.iterative.functions;
 
+import com.google.common.collect.Lists;
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.configuration.Configuration;
 import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.gspan.GSpan;
+import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.Supportable;
 import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.IterationItem;
 
 import java.util.Collection;
@@ -37,13 +40,21 @@ public class GrowFrequentSubgraphs
   /**
    * frequent DFS codes
    */
-  private Collection<CompressedDfsCode> frequentSubgraphs;
+  private Collection<DfsCode> frequentSubgraphs;
 
   @Override
   public void open(Configuration parameters) throws Exception {
     super.open(parameters);
-    this.frequentSubgraphs = getRuntimeContext()
-      .getBroadcastVariable(BroadcastNames.FREQUENT_SUBGRAPHS);
+
+    Collection<Supportable<CompressedDfsCode>> compressedSubgraphs =
+      getRuntimeContext().getBroadcastVariable(BroadcastNames.FREQUENT_SUBGRAPHS);
+
+    frequentSubgraphs = Lists.newArrayList();
+
+    for (Supportable<CompressedDfsCode> compressedSubgraph : compressedSubgraphs) {
+      frequentSubgraphs.add(compressedSubgraph.getObject().getDfsCode());
+    }
+
   }
   /**
    * constructor

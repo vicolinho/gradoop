@@ -4,26 +4,11 @@ import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.flink.hadoop.shaded.com.google.common.collect.Maps;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyList;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.AdjacencyListEntry;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSEmbedding;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSStep;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.GSpanEdge;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.GSpanTransaction;
+import org.gradoop.model.impl.algorithms.fsm.common.pojos.*;
 import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTriple;
-
-
 import org.gradoop.model.impl.id.GradoopId;
 
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class GSpan {
 
@@ -44,10 +29,10 @@ public class GSpan {
     return createTransaction(adjacencyLists, edges);
   }
 
-  public static GSpanTransaction createTransaction(CompressedDfsCode dfsCode) {
+  public static GSpanTransaction createTransaction(DfsCode dfsCode) {
 
     // turn DFS edges into gSpan edges
-    List<DFSStep> steps = dfsCode.getDfsCode().getSteps();
+    List<DFSStep> steps = dfsCode.getSteps();
     List<AdjacencyList> adjacencyLists = Lists.newArrayList();
     List<GSpanEdge> edges = Lists.newArrayListWithExpectedSize(steps.size());
     createAdjacencyListsAndEdges(steps, adjacencyLists, edges);
@@ -62,7 +47,7 @@ public class GSpan {
 
     // create adjacency lists and 1-edge DFS codes with their embeddings
 
-    Map<CompressedDfsCode, Collection<DFSEmbedding>> codeEmbeddings =
+    Map<DfsCode, Collection<DFSEmbedding>> codeEmbeddings =
       Maps.newHashMap();
 
     Iterator<GSpanEdge> iterator = edges.iterator();
@@ -213,10 +198,10 @@ public class GSpan {
 
 
   private static Collection<DFSEmbedding> createNewDfsCodeEmbeddings(
-    Map<CompressedDfsCode, Collection<DFSEmbedding>> codeEmbeddings,
+    Map<DfsCode, Collection<DFSEmbedding>> codeEmbeddings,
     GSpanEdge edge) {
 
-    CompressedDfsCode code = initDfsCode(edge);
+    DfsCode code = initDfsCode(edge);
     DFSEmbedding embedding = initDfsEmbedding(edge);
     Collection<DFSEmbedding> embeddings = Lists.newArrayList(embedding);
     codeEmbeddings.put(code, embeddings);
@@ -238,7 +223,7 @@ public class GSpan {
     return new DFSEmbedding(vertexTimes, Lists.newArrayList(edge.getEdgeId()));
   }
 
-  private static CompressedDfsCode initDfsCode(final GSpanEdge edge) {
+  private static DfsCode initDfsCode(final GSpanEdge edge) {
 
     int sourceLabel = edge.getSourceLabel();
     int edgeLabel = edge.getLabel();
@@ -254,7 +239,7 @@ public class GSpan {
       step = new DFSStep(0, targetLabel, false, edgeLabel, 1, sourceLabel);
     }
 
-    return new CompressedDfsCode(new DfsCode(step));
+    return new DfsCode(step);
   }
 
 
@@ -311,17 +296,16 @@ public class GSpan {
   }
 
   public static void growFrequentSubgraphs(final GSpanTransaction transaction,
-    Collection<CompressedDfsCode> frequentParentSubgraphs, FSMConfig fsmConfig)
+    Collection<DfsCode> frequentParentSubgraphs, FSMConfig fsmConfig)
   {
-    Map<CompressedDfsCode, Collection<DFSEmbedding>> childCodeEmbeddings = null;
+    Map<DfsCode, Collection<DFSEmbedding>> childCodeEmbeddings = null;
 
-    for(CompressedDfsCode frequentSubgraph : frequentParentSubgraphs) {
+    for(DfsCode parentCode : frequentParentSubgraphs) {
       Collection<DFSEmbedding> parentEmbeddings =
-        transaction.getCodeEmbeddings().get(frequentSubgraph);
+        transaction.getCodeEmbeddings().get(parentCode);
 
       if (parentEmbeddings != null) {
-        DfsCode parentCode = frequentSubgraph.getDfsCode();
-        int minVertexLabel = frequentSubgraph.getMinVertexLabel();
+        int minVertexLabel = parentCode.getMinVertexLabel();
 
         List<Integer> rightmostPath = parentCode.getRightMostPathVertexTimes();
 
@@ -389,13 +373,10 @@ public class GSpan {
                       toVertexLabel
                     ));
 
-                    childEmbedding.getEdgeTimes().add(edgeId);
-
-                    CompressedDfsCode compressedChildCode =
-                      new CompressedDfsCode(childCode);
+                    childEmbedding.getEdgeTimes().add(edgeId);;
 
                     childCodeEmbeddings = addCodeEmbedding(
-                      childCodeEmbeddings, compressedChildCode, childEmbedding);
+                      childCodeEmbeddings, childCode, childEmbedding);
                   }
                 }
               }
@@ -422,25 +403,20 @@ public class GSpan {
     return vertexTimes;
   }
 
-  public static CompressedDfsCode minimumDfsCode(
-    final Collection<CompressedDfsCode> dfsCodes, final FSMConfig fsmConfig) {
+  public static DfsCode minimumDfsCode(
+    final Collection<DfsCode> dfsCodes, final FSMConfig fsmConfig) {
 
-    Iterator<CompressedDfsCode> iterator = dfsCodes.iterator();
+    Iterator<DfsCode> iterator = dfsCodes.iterator();
 
-    DfsCode minCode = iterator.next().getDfsCode();
+    DfsCode minCode = iterator.next();
 
-    for(CompressedDfsCode subgraph : dfsCodes) {
-      DfsCode nextCode = subgraph.getDfsCode();
-
+    for(DfsCode nextCode : dfsCodes) {
       if(getSiblingComparator(fsmConfig).compare(nextCode, minCode) < 0) {
         minCode = nextCode;
       }
     }
 
-    CompressedDfsCode minSubgraph = new CompressedDfsCode(minCode);
-    minSubgraph.setMinVertexLabel(minCode.getMinVertexLabel());
-
-    return minSubgraph;
+    return minCode;
   }
 
   private static DfsCodeSiblingComparator getSiblingComparator(
@@ -448,10 +424,10 @@ public class GSpan {
     return new DfsCodeSiblingComparator(fsmConfig.isDirected());
   }
 
-  private static Map<CompressedDfsCode, Collection<DFSEmbedding>>
+  private static Map<DfsCode, Collection<DFSEmbedding>>
   addCodeEmbedding(
-    Map<CompressedDfsCode, Collection<DFSEmbedding>> codeEmbeddings,
-    CompressedDfsCode code, DFSEmbedding embedding) {
+    Map<DfsCode, Collection<DFSEmbedding>> codeEmbeddings,
+    DfsCode code, DFSEmbedding embedding) {
 
     Collection<DFSEmbedding> embeddings;
 
@@ -471,20 +447,20 @@ public class GSpan {
   }
 
   public static boolean isMinimumDfsCode(
-    CompressedDfsCode subgraph, FSMConfig fsmConfig) {
+    DfsCode subgraph, FSMConfig fsmConfig) {
 
     GSpanTransaction transaction = createTransaction(subgraph);
-    CompressedDfsCode minDfsCode = getMinimumDFSCode(transaction, fsmConfig);
+    DfsCode minDfsCode = getMinimumDFSCode(transaction, fsmConfig);
 
     return subgraph.equals(minDfsCode);
   }
 
-  public static CompressedDfsCode getMinimumDFSCode(
+  public static DfsCode getMinimumDFSCode(
     GSpanTransaction transaction, FSMConfig fsmConfig) {
-    CompressedDfsCode minDfsCode = null;
+    DfsCode minDfsCode = null;
 
     while (transaction.hasGrownSubgraphs()) {
-      Set<CompressedDfsCode> grownSubgraphs =
+      Set<DfsCode> grownSubgraphs =
         transaction.getCodeEmbeddings().keySet();
 
       minDfsCode = minimumDfsCode(grownSubgraphs, fsmConfig);
