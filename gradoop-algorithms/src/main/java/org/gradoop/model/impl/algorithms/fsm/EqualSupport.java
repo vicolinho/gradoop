@@ -4,14 +4,14 @@ import org.apache.flink.api.common.functions.RichFlatJoinFunction;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.common.DfsCodeTranslator;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.Supportable;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedSubgraph;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.ObjectWithCount;
 
 /**
  * Created by peet on 20.05.16.
  */
 public class EqualSupport
-  extends RichFlatJoinFunction<Supportable<CompressedDfsCode>, Supportable<CompressedDfsCode>, Boolean> {
+  extends RichFlatJoinFunction<ObjectWithCount<CompressedSubgraph>, ObjectWithCount<CompressedSubgraph>, Boolean> {
 
   private DfsCodeTranslator translator;
 
@@ -24,7 +24,7 @@ public class EqualSupport
 
   @Override
   public void join(
-    Supportable<CompressedDfsCode> left, Supportable<CompressedDfsCode> right, Collector<Boolean> collector
+    ObjectWithCount<CompressedSubgraph> left, ObjectWithCount<CompressedSubgraph> right, Collector<Boolean> collector
   ) throws Exception {
 
     String out;

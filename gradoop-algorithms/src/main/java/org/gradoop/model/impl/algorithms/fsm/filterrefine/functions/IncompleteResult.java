@@ -1,8 +1,6 @@
 package org.gradoop.model.impl.algorithms.fsm.filterrefine.functions;
 
 import org.apache.flink.api.common.functions.FilterFunction;
-import org.apache.flink.api.java.tuple.Tuple3;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine.tuples.SubgraphMessage;
 
 /**

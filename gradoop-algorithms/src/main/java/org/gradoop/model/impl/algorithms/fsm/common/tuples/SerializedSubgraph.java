@@ -22,30 +22,27 @@ import org.apache.flink.api.java.tuple.Tuple1;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
 
 import java.io.*;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 
 /**
  * tuple-representation fo a compressed DFS code including its support.
  * (bytes,support)
  */
-public class CompressedDfsCode extends Tuple1<byte[]> {
-  
+public class SerializedSubgraph extends Tuple1<byte[]> {
+
   /**
    * default constructor
    */
-  public CompressedDfsCode() {
+  public SerializedSubgraph() {
   }
 
   /**
    * valued constructor
    * @param dfsCode DFS code to compress
    */
-  public CompressedDfsCode(DfsCode dfsCode) {
+  public SerializedSubgraph(DfsCode dfsCode) {
     try {
       ByteArrayOutputStream byteArrayOS = new ByteArrayOutputStream();
-      GZIPOutputStream gzipOS = new GZIPOutputStream(byteArrayOS);
-      ObjectOutputStream objectOS = new ObjectOutputStream(gzipOS);
+      ObjectOutputStream objectOS = new ObjectOutputStream(byteArrayOS);
       objectOS.writeObject(dfsCode);
       objectOS.close();
       this.f0 = byteArrayOS.toByteArray();
@@ -63,8 +60,7 @@ public class CompressedDfsCode extends Tuple1<byte[]> {
 
     try {
       ByteArrayInputStream byteArrayIS = new ByteArrayInputStream(this.f0);
-      GZIPInputStream gzipIn = new GZIPInputStream(byteArrayIS);
-      ObjectInputStream objectIn = new ObjectInputStream(gzipIn);
+      ObjectInputStream objectIn = new ObjectInputStream(byteArrayIS);
       dfsCode = (DfsCode) objectIn.readObject();
       objectIn.close();
     } catch (IOException | ClassNotFoundException e) {
@@ -98,7 +94,7 @@ public class CompressedDfsCode extends Tuple1<byte[]> {
 
     if (equals) {
       byte[] ownBytes = this.getBytes();
-      byte[] otherBytes = ((CompressedDfsCode) o).getBytes();
+      byte[] otherBytes = ((SerializedSubgraph) o).getBytes();
 
       equals = ownBytes.length == otherBytes.length;
 

@@ -6,12 +6,12 @@ import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.gspan
   .DfsCodeSiblingComparator;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.SerializedSubgraph;
 
 import java.util.Iterator;
 
 public class MinimumDfsCode
-  implements GroupReduceFunction<CompressedDfsCode, CompressedDfsCode> {
+  implements GroupReduceFunction<SerializedSubgraph, SerializedSubgraph> {
 
   private final DfsCodeSiblingComparator comparator;
 
@@ -20,15 +20,15 @@ public class MinimumDfsCode
   }
 
   @Override
-  public void reduce(Iterable<CompressedDfsCode> iterable,
-    Collector<CompressedDfsCode> collector) throws Exception {
-    Iterator<CompressedDfsCode> iterator = iterable.iterator();
+  public void reduce(Iterable<SerializedSubgraph> iterable,
+    Collector<SerializedSubgraph> collector) throws Exception {
+    Iterator<SerializedSubgraph> iterator = iterable.iterator();
 
-    CompressedDfsCode minCompressedDfsCode = iterator.next();
+    SerializedSubgraph minCompressedDfsCode = iterator.next();
     DfsCode minDfsCode = minCompressedDfsCode.getDfsCode();
 
     while (iterator.hasNext()) {
-      CompressedDfsCode subgraph = iterator.next();
+      SerializedSubgraph subgraph = iterator.next();
       DfsCode dfsCode = subgraph.getDfsCode();
 
       if(comparator.compare(dfsCode, minDfsCode) < 0) {

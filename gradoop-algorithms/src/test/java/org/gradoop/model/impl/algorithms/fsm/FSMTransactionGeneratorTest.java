@@ -10,8 +10,8 @@ import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMiner;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common
   .GradoopTransactionalFSMEncoder;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.Supportable;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedSubgraph;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.ObjectWithCount;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine
   .FilterRefineTransactionalFSMiner;
 import org.gradoop.model.impl.algorithms.fsm.iterative
@@ -41,16 +41,16 @@ public class FSMTransactionGeneratorTest extends GradoopFlinkTestBase {
     TransactionalFSMiner iMiner = new IterativeTransactionalFSMiner();
     iMiner.setExecutionEnvironment(
       input.getConfig().getExecutionEnvironment());
-    DataSet<Supportable<CompressedDfsCode>> iResult =
+    DataSet<ObjectWithCount<CompressedSubgraph>> iResult =
       iMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
     TransactionalFSMiner frMiner = new FilterRefineTransactionalFSMiner();
-    DataSet<Supportable<CompressedDfsCode>> frResult =
+    DataSet<ObjectWithCount<CompressedSubgraph>> frResult =
       frMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
     iResult.fullOuterJoin(frResult)
       .where(0).equalTo(0)
-      .with(new WithEmptySide<Supportable<CompressedDfsCode>, Supportable<CompressedDfsCode>>())
+      .with(new WithEmptySide<ObjectWithCount<CompressedSubgraph>, ObjectWithCount<CompressedSubgraph>>())
       .print();
   }
 
@@ -87,16 +87,16 @@ public class FSMTransactionGeneratorTest extends GradoopFlinkTestBase {
     TransactionalFSMiner iMiner = new IterativeTransactionalFSMiner();
     iMiner.setExecutionEnvironment(
       input.getConfig().getExecutionEnvironment());
-    DataSet<Supportable<CompressedDfsCode>> iResult =
+    DataSet<ObjectWithCount<CompressedSubgraph>> iResult =
       iMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
     TransactionalFSMiner frMiner = new FilterRefineTransactionalFSMiner();
-    DataSet<Supportable<CompressedDfsCode>> frResult =
+    DataSet<ObjectWithCount<CompressedSubgraph>> frResult =
       frMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
     iResult.fullOuterJoin(frResult)
       .where(0).equalTo(0)
-      .with(new WithEmptySide<Supportable<CompressedDfsCode>, Supportable<CompressedDfsCode>>())
+      .with(new WithEmptySide<ObjectWithCount<CompressedSubgraph>, ObjectWithCount<CompressedSubgraph>>())
       .print();
   }
 

@@ -3,17 +3,17 @@ package org.gradoop.model.impl.algorithms.fsm.common.tuples;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
 
-public class Supportable<T> extends Tuple2<T, Integer> {
+public class ObjectWithCount<T> extends Tuple2<T, Integer> {
 
-  public Supportable() {
+  public ObjectWithCount() {
 
   }
 
-  public Supportable(T t) {
+  public ObjectWithCount(T t) {
     super(t, 1);
   }
 
-  public Supportable(T t, int support) {
+  public ObjectWithCount(T t, int support) {
     super(t, support);
   }
 

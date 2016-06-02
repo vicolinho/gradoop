@@ -29,8 +29,8 @@ import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMGraphHeadFactory;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSStep;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.Supportable;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedSubgraph;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.ObjectWithCount;
 import org.gradoop.model.impl.id.GradoopId;
 
 import java.util.ArrayList;
@@ -45,7 +45,7 @@ public class DfsDecoder<G extends EPGMGraphHead> implements
   ResultTypeQueryable<Tuple3<G,
       ArrayList<Tuple2<GradoopId, Integer>>,
       ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>>,
-  MapFunction<Supportable<CompressedDfsCode>,Tuple3<G,
+  MapFunction<ObjectWithCount<CompressedSubgraph>,Tuple3<G,
       ArrayList<Tuple2<GradoopId, Integer>>,
       ArrayList<Tuple3<GradoopId, GradoopId, Integer>>>> {
 
@@ -57,7 +57,7 @@ public class DfsDecoder<G extends EPGMGraphHead> implements
   @Override
   public Tuple3<G, ArrayList<Tuple2<GradoopId, Integer>>,
     ArrayList<Tuple3<GradoopId, GradoopId, Integer>>> map(
-    Supportable<CompressedDfsCode> compressedDfsCode) throws  Exception {
+    ObjectWithCount<CompressedSubgraph> compressedDfsCode) throws  Exception {
 
 //    System.out.println(compressedDfsCode);
 

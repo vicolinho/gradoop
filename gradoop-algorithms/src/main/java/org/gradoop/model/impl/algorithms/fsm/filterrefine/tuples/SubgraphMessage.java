@@ -1,15 +1,15 @@
 package org.gradoop.model.impl.algorithms.fsm.filterrefine.tuples;
 
 import org.apache.flink.api.java.tuple.Tuple4;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedSubgraph;
 
-public class SubgraphMessage extends Tuple4<CompressedDfsCode, Integer, Integer, Boolean> {
+public class SubgraphMessage extends Tuple4<CompressedSubgraph, Integer, Integer, Boolean> {
 
   public SubgraphMessage() {
 
   }
 
-  public SubgraphMessage(CompressedDfsCode subgraph, int support, int workerId, boolean locallyFrequent) {
+  public SubgraphMessage(CompressedSubgraph subgraph, int support, int workerId, boolean locallyFrequent) {
     super(subgraph, support, workerId, locallyFrequent);
   }
 
@@ -17,7 +17,7 @@ public class SubgraphMessage extends Tuple4<CompressedDfsCode, Integer, Integer,
     return this.f1;
   }
 
-  public CompressedDfsCode getSubgraph() {
+  public CompressedSubgraph getSubgraph() {
     return this.f0;
   }
 

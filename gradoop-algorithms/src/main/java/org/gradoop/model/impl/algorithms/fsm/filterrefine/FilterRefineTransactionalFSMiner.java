@@ -7,8 +7,8 @@ import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.Frequent;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.GSpanTransaction;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.Supportable;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedSubgraph;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.ObjectWithCount;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine.functions.*;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine.tuples.SubgraphMessage;
 import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTriple;
@@ -22,7 +22,7 @@ public class FilterRefineTransactionalFSMiner
 
 
   @Override
-  public DataSet<Supportable<CompressedDfsCode>> mine(DataSet<EdgeTriple> edges,
+  public DataSet<ObjectWithCount<CompressedSubgraph>> mine(DataSet<EdgeTriple> edges,
                                                       DataSet<Integer> minSupport, FSMConfig fsmConfig) {
 
     setFsmConfig(fsmConfig);
@@ -55,7 +55,7 @@ public class FilterRefineTransactionalFSMiner
         .withBroadcastSet(workerIdsGraphCount, BroadcastNames.WORKER_GRAPHCOUNT);
 
     // add globally frequent DFS codes to result
-    DataSet<Supportable<CompressedDfsCode>> frequentDfsCodes = filterResult
+    DataSet<ObjectWithCount<CompressedSubgraph>> frequentDfsCodes = filterResult
       .filter(new KnownToBeGloballyFrequent())
       .map(new ToSupportable());
 
@@ -66,7 +66,7 @@ public class FilterRefineTransactionalFSMiner
         .filter(new NeedsRefinement());
 
     // remember incomplete results
-    DataSet<Supportable<CompressedDfsCode>> incompleteResults = refinementCandidates
+    DataSet<ObjectWithCount<CompressedSubgraph>> incompleteResults = refinementCandidates
       .filter(new IncompleteResult())
       .map(new ToSupportable());
 

@@ -5,11 +5,12 @@ import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.gspan.GSpan;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.Supportable;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedSubgraph;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.SerializedSubgraph;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.ObjectWithCount;
 
 public class PostPruneAndCompress
-  implements FlatMapFunction<Supportable<DfsCode>, Supportable<CompressedDfsCode>> {
+  implements FlatMapFunction<ObjectWithCount<SerializedSubgraph>, ObjectWithCount<CompressedSubgraph>> {
 
   private final FSMConfig fsmConfig;
 
@@ -18,12 +19,14 @@ public class PostPruneAndCompress
   }
 
   @Override
-  public void flatMap(Supportable<DfsCode> subgraph,
-    Collector<Supportable<CompressedDfsCode>> collector) throws Exception {
+  public void flatMap(ObjectWithCount<SerializedSubgraph> subgraphWithSupport,
+    Collector<ObjectWithCount<CompressedSubgraph>> collector) throws Exception {
 
-    DfsCode code = subgraph.getObject();
+    DfsCode code = subgraphWithSupport.getObject().getDfsCode();
+    int support = subgraphWithSupport.getSupport();
+
     if (GSpan.isMinimumDfsCode(code, fsmConfig)) {
-      collector.collect(new Supportable<>(new CompressedDfsCode(code)));
+      collector.collect(new ObjectWithCount<>(new CompressedSubgraph(code), support));
     }
   }
 }

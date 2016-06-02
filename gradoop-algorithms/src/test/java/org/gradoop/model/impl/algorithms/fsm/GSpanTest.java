@@ -11,7 +11,6 @@ import org.gradoop.model.impl.algorithms.fsm.common.gspan.GSpan;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSStep;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.GSpanTransaction;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
 import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTriple;
 import org.gradoop.model.impl.pojo.EdgePojo;
 import org.gradoop.model.impl.pojo.GraphHeadPojo;

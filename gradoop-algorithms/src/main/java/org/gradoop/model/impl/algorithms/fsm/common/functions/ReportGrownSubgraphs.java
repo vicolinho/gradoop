@@ -18,25 +18,26 @@
 package org.gradoop.model.impl.algorithms.fsm.common.functions;
 
 import org.apache.flink.api.common.functions.FlatMapFunction;
+import org.apache.flink.api.java.tuple.Tuple1;
 import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.Supportable;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.SerializedSubgraph;
 import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.IterationItem;
 
 /**
  * Graph => [(Countable<CompressedDfsCode>, 1),..]
  */
 public class ReportGrownSubgraphs
-  implements FlatMapFunction<IterationItem, Supportable<DfsCode>> {
+  implements FlatMapFunction<IterationItem, SerializedSubgraph> {
 
   @Override
   public void flatMap(IterationItem wrapper,
-    Collector<Supportable<DfsCode>> collector) throws Exception {
+    Collector<SerializedSubgraph> collector) throws Exception {
 
     if (! wrapper.isCollector()) {
       for (DfsCode code :
         wrapper.getTransaction().getCodeEmbeddings().keySet()) {
-        collector.collect(new Supportable<>(code));
+        collector.collect(new SerializedSubgraph(code));
       }
     }
   }

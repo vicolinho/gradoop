@@ -8,7 +8,7 @@ import org.apache.flink.configuration.Configuration;
 import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedSubgraph;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine.tuples.SubgraphMessage;
 
 import java.util.ArrayList;
@@ -55,13 +55,13 @@ public class FrequentOrRefinementCandidate
       .newHashSet(workerGraphCount.keySet());
 
     // init aggregate variables
-    CompressedDfsCode code = null;
+    CompressedSubgraph code = null;
     int support = 0;
     boolean atLeastOnceLocallyFrequent = false;
 
     // for each worker report
-    for(Tuple4<CompressedDfsCode, Integer, Integer, Boolean> triple : x) {
-      code = triple.f0;
+    for(SubgraphMessage triple : x) {
+      code = triple.getSubgraph();
 
       Integer reportedWorkerId = triple.f2;
       Boolean locallyFrequent = triple.f3;

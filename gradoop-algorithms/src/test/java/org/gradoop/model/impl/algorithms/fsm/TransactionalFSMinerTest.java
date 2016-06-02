@@ -12,8 +12,8 @@ import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common
   .GradoopTransactionalFSMEncoder;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedDfsCode;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.Supportable;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedSubgraph;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.ObjectWithCount;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine
   .FilterRefineTransactionalFSMiner;
 import org.gradoop.model.impl.algorithms.fsm.iterative
@@ -44,9 +44,9 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
     TransactionalFSMiner iMiner = new IterativeTransactionalFSMiner();
     iMiner.setExecutionEnvironment(
       input.getConfig().getExecutionEnvironment());
-    DataSet<Supportable<CompressedDfsCode>> iResult =
+    DataSet<ObjectWithCount<CompressedSubgraph>> iResult =
       iMiner.mine(edges, encoder.getMinSupport(), fsmConfig)
-      .map(new Print<Supportable<CompressedDfsCode>>(""));
+      .map(new Print<ObjectWithCount<CompressedSubgraph>>(""));
 
     Assert.assertEquals(702, iResult.count());
   }
@@ -66,7 +66,7 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
 
     TransactionalFSMiner iMiner = new FilterRefineTransactionalFSMiner();
 
-    DataSet<Supportable<CompressedDfsCode>> iResult =
+    DataSet<ObjectWithCount<CompressedSubgraph>> iResult =
       iMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
 //    iResult.map(new PrintDfsCode())
@@ -98,11 +98,11 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
     TransactionalFSMiner iMiner = new IterativeTransactionalFSMiner();
     iMiner.setExecutionEnvironment(
       input.getConfig().getExecutionEnvironment());
-    DataSet<Supportable<CompressedDfsCode>> iResult =
+    DataSet<ObjectWithCount<CompressedSubgraph>> iResult =
       iMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
     TransactionalFSMiner frMiner = new FilterRefineTransactionalFSMiner();
-    DataSet<Supportable<CompressedDfsCode>> frResult =
+    DataSet<ObjectWithCount<CompressedSubgraph>> frResult =
       frMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
     collectAndAssertTrue(
@@ -153,11 +153,11 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
     TransactionalFSMiner iMiner = new IterativeTransactionalFSMiner();
     iMiner.setExecutionEnvironment(
       input.getConfig().getExecutionEnvironment());
-    DataSet<Supportable<CompressedDfsCode>> iResult =
+    DataSet<ObjectWithCount<CompressedSubgraph>> iResult =
       iMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
     TransactionalFSMiner frMiner = new FilterRefineTransactionalFSMiner();
-    DataSet<Supportable<CompressedDfsCode>> frResult =
+    DataSet<ObjectWithCount<CompressedSubgraph>> frResult =
       frMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
     collectAndAssertTrue(
@@ -175,9 +175,9 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
     );
   }
 
-  private class WrongCount implements FilterFunction<Supportable<CompressedDfsCode>> {
+  private class WrongCount implements FilterFunction<ObjectWithCount<CompressedSubgraph>> {
     @Override
-    public boolean filter(Supportable<CompressedDfsCode> subgraph) throws
+    public boolean filter(ObjectWithCount<CompressedSubgraph> subgraph) throws
       Exception {
       return subgraph.getSupport() % 10 != 0;
     }
