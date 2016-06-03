@@ -33,13 +33,13 @@ public class DfsCode implements Serializable {
   /**
    * list of steps
    */
-  private final List<DFSStep> steps;
+  private final List<DfsStep> steps;
 
   /**
    * constructor
    * @param step initial step
    */
-  public DfsCode(DFSStep step) {
+  public DfsCode(DfsStep step) {
     this.steps = new ArrayList<>();
     this.steps.add(step);
   }
@@ -48,7 +48,7 @@ public class DfsCode implements Serializable {
    * constructor
    * @param steps initial steps
    */
-  public DfsCode(ArrayList<DFSStep> steps) {
+  public DfsCode(ArrayList<DfsStep> steps) {
     this.steps = steps;
   }
 
@@ -70,7 +70,7 @@ public class DfsCode implements Serializable {
 
     List<Integer> rightMostPath = null;
 
-    for (DFSStep step : Lists.reverse(steps)) {
+    for (DfsStep step : Lists.reverse(steps)) {
 
       if (step.isForward() || lastToTime == null && step.isLoop()) {
         int fromTime = step.getFromTime();
@@ -98,7 +98,7 @@ public class DfsCode implements Serializable {
     return rightMostPath;
   }
 
-  public List<DFSStep> getSteps() {
+  public List<DfsStep> getSteps() {
     return steps;
   }
 
@@ -112,7 +112,7 @@ public class DfsCode implements Serializable {
 
     HashCodeBuilder builder = new HashCodeBuilder();
 
-    for (DFSStep step : steps) {
+    for (DfsStep step : steps) {
       builder.append(step.hashCode());
     }
 
@@ -130,8 +130,8 @@ public class DfsCode implements Serializable {
 
       if (this.getSteps().size() == otherCode.getSteps().size()) {
 
-        Iterator<DFSStep> ownSteps = this.getSteps().iterator();
-        Iterator<DFSStep> otherSteps = otherCode.getSteps().iterator();
+        Iterator<DfsStep> ownSteps = this.getSteps().iterator();
+        Iterator<DfsStep> otherSteps = otherCode.getSteps().iterator();
 
         equals = true;
 
@@ -157,7 +157,7 @@ public class DfsCode implements Serializable {
     return steps.size();
   }
 
-  public DFSStep getLastStep() {
+  public DfsStep getLastStep() {
     return steps.get(steps.size() - 1);
   }
 

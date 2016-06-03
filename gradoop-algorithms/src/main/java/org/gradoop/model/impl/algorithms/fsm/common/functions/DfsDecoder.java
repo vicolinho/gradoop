@@ -27,7 +27,7 @@ import org.apache.flink.api.java.typeutils.TupleTypeInfo;
 import org.apache.flink.api.java.typeutils.TypeExtractor;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMGraphHeadFactory;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSStep;
+import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsStep;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedSubgraph;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.ObjectWithCount;
@@ -75,7 +75,7 @@ public class DfsDecoder<G extends EPGMGraphHead> implements
 
     Map<Integer, GradoopId> vertexTimeId = new HashMap<>();
 
-    for (DFSStep step : dfsCode.getSteps()) {
+    for (DfsStep step : dfsCode.getSteps()) {
 
       Integer fromTime = step.getFromTime();
       Integer fromLabel = step.getFromLabel();

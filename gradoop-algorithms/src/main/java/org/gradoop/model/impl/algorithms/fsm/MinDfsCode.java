@@ -81,17 +81,17 @@ public class MinDfsCode
 
       targetAdjacencyList.getEntries().add(new AdjacencyListEntry(false, edgeId, label, sourceId, sourceLabel));
 
-      DFSStep step;
+      DfsStep step;
       List<Integer> vertexTimes;
 
       if(sourceId == targetId) {
-        step = new DFSStep(0, sourceLabel, true, label, 0, targetLabel);
+        step = new DfsStep(0, sourceLabel, true, label, 0, targetLabel);
         vertexTimes = Lists.newArrayList(sourceId);
       } else if (sourceLabel <= targetLabel) {
-        step = new DFSStep(0, sourceLabel, true, label, 1, targetLabel);
+        step = new DfsStep(0, sourceLabel, true, label, 1, targetLabel);
         vertexTimes = Lists.newArrayList(sourceId, targetId);
       } else {
-        step = new DFSStep(0, targetLabel, false, label, 1, sourceLabel);
+        step = new DfsStep(0, targetLabel, false, label, 1, sourceLabel);
         vertexTimes = Lists.newArrayList(targetId, sourceId);
       }
 

@@ -32,7 +32,7 @@ public class GSpan {
   public static GSpanTransaction createTransaction(DfsCode dfsCode) {
 
     // turn DFS edges into gSpan edges
-    List<DFSStep> steps = dfsCode.getSteps();
+    List<DfsStep> steps = dfsCode.getSteps();
     List<AdjacencyList> adjacencyLists = Lists.newArrayList();
     List<GSpanEdge> edges = Lists.newArrayListWithExpectedSize(steps.size());
     createAdjacencyListsAndEdges(steps, adjacencyLists, edges);
@@ -162,11 +162,11 @@ public class GSpan {
       outgoing, edgeId, edgeLabel, toId, toLabel));
   }
 
-  private static void createAdjacencyListsAndEdges(final List<DFSStep> steps,
+  private static void createAdjacencyListsAndEdges(final List<DfsStep> steps,
     final List<AdjacencyList> adjacencyLists, final List<GSpanEdge> edges) {
 
     int edgeId = 0;
-    for(DFSStep step : steps) {
+    for(DfsStep step : steps) {
 
       Integer edgeLabel = step.getEdgeLabel();
 
@@ -229,14 +229,14 @@ public class GSpan {
     int edgeLabel = edge.getLabel();
     int targetLabel = edge.getTargetLabel();
 
-    DFSStep step;
+    DfsStep step;
 
     if (edge.isLoop()) {
-      step = new DFSStep(0, sourceLabel, true, edgeLabel, 0, sourceLabel);
+      step = new DfsStep(0, sourceLabel, true, edgeLabel, 0, sourceLabel);
     } else if(edge.sourceIsMinimumLabel()) {
-      step = new DFSStep(0, sourceLabel, true, edgeLabel, 1, targetLabel);
+      step = new DfsStep(0, sourceLabel, true, edgeLabel, 1, targetLabel);
     } else {
-      step = new DFSStep(0, targetLabel, false, edgeLabel, 1, sourceLabel);
+      step = new DfsStep(0, targetLabel, false, edgeLabel, 1, sourceLabel);
     }
 
     return new DfsCode(step);
@@ -364,7 +364,7 @@ public class GSpan {
                       toVertexTime = vertexIdTime.size();
                     }
 
-                    childCode.getSteps().add(new DFSStep(
+                    childCode.getSteps().add(new DfsStep(
                       fromVertexTime,
                       fromVertexLabel,
                       entry.isOutgoing(),

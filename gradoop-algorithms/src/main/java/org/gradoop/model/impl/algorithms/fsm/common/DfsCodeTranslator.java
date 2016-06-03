@@ -2,7 +2,7 @@ package org.gradoop.model.impl.algorithms.fsm.common;
 
 import org.apache.flink.api.common.functions.RuntimeContext;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSStep;
+import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsStep;
 
 import java.util.List;
 
@@ -24,7 +24,7 @@ public class DfsCodeTranslator {
 
     builder.append("[");
 
-    for(DFSStep step : dfsCode.getSteps()) {
+    for(DfsStep step : dfsCode.getSteps()) {
       int fromTime = step.getFromTime();
       String fromLabel = vertexLabelDictionary.get(step.getFromLabel());
 

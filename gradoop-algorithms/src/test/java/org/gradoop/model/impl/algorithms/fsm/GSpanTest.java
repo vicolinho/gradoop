@@ -8,7 +8,7 @@ import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common
   .GradoopTransactionalFSMEncoder;
 import org.gradoop.model.impl.algorithms.fsm.common.gspan.GSpan;
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSStep;
+import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsStep;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.GSpanTransaction;
 import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTriple;
@@ -36,9 +36,9 @@ public class GSpanTest extends GradoopFlinkTestBase {
     //  (0:A)    (1:A)
     //       -a->
 
-    DFSStep firstStep = new DFSStep(0, 0, true, 0, 1, 0);
-    DFSStep backwardStep = new DFSStep(1, 0, false, 0, 0, 0);
-    DFSStep branchStep = new DFSStep(0, 0, true, 0, 1, 0);
+    DfsStep firstStep = new DfsStep(0, 0, true, 0, 1, 0);
+    DfsStep backwardStep = new DfsStep(1, 0, false, 0, 0, 0);
+    DfsStep branchStep = new DfsStep(0, 0, true, 0, 1, 0);
 
     DfsCode minCode = new DfsCode(Lists.newArrayList(firstStep, backwardStep));
     DfsCode wrongCode = new DfsCode(Lists.newArrayList(firstStep, branchStep));
@@ -99,7 +99,7 @@ public class GSpanTest extends GradoopFlinkTestBase {
     DfsCode singleEdgeCode =
       singleEdgeCodes.iterator().next();
 
-    assertEquals(singleEdgeCode, new DfsCode(new DFSStep(0, 0, true, 0, 1, 0)));
+    assertEquals(singleEdgeCode, new DfsCode(new DfsStep(0, 0, true, 0, 1, 0)));
 
     // N=2
     assertEquals(0, singleEdgeCode.getMinVertexLabel());

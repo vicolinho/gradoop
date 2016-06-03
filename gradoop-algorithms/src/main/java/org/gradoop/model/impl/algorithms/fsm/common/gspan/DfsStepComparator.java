@@ -17,7 +17,7 @@
 
 package org.gradoop.model.impl.algorithms.fsm.common.gspan;
 
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSStep;
+import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsStep;
 
 import java.io.Serializable;
 import java.util.Comparator;
@@ -25,7 +25,7 @@ import java.util.Comparator;
 /**
  * Comparator of DFS code steps based on gSpan lexicographical order.
  */
-public class DfsStepComparator implements Comparator<DFSStep>, Serializable {
+public class DfsStepComparator implements Comparator<DfsStep>, Serializable {
 
   /**
    * true for comparing DFS steps of directed graphs,
@@ -42,79 +42,42 @@ public class DfsStepComparator implements Comparator<DFSStep>, Serializable {
   }
 
   @Override
-  public int compare(DFSStep e1, DFSStep e2) {
+  public int compare(DfsStep e1, DfsStep e2) {
     int comparison;
 
-    // forward - backward relation
-    if (e1.isForward() && e2.isForward()) {
-
-      if(e1.getToTime() < e2.getToTime()) {
-        comparison = -1;
-      } else if (e1.getToTime() > e2.getToTime()) {
+    if (e1.isForward()) {
+      if (e2.isBackward()) {
+        // forward - backward
         comparison = 1;
       } else {
-
-      }
-    }
-
-    // same direction
-    if (e1.isForward() == e2.isForward()) {
-
-      // both forward
-      if (e1.isForward()) {
-
-        if (e1.getToTime() < e2.getToTime()) {
+        // forward - forward
+        if (e1.getFromTime() == e2.getFromTime()) {
+          // forward from same vertex
+          comparison = compareLabels(e1, e2);
+        } else if (e1.getFromTime() > e2.getFromTime()) {
+          // first forward from later vertex
           comparison = -1;
-
-        } else if (e1.getToTime() > e2.getToTime()) {
+        } else  {
+          // second forward from later vertex
           comparison = 1;
-
-        } else {
-          comparison = compareLabels(e1, e2);
-        }
-
-        // both backward
-      } else {
-
-        if (e1.getFromTime() < e2.getFromTime() ||
-          e1.getFromTime() == e2.getFromTime() &&
-            e1.getToTime() < e2.getToTime()) {
-
-          comparison = -1;
-
-        } else if (e1.getFromTime() > e2.getFromTime() ||
-          e1.getFromTime() == e2.getFromTime() &&
-            e1.getToTime() > e2.getToTime()) {
-
-          comparison = -1;
-        } else {
-          comparison = compareLabels(e1, e2);
         }
       }
-
-      // inverse direction
     } else {
-
-      if (e1.isForward() && e2.isBackward() &&
-        (
-          e1.getFromTime() < e2.getToTime() ||
-            e1.getToTime() <= e2.getFromTime()
-        )
-        ) {
-
+      if(e2.isForward()) {
+        // backward - forward
         comparison = -1;
-
-      } else if(e1.isBackward() && e2.isForward() &&
-        (
-          e1.getFromTime() > e2.getToTime() ||
-            e1.getToTime() >= e2.getFromTime()
-        )
-        ) {
-
-        comparison = 1;
-
       } else {
-        comparison = compareLabels(e1, e2);
+        // backward - backward
+        if (e1.getToTime() == e2.getToTime()) {
+          // backward to same vertex
+          comparison = compareLabels(e1, e2);
+        } else if (e1.getToTime() < e2.getToTime()) {
+          // first back to earlier vertex
+          comparison = -1;
+        } else {
+          // second back to earlier vertex
+          comparison = 1;
+        }
       }
     }
 
@@ -128,7 +91,7 @@ public class DfsStepComparator implements Comparator<DFSStep>, Serializable {
    * @param s2 second DFS step
    * @return comparison result
    */
-  private int compareLabels(DFSStep s1, DFSStep s2) {
+  private int compareLabels(DfsStep s1, DfsStep s2) {
     int comparison;
 
     if (s1.getFromLabel().compareTo(s2.getFromLabel()) < 0) {
@@ -151,7 +114,7 @@ public class DfsStepComparator implements Comparator<DFSStep>, Serializable {
    * @param s2 second DFS step
    * @return  comparison result
    */
-  private int compareDirectedLabels(DFSStep s1, DFSStep s2) {
+  private int compareDirectedLabels(DfsStep s1, DfsStep s2) {
     int comparison;
 
     if (s1.isOutgoing() && !s2.isOutgoing()) {
@@ -170,7 +133,7 @@ public class DfsStepComparator implements Comparator<DFSStep>, Serializable {
    * @param s2 second DFS step
    * @return  comparison result
    */
-  private int compareUndirectedLabels(DFSStep s1, DFSStep s2) {
+  private int compareUndirectedLabels(DfsStep s1, DfsStep s2) {
     int comparison;
     if (s1.getEdgeLabel().compareTo(s2.getEdgeLabel()) < 0) {
       comparison = -1;
@@ -187,4 +150,6 @@ public class DfsStepComparator implements Comparator<DFSStep>, Serializable {
     }
     return comparison;
   }
+
+
 }

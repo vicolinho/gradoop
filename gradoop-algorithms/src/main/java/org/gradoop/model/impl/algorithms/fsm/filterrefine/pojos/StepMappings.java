@@ -1,18 +1,18 @@
 package org.gradoop.model.impl.algorithms.fsm.filterrefine.pojos;
 
-import org.gradoop.model.impl.algorithms.fsm.common.pojos.DFSStep;
+import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsStep;
 
 import java.util.Collection;
 
 public class StepMappings
   implements Comparable<StepMappings> {
 
-  private final DFSStep step;
+  private final DfsStep step;
   private final Collection<StepPatternMapping> mappings;
   private final int frequency;
   private final int edgeTime;
 
-  public StepMappings(DFSStep stepPattern,
+  public StepMappings(DfsStep stepPattern,
     Collection<StepPatternMapping> mappings, int edgeTime) {
     this.step = stepPattern;
     this.mappings = mappings;
@@ -25,7 +25,7 @@ public class StepMappings
     return this.frequency - o.frequency;
   }
 
-  public DFSStep getStep() {
+  public DfsStep getStep() {
     return step;
   }
 

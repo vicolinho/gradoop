@@ -48,7 +48,7 @@
 //
 //      Integer maxVertexTime = 0;
 //
-//      for(DFSStep step : code.getSteps()) {
+//      for(DfsStep step : code.getSteps()) {
 //        StepPattern stepPattern = new StepPattern(step);
 //        allStepPatterns.add(stepPattern);
 //        edgeTimes.add(null);
@@ -86,7 +86,7 @@
 //          .newArrayListWithCapacity(code.size());
 //
 //        int edgeTime = 0;
-//        for(DFSStep step : code.getSteps()) {
+//        for(DfsStep step : code.getSteps()) {
 //          StepPattern pattern = new StepPattern(step);
 //
 //          Collection<StepPatternMapping> patternMappings = stepPatternMappings
@@ -138,7 +138,7 @@
 //    Collection<DFSEmbedding> parents, StepMappings stepWithMappings) {
 //    Collection<DFSEmbedding> children = Lists.newArrayList();
 //
-//    DFSStep step = stepWithMappings.getStep();
+//    DfsStep step = stepWithMappings.getStep();
 //    Collection<StepPatternMapping> mappings = stepWithMappings.getMappings();
 //
 //    for (DFSEmbedding parent : parents) {

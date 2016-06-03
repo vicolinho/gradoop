@@ -52,7 +52,7 @@ public class IterativeTransactionalFSMiner
 
     // ITERATION HEAD
     IterativeDataSet<IterationItem> workSet = searchSpace
-      .iterate(fsmConfig.getMaxEdgeCount() - 1);
+      .iterate(fsmConfig.getMaxEdgeCount());
 
     // ITERATION BODY
 
@@ -78,7 +78,7 @@ public class IterativeTransactionalFSMiner
       .map(new AllFrequentSubgraphs())
       .union(
         currentFrequentSubgraphs
-          .reduceGroup(new CollectFrequentSubgraphs())
+          .reduceGroup(new CollectFrequentSubgraphs(fsmConfig))
       )
       .reduce(new Merge());
 
