@@ -25,13 +25,13 @@ import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.gspan.GSpan;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedSubgraph;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.ObjectWithCount;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.WithCount;
 import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.IterationItem;
 
 import java.util.Collection;
 
 /**
- * Core of gSpan implementation. Grows embeddings of KnownToBeGloballyFrequent DFS codes.
+ * Core of gSpan implementation. Grows embeddings of CompleteResult DFS codes.
  */
 public class GrowFrequentSubgraphs
   extends RichMapFunction<IterationItem, IterationItem> {
@@ -46,12 +46,12 @@ public class GrowFrequentSubgraphs
   public void open(Configuration parameters) throws Exception {
     super.open(parameters);
 
-    Collection<ObjectWithCount<CompressedSubgraph>> compressedSubgraphs =
+    Collection<WithCount<CompressedSubgraph>> compressedSubgraphs =
       getRuntimeContext().getBroadcastVariable(BroadcastNames.FREQUENT_SUBGRAPHS);
 
     frequentSubgraphs = Lists.newArrayList();
 
-    for (ObjectWithCount<CompressedSubgraph> compressedSubgraph : compressedSubgraphs) {
+    for (WithCount<CompressedSubgraph> compressedSubgraph : compressedSubgraphs) {
       frequentSubgraphs.add(compressedSubgraph.getObject().getDfsCode());
     }
 
@@ -68,7 +68,7 @@ public class GrowFrequentSubgraphs
   public IterationItem map(IterationItem wrapper) throws Exception {
 
     if (! wrapper.isCollector()) {
-      GSpan.growFrequentSubgraphs(
+      GSpan.growEmbeddings(
         wrapper.getTransaction(), frequentSubgraphs, fsmConfig);
     }
 

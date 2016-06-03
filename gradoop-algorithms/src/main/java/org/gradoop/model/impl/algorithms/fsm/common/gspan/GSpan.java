@@ -137,10 +137,10 @@ public class GSpan {
         targetId, targetLabel, false, edgeId, edgeLabel, sourceId, sourceLabel);
     } else {
       addEntry(adjacencyLists,
-        sourceId, sourceLabel, true, edgeId, edgeLabel, targetId, targetLabel);
+        targetId, targetLabel, false, edgeId, edgeLabel, sourceId, sourceLabel);
 
       addEntry(adjacencyLists,
-        targetId, targetLabel, false, edgeId, edgeLabel, sourceId, sourceLabel);
+        sourceId, sourceLabel, true, edgeId, edgeLabel, targetId, targetLabel);
     }
   }
 
@@ -295,7 +295,7 @@ public class GSpan {
     return adjacencyList;
   }
 
-  public static void growFrequentSubgraphs(final GSpanTransaction transaction,
+  public static void growEmbeddings(final GSpanTransaction transaction,
     Collection<DfsCode> frequentParentSubgraphs, FSMConfig fsmConfig)
   {
     Map<DfsCode, Collection<DFSEmbedding>> childCodeEmbeddings = null;
@@ -466,10 +466,93 @@ public class GSpan {
       minDfsCode = minimumDfsCode(grownSubgraphs, fsmConfig);
 
 
-      growFrequentSubgraphs(
+      growEmbeddings(
         transaction, Lists.newArrayList(minDfsCode), fsmConfig);
 
     }
     return minDfsCode;
+  }
+
+  public static boolean contains(
+    GSpanTransaction graph, DfsCode subgraph, FSMConfig fsmConfig) {
+
+
+    Iterator<DfsStep> iterator = subgraph.getSteps().iterator();
+
+    DfsStep step = iterator.next();
+
+    Collection<DFSEmbedding> parentEmbeddings = Lists.newArrayList();
+    int fromVertexId = 0;
+    for(AdjacencyList adjacencyList : graph.getAdjacencyLists()) {
+      if (step.getFromLabel().equals(adjacencyList.getFromVertexLabel())) {
+        for (AdjacencyListEntry entry : adjacencyList.getEntries()) {
+          if (step.isOutgoing() == entry.isOutgoing() &&
+            step.getEdgeLabel().equals(entry.getEdgeLabel()) &&
+            step.getToLabel().equals(entry.getToVertexLabel())) {
+
+            List<Integer> vertexTimes = step.isLoop() ?
+              Lists.newArrayList(fromVertexId) :
+              Lists.newArrayList(fromVertexId, entry.getToVertexId());
+
+            List<Integer> edgesTimes = Lists.newArrayList(entry.getEdgeId());
+            parentEmbeddings.add(new DFSEmbedding(vertexTimes, edgesTimes));
+          }
+        }
+      }
+      fromVertexId++;
+    }
+
+    while (iterator.hasNext() && !parentEmbeddings.isEmpty()) {
+      Collection<DFSEmbedding> childEmbeddings = Lists.newArrayList();
+
+      step = iterator.next();
+
+      for (DFSEmbedding parentEmbedding : parentEmbeddings) {
+        fromVertexId = parentEmbedding.getVertexTimes().get(step.getFromTime());
+
+        for (AdjacencyListEntry entry :
+          graph.getAdjacencyLists().get(fromVertexId).getEntries()) {
+
+          // edge not contained
+          if (!parentEmbedding.getEdgeTimes().contains(entry.getEdgeId())) {
+            // forward traversal
+            if (step.isForward() &&
+              // same to vertex label
+              step.getToLabel().equals(entry.getToVertexLabel()) &&
+              // same edge label
+              step.getEdgeLabel().equals(entry.getEdgeLabel()) &&
+              // vertex not contained
+              ! parentEmbedding.getVertexTimes()
+                .contains(entry.getToVertexId())) {
+
+              DFSEmbedding childEmbedding =
+                DFSEmbedding.deepCopy(parentEmbedding);
+              childEmbedding.getVertexTimes().add(entry.getToVertexId());
+              childEmbedding.getEdgeTimes().add(entry.getEdgeId());
+
+              childEmbeddings.add(childEmbedding);
+
+              // backward traversal
+            } else if (step.isBackward() &&
+              // same edge label
+              step.getEdgeLabel().equals(entry.getEdgeLabel()) &&
+              // vertex already mapped to correct time
+              parentEmbedding.getVertexTimes().get(step.getToTime())
+                .equals(entry.getToVertexId())) {
+
+              DFSEmbedding childEmbedding =
+                DFSEmbedding.deepCopy(parentEmbedding);
+              childEmbedding.getEdgeTimes().add(entry.getEdgeId());
+
+              childEmbeddings.add(childEmbedding);
+            }
+          }
+        }
+      }
+
+      parentEmbeddings = childEmbeddings;
+    }
+
+    return !parentEmbeddings.isEmpty();
   }
 }

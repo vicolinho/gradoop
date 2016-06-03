@@ -11,11 +11,9 @@ import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common
   .GradoopTransactionalFSMEncoder;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedSubgraph;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.ObjectWithCount;
-import org.gradoop.model.impl.algorithms.fsm.filterrefine
-  .FilterRefineTransactionalFSMiner;
-import org.gradoop.model.impl.algorithms.fsm.iterative
-  .IterativeTransactionalFSMiner;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.WithCount;
+import org.gradoop.model.impl.algorithms.fsm.filterrefine.FilterRefineGSpanMiner;
+import org.gradoop.model.impl.algorithms.fsm.iterative.IterativeGSpanMiner;
 import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTriple;
 import org.gradoop.model.impl.functions.utils.WithEmptySide;
 import org.gradoop.model.impl.pojo.EdgePojo;
@@ -38,19 +36,19 @@ public class FSMTransactionGeneratorTest extends GradoopFlinkTestBase {
 
     DataSet<EdgeTriple> edges = encoder.encode(input, fsmConfig);
 
-    TransactionalFSMiner iMiner = new IterativeTransactionalFSMiner();
+    TransactionalFSMiner iMiner = new IterativeGSpanMiner();
     iMiner.setExecutionEnvironment(
       input.getConfig().getExecutionEnvironment());
-    DataSet<ObjectWithCount<CompressedSubgraph>> iResult =
+    DataSet<WithCount<CompressedSubgraph>> iResult =
       iMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
-    TransactionalFSMiner frMiner = new FilterRefineTransactionalFSMiner();
-    DataSet<ObjectWithCount<CompressedSubgraph>> frResult =
+    TransactionalFSMiner frMiner = new FilterRefineGSpanMiner();
+    DataSet<WithCount<CompressedSubgraph>> frResult =
       frMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
     iResult.fullOuterJoin(frResult)
       .where(0).equalTo(0)
-      .with(new WithEmptySide<ObjectWithCount<CompressedSubgraph>, ObjectWithCount<CompressedSubgraph>>())
+      .with(new WithEmptySide<WithCount<CompressedSubgraph>, WithCount<CompressedSubgraph>>())
       .print();
   }
 
@@ -84,19 +82,19 @@ public class FSMTransactionGeneratorTest extends GradoopFlinkTestBase {
 
     DataSet<EdgeTriple> edges = encoder.encode(input, fsmConfig);
 
-    TransactionalFSMiner iMiner = new IterativeTransactionalFSMiner();
+    TransactionalFSMiner iMiner = new IterativeGSpanMiner();
     iMiner.setExecutionEnvironment(
       input.getConfig().getExecutionEnvironment());
-    DataSet<ObjectWithCount<CompressedSubgraph>> iResult =
+    DataSet<WithCount<CompressedSubgraph>> iResult =
       iMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
-    TransactionalFSMiner frMiner = new FilterRefineTransactionalFSMiner();
-    DataSet<ObjectWithCount<CompressedSubgraph>> frResult =
+    TransactionalFSMiner frMiner = new FilterRefineGSpanMiner();
+    DataSet<WithCount<CompressedSubgraph>> frResult =
       frMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
     iResult.fullOuterJoin(frResult)
       .where(0).equalTo(0)
-      .with(new WithEmptySide<ObjectWithCount<CompressedSubgraph>, ObjectWithCount<CompressedSubgraph>>())
+      .with(new WithEmptySide<WithCount<CompressedSubgraph>, WithCount<CompressedSubgraph>>())
       .print();
   }
 

@@ -5,37 +5,35 @@ import org.apache.flink.api.common.functions.GroupReduceFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedSubgraph;
-import org.gradoop.model.impl.algorithms.fsm.filterrefine.tuples.SubgraphMessage;
+import org.gradoop.model.impl.algorithms.fsm.filterrefine.tuples.RefinementMessage;
 
 import java.util.Collection;
+import java.util.Iterator;
 
 public class RefinementCalls implements
-  GroupReduceFunction<SubgraphMessage, Tuple2<Integer, Collection<CompressedSubgraph>>> {
+  GroupReduceFunction<RefinementMessage, Tuple2<Integer, Collection<CompressedSubgraph>>> {
 
   @Override
   public void reduce(
-    Iterable<SubgraphMessage> iterable,
+    Iterable<RefinementMessage> iterable,
     Collector<Tuple2<Integer, Collection<CompressedSubgraph>>> collector) throws
     Exception {
 
-    boolean first = true;
-    Integer workerId = null;
+    Iterator<RefinementMessage> iterator = iterable.iterator();
 
-    Collection<CompressedSubgraph> codes = Lists.newArrayList();
+    RefinementMessage message = iterator.next();
 
-    for(SubgraphMessage triple : iterable) {
-      if (first) {
-        workerId = triple.f1;
-        first = false;
-      }
+    int workerId = message.getWorkerId();
 
-      codes.add(triple.f0);
+    Collection<CompressedSubgraph> codes = Lists
+      .newArrayList(message.getSubgraph());
+
+    while (iterator.hasNext()) {
+      message = iterator.next();
+      codes.add(message.getSubgraph());
     }
+    collector.collect(new Tuple2<>(workerId, codes));
 
-    Tuple2<Integer, Collection<CompressedSubgraph>> call =
-      new Tuple2<>(workerId, codes);
-
-    collector.collect(call);
   }
 
 }

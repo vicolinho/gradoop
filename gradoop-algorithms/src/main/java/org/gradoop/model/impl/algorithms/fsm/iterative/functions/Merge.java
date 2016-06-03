@@ -2,19 +2,19 @@ package org.gradoop.model.impl.algorithms.fsm.iterative.functions;
 
 import org.apache.flink.api.common.functions.ReduceFunction;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedSubgraph;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.ObjectWithCount;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.WithCount;
 
 import java.util.Collection;
 
-public class Merge implements ReduceFunction<Collection<ObjectWithCount<CompressedSubgraph>>> {
+public class Merge implements ReduceFunction<Collection<WithCount<CompressedSubgraph>>> {
 
   @Override
-  public Collection<ObjectWithCount<CompressedSubgraph>> reduce(
-    Collection<ObjectWithCount<CompressedSubgraph>> firstCollection,
-    Collection<ObjectWithCount<CompressedSubgraph>> secondCollection) throws Exception {
+  public Collection<WithCount<CompressedSubgraph>> reduce(
+    Collection<WithCount<CompressedSubgraph>> firstCollection,
+    Collection<WithCount<CompressedSubgraph>> secondCollection) throws Exception {
 
 
-    Collection<ObjectWithCount<CompressedSubgraph>> mergedCollection;
+    Collection<WithCount<CompressedSubgraph>> mergedCollection;
 
     if(firstCollection.size() >= firstCollection.size()) {
       firstCollection.addAll(secondCollection);

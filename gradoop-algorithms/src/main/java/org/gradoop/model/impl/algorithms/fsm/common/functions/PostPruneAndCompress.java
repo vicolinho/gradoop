@@ -7,10 +7,10 @@ import org.gradoop.model.impl.algorithms.fsm.common.gspan.GSpan;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedSubgraph;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.SerializedSubgraph;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.ObjectWithCount;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.WithCount;
 
 public class PostPruneAndCompress
-  implements FlatMapFunction<ObjectWithCount<SerializedSubgraph>, ObjectWithCount<CompressedSubgraph>> {
+  implements FlatMapFunction<WithCount<SerializedSubgraph>, WithCount<CompressedSubgraph>> {
 
   private final FSMConfig fsmConfig;
 
@@ -19,14 +19,14 @@ public class PostPruneAndCompress
   }
 
   @Override
-  public void flatMap(ObjectWithCount<SerializedSubgraph> subgraphWithSupport,
-    Collector<ObjectWithCount<CompressedSubgraph>> collector) throws Exception {
+  public void flatMap(WithCount<SerializedSubgraph> subgraphWithSupport,
+    Collector<WithCount<CompressedSubgraph>> collector) throws Exception {
 
     DfsCode code = subgraphWithSupport.getObject().getDfsCode();
     int support = subgraphWithSupport.getSupport();
 
     if (GSpan.isMinimumDfsCode(code, fsmConfig)) {
-      collector.collect(new ObjectWithCount<>(new CompressedSubgraph(code), support));
+      collector.collect(new WithCount<>(new CompressedSubgraph(code), support));
     }
   }
 }

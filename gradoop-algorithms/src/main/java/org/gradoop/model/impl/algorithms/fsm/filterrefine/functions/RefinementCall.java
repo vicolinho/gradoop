@@ -1,18 +1,17 @@
 package org.gradoop.model.impl.algorithms.fsm.filterrefine.functions;
 
 import org.apache.flink.api.common.functions.FilterFunction;
-import org.gradoop.model.impl.algorithms.fsm.filterrefine.tuples.SubgraphMessage;
+import org.gradoop.model.impl.algorithms.fsm.filterrefine.tuples.FilterResult;
+import org.gradoop.model.impl.algorithms.fsm.filterrefine.tuples
+  .RefinementMessage;
 
-/**
- * Created by peet on 09.05.16.
- */
+
 public class RefinementCall implements
-  FilterFunction<SubgraphMessage> {
+  FilterFunction<RefinementMessage> {
+
 
   @Override
-  public boolean filter(SubgraphMessage triple
-  ) throws
-    Exception {
-    return triple.f1 >= 0;
+  public boolean filter(RefinementMessage refinementMessage) throws Exception {
+    return refinementMessage.getMessageType() == RefinementMessage.REFINEMENT_CALL;
   }
 }

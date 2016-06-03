@@ -23,8 +23,7 @@ import org.gradoop.model.api.EPGMVertex;
 import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.TransactionalFSM;
-import org.gradoop.model.impl.algorithms.fsm.iterative
-  .IterativeTransactionalFSMiner;
+import org.gradoop.model.impl.algorithms.fsm.iterative.IterativeGSpanMiner;
 
 /**
  * The gSpan frequent subgraph mining algorithm implemented as Gradoop Operator
@@ -41,7 +40,7 @@ public class IterativeTransactionalFSM
    * @param fsmConfig frequent subgraph mining configuration
    */
   public IterativeTransactionalFSM(FSMConfig fsmConfig) {
-    super(fsmConfig, new IterativeTransactionalFSMiner());
+    super(fsmConfig, new IterativeGSpanMiner());
   }
 
   @Override

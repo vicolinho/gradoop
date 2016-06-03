@@ -4,8 +4,7 @@ import com.google.common.collect.Lists;
 import org.apache.flink.api.common.typeinfo.TypeInformation;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.operators.IterativeDataSet;
-import org.gradoop.model.impl.algorithms.fsm.common
-  .AbstractTransactionalFSMiner;
+import org.gradoop.model.impl.algorithms.fsm.common.AbstractGSpanMiner;
 import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.functions
@@ -19,18 +18,17 @@ import org.gradoop.model.impl.algorithms.fsm.common.functions
   .ReportGrownSubgraphs;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedSubgraph;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.SerializedSubgraph;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.ObjectWithCount;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.WithCount;
 import org.gradoop.model.impl.algorithms.fsm.iterative.functions.*;
 import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTriple;
 import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.IterationItem;
 
 import java.util.Collection;
 
-public class IterativeTransactionalFSMiner
-  extends AbstractTransactionalFSMiner {
+public class IterativeGSpanMiner extends AbstractGSpanMiner {
 
   @Override
-  public DataSet<ObjectWithCount<CompressedSubgraph>> mine(DataSet<EdgeTriple> edges,
+  public DataSet<WithCount<CompressedSubgraph>> mine(DataSet<EdgeTriple> edges,
     DataSet<Integer> minSupport, FSMConfig fsmConfig) {
 
     setFsmConfig(fsmConfig);
@@ -40,7 +38,7 @@ public class IterativeTransactionalFSMiner
 
     // create search space with collector
 
-    Collection<ObjectWithCount<CompressedSubgraph>> emptySubgraphList =
+    Collection<WithCount<CompressedSubgraph>> emptySubgraphList =
       Lists.newArrayListWithExpectedSize(0);
 
     DataSet<IterationItem> searchSpace = transactions
@@ -61,7 +59,7 @@ public class IterativeTransactionalFSMiner
       .filter(new IsTransaction());
 
     // report ,filter and validate frequent subgraphs
-    DataSet<ObjectWithCount<CompressedSubgraph>> currentFrequentSubgraphs = transactions
+    DataSet<WithCount<CompressedSubgraph>> currentFrequentSubgraphs = transactions
       .flatMap(new ReportGrownSubgraphs())  // report patterns
       .groupBy(0)
       .combineGroup(new Support<SerializedSubgraph>())
@@ -73,7 +71,7 @@ public class IterativeTransactionalFSMiner
       ;   // filter false positives
 
     // get all frequent subgraphs
-    DataSet<Collection<ObjectWithCount<CompressedSubgraph>>> collector = workSet
+    DataSet<Collection<WithCount<CompressedSubgraph>>> collector = workSet
       .filter(new IsCollector())
       .map(new AllFrequentSubgraphs())
       .union(

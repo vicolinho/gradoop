@@ -15,7 +15,7 @@ import org.gradoop.model.impl.id.GradoopId;
 /**
  * Created by peet on 17.05.16.
  */
-public abstract class AbstractTransactionalFSMiner
+public abstract class AbstractGSpanMiner
   implements TransactionalFSMiner {
 
   /**

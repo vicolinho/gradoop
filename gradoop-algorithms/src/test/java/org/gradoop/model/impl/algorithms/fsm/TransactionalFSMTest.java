@@ -209,8 +209,8 @@ public class TransactionalFSMTest extends GradoopFlinkTestBase {
     miners.add(
       new IterativeTransactionalFSM<GraphHeadPojo, VertexPojo, EdgePojo>(fsmConfig));
 
-//    miners.add(
-//      new FilterRefineTransactionalFSM<GraphHeadPojo, VertexPojo, EdgePojo>(fsmConfig));
+    miners.add(
+      new FilterRefineTransactionalFSM<GraphHeadPojo, VertexPojo, EdgePojo>(fsmConfig));
 
     return miners;
   }

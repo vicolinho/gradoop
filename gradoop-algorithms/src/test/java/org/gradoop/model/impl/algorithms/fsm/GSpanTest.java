@@ -104,7 +104,7 @@ public class GSpanTest extends GradoopFlinkTestBase {
     // N=2
     assertEquals(0, singleEdgeCode.getMinVertexLabel());
 
-    GSpan.growFrequentSubgraphs(transaction, singleEdgeCodes,fsmConfig);
+    GSpan.growEmbeddings(transaction, singleEdgeCodes,fsmConfig);
 
     Collection<DfsCode> twoEdgeCodes =
       transaction.getCodeEmbeddings().keySet();
@@ -129,7 +129,7 @@ public class GSpanTest extends GradoopFlinkTestBase {
     DfsCode minSubgraph =
       GSpan.minimumDfsCode(twoEdgeCodes, fsmConfig);
 
-    GSpan.growFrequentSubgraphs(
+    GSpan.growEmbeddings(
       transaction, Lists.newArrayList(minSubgraph), fsmConfig);
 
     Collection<DfsCode> threeEdgeCodes =
@@ -154,7 +154,7 @@ public class GSpanTest extends GradoopFlinkTestBase {
 
     minSubgraph = GSpan.minimumDfsCode(threeEdgeCodes, fsmConfig);
 
-    GSpan.growFrequentSubgraphs(
+    GSpan.growEmbeddings(
       transaction, Lists.newArrayList(minSubgraph), fsmConfig);
 
     Collection<DfsCode> fourEdgeCodes =

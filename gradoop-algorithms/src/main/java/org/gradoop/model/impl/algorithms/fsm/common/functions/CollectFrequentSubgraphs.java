@@ -21,7 +21,7 @@ import org.apache.flink.api.common.functions.GroupReduceFunction;
 import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedSubgraph;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.ObjectWithCount;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.WithCount;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -32,7 +32,7 @@ import java.util.List;
  * [(Supportable<CompressedDfsCode>, Support),..] => Supportable<CompressedDfsCode>[]
  */
 public class CollectFrequentSubgraphs implements
-  GroupReduceFunction<ObjectWithCount<CompressedSubgraph>, Collection<ObjectWithCount<CompressedSubgraph>>> {
+  GroupReduceFunction<WithCount<CompressedSubgraph>, Collection<WithCount<CompressedSubgraph>>> {
 
 
   private final FSMConfig fsmConfig;
@@ -42,16 +42,16 @@ public class CollectFrequentSubgraphs implements
   }
 
   @Override
-  public void reduce(Iterable<ObjectWithCount<CompressedSubgraph>> iterable,
-    Collector<Collection<ObjectWithCount<CompressedSubgraph>>> collector) throws Exception {
+  public void reduce(Iterable<WithCount<CompressedSubgraph>> iterable,
+    Collector<Collection<WithCount<CompressedSubgraph>>> collector) throws Exception {
 
-    List<ObjectWithCount<CompressedSubgraph>> codes = new ArrayList<>();
+    List<WithCount<CompressedSubgraph>> codes = new ArrayList<>();
 
-    Iterator<ObjectWithCount<CompressedSubgraph>> iterator = iterable
+    Iterator<WithCount<CompressedSubgraph>> iterator = iterable
       .iterator();
 
     if (iterator.hasNext()) {
-      ObjectWithCount<CompressedSubgraph> code = iterator.next();
+      WithCount<CompressedSubgraph> code = iterator.next();
 
       if (code.getObject().getDfsCode().size() >= fsmConfig.getMinEdgeCount()) {
         codes.add(code);

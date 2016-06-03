@@ -21,14 +21,13 @@ import org.apache.flink.api.common.functions.RichFilterFunction;
 import org.apache.flink.configuration.Configuration;
 import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedSubgraph;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.SerializedSubgraph;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.ObjectWithCount;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.WithCount;
 
 /**
  * filters frequent (Countable<CompressedDfsCode>s, Support), i.e., Support > minSupport
  */
 public class Frequent
-  extends RichFilterFunction<ObjectWithCount<CompressedSubgraph>> {
+  extends RichFilterFunction<WithCount<CompressedSubgraph>> {
 
   /**
    * minimum support
@@ -44,7 +43,7 @@ public class Frequent
   }
 
   @Override
-  public boolean filter(ObjectWithCount<CompressedSubgraph> c) throws Exception {
+  public boolean filter(WithCount<CompressedSubgraph> c) throws Exception {
     return c.getSupport() >= minSupport;
   }
 }

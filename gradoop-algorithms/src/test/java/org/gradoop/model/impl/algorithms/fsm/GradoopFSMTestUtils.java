@@ -2,24 +2,39 @@ package org.gradoop.model.impl.algorithms.fsm;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang.StringUtils;
+import org.apache.flink.api.common.functions.FlatJoinFunction;
 import org.apache.flink.api.common.functions.RichGroupCombineFunction;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.configuration.Configuration;
+import org.apache.flink.types.Either;
 import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.gspan.DfsCodeComparator;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsStep;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.DfsCode;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedSubgraph;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.ObjectWithCount;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.WithCount;
 
 import java.util.Collections;
 import java.util.List;
 
 public class GradoopFSMTestUtils {
 
+  public static void printDifference(
+    DataSet<WithCount<CompressedSubgraph>> left,
+    DataSet<WithCount<CompressedSubgraph>> right) throws Exception {
+
+    left.fullOuterJoin(right)
+      .where(0).equalTo(0)
+    .with(new JoinDifference())
+    .print();
+    ;
+
+
+  }
+
   public static void sortTranslateAndPrint(
-    DataSet<ObjectWithCount<CompressedSubgraph>> iResult,
+    DataSet<WithCount<CompressedSubgraph>> iResult,
     DataSet<List<String>> vertexLabelDictionary,
     DataSet<List<String>> edgeLabelDictionary) throws Exception {
 
@@ -37,7 +52,7 @@ public class GradoopFSMTestUtils {
 
   private static class SortAndTranslate
     extends
-    RichGroupCombineFunction<ObjectWithCount<CompressedSubgraph>, String> {
+    RichGroupCombineFunction<WithCount<CompressedSubgraph>, String> {
 
     private List<String> vertexDictionary;
     private List<String> edgeDictionary;
@@ -55,14 +70,14 @@ public class GradoopFSMTestUtils {
     }
 
     @Override
-    public void combine(Iterable<ObjectWithCount<CompressedSubgraph>> iterable,
+    public void combine(Iterable<WithCount<CompressedSubgraph>> iterable,
       Collector<String> collector) throws Exception {
 
       List<DfsCode> subgraphs = Lists.newArrayList();
       List<String> strings = Lists.newArrayList();
 
 
-      for(ObjectWithCount<CompressedSubgraph> subgraphWithCount : iterable) {
+      for(WithCount<CompressedSubgraph> subgraphWithCount : iterable) {
 
         subgraphs.add(subgraphWithCount.getObject().getDfsCode());
       }
@@ -111,5 +126,32 @@ public class GradoopFSMTestUtils {
   private static String formatEdge(boolean outgoing, String edgeLabel) {
     return outgoing ?
       "-" + edgeLabel + "->" : "<-" + edgeLabel + "-";
+  }
+
+  private static class JoinDifference
+    implements FlatJoinFunction<WithCount<CompressedSubgraph>, WithCount<CompressedSubgraph>,
+    Either<WithCount<CompressedSubgraph>, WithCount<CompressedSubgraph>>> {
+
+    @Override
+    public void join(
+      WithCount<CompressedSubgraph> left,
+      WithCount<CompressedSubgraph> right,
+      Collector<Either<WithCount<CompressedSubgraph>, WithCount<CompressedSubgraph>>> collector) throws
+      Exception {
+
+      if(left == null) {
+        collector.collect(
+          Either.<WithCount<CompressedSubgraph>, WithCount<CompressedSubgraph>>Right(right));
+      } else if (right == null) {
+        collector.collect(
+          Either.<WithCount<CompressedSubgraph>, WithCount<CompressedSubgraph>>Left(left));
+      } else if (left.getSupport() != right.getSupport()) {
+        collector.collect(
+          Either.<WithCount<CompressedSubgraph>, WithCount<CompressedSubgraph>>Left(left));
+        collector.collect(
+          Either.<WithCount<CompressedSubgraph>, WithCount<CompressedSubgraph>>Right(right));
+      }
+
+    }
   }
 }

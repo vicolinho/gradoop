@@ -18,18 +18,18 @@
 package org.gradoop.model.impl.algorithms.fsm.filterrefine.functions;
 
 import org.apache.flink.api.common.functions.FilterFunction;
-import org.gradoop.model.impl.algorithms.fsm.filterrefine.tuples.SubgraphMessage;
+import org.gradoop.model.impl.algorithms.fsm.filterrefine.tuples.FilterResult;
+import org.gradoop.model.impl.algorithms.fsm.filterrefine.tuples
+  .RefinementMessage;
 
 /**
  * filters frequent (CompressedDfsCodes, Support), i.e., Support > minSupport
  */
-public class KnownToBeGloballyFrequent
-  implements FilterFunction<SubgraphMessage> {
+public class CompleteResult
+  implements FilterFunction<RefinementMessage> {
 
   @Override
-  public boolean filter(SubgraphMessage triple
-  ) throws Exception {
-
-    return triple.f3;
+  public boolean filter(RefinementMessage refinementMessage) throws Exception {
+    return refinementMessage.getMessageType() == RefinementMessage.GLOBALLY_FREQUENT;
   }
 }

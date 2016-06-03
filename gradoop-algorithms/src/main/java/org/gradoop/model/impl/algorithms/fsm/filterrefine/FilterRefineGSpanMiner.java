@@ -2,27 +2,29 @@ package org.gradoop.model.impl.algorithms.fsm.filterrefine;
 
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.tuple.Tuple2;
-import org.gradoop.model.impl.algorithms.fsm.common.AbstractTransactionalFSMiner;
+import org.gradoop.model.impl.algorithms.fsm.common.AbstractGSpanMiner;
 import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.functions.Frequent;
 import org.gradoop.model.impl.algorithms.fsm.common.pojos.GSpanTransaction;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedSubgraph;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.ObjectWithCount;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.WithCount;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine.functions.*;
-import org.gradoop.model.impl.algorithms.fsm.filterrefine.tuples.SubgraphMessage;
+import org.gradoop.model.impl.algorithms.fsm.filterrefine.tuples.FilterResult;
+import org.gradoop.model.impl.algorithms.fsm.filterrefine.tuples
+  .RefinementMessage;
 import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTriple;
 
 import java.util.Collection;
 import java.util.Map;
 
 
-public class FilterRefineTransactionalFSMiner
-  extends AbstractTransactionalFSMiner {
+public class FilterRefineGSpanMiner
+  extends AbstractGSpanMiner {
 
 
   @Override
-  public DataSet<ObjectWithCount<CompressedSubgraph>> mine(DataSet<EdgeTriple> edges,
+  public DataSet<WithCount<CompressedSubgraph>> mine(DataSet<EdgeTriple> edges,
                                                       DataSet<Integer> minSupport, FSMConfig fsmConfig) {
 
     setFsmConfig(fsmConfig);
@@ -40,12 +42,12 @@ public class FilterRefineTransactionalFSMiner
       .reduceGroup(new WorkerIdsGraphCounts());
 
     // FILTER round
-    DataSet<SubgraphMessage> fsmResult =
+    DataSet<FilterResult> fsmResult =
       partitions
         // run local FSM
-        .flatMap(new LocalTransactionalFSM(fsmConfig));
+        .flatMap(new LocalGSpan(fsmConfig));
 
-    DataSet<SubgraphMessage> filterResult =
+    DataSet<RefinementMessage> filterResult =
       fsmResult
         // group reports by DFS code
         .groupBy(0)
@@ -55,37 +57,35 @@ public class FilterRefineTransactionalFSMiner
         .withBroadcastSet(workerIdsGraphCount, BroadcastNames.WORKER_GRAPHCOUNT);
 
     // add globally frequent DFS codes to result
-    DataSet<ObjectWithCount<CompressedSubgraph>> frequentDfsCodes = filterResult
-      .filter(new KnownToBeGloballyFrequent())
-      .map(new ToSupportable());
+    DataSet<WithCount<CompressedSubgraph>> frequentDfsCodes = filterResult
+      .filter(new CompleteResult())
+      .map(new CompressedSubgraphWithCount());
 
     // REFINEMENT
 
-    DataSet<SubgraphMessage> refinementCandidates =
-      filterResult
-        .filter(new NeedsRefinement());
-
     // remember incomplete results
-    DataSet<ObjectWithCount<CompressedSubgraph>> incompleteResults = refinementCandidates
-      .filter(new IncompleteResult())
-      .map(new ToSupportable());
+    DataSet<WithCount<CompressedSubgraph>> partialResults = filterResult
+      .filter(new PartialResult())
+      .map(new CompressedSubgraphWithCount());
 
     // get refined results
-//    DataSet<Supportable<CompressedDfsCode>> refinementResults = refinementCandidates
-//      .filter(new RefinementCall())
-//      .groupBy(1)
-//      .reduceGroup(new RefinementCalls())
-//      .join(partitions)
-//      .where(0).equalTo(0)
-//      .with(new Refinement(fsmConfig));
+    DataSet<WithCount<CompressedSubgraph>> refinementResults =
+      filterResult
+      .filter(new RefinementCall())
+      .groupBy(1) // workerId
+      .reduceGroup(new RefinementCalls())
+      .join(partitions)
+      .where(0).equalTo(0)
+      .with(new Refinement(fsmConfig));
 
     frequentDfsCodes = frequentDfsCodes
-      .union(incompleteResults
-//        .union(refinementResults)
-        .groupBy(0)
-        .sum(1)
-        .filter(new Frequent())
-        .withBroadcastSet(minSupport, BroadcastNames.MIN_SUPPORT)
+      .union(
+        partialResults
+          .union(refinementResults)
+          .groupBy(0)
+          .sum(1)
+          .filter(new Frequent())
+          .withBroadcastSet(minSupport, BroadcastNames.MIN_SUPPORT)
       );
 
     return frequentDfsCodes;

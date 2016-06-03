@@ -1,23 +1,29 @@
 package org.gradoop.model.impl.algorithms.fsm.filterrefine.functions;
 
 import com.google.common.collect.Lists;
-import com.google.common.collect.Sets;
 import org.apache.flink.api.common.functions.RichGroupReduceFunction;
-import org.apache.flink.api.java.tuple.Tuple4;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedSubgraph;
-import org.gradoop.model.impl.algorithms.fsm.filterrefine.tuples.SubgraphMessage;
+import org.gradoop.model.impl.algorithms.fsm.filterrefine.tuples.FilterResult;
+import org.gradoop.model.impl.algorithms.fsm.filterrefine.tuples
+  .RefinementMessage;
 
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.Map;
 
+/**
+ * Candidate selection for refinement phase
+ *
+ * FilterResultMessage,.. => RefinementCall,..
+ * where FilterResultMessage.subgraph == RefinementCall.subgraph
+ */
 public class FrequentOrRefinementCandidate
   extends RichGroupReduceFunction
-  <SubgraphMessage, SubgraphMessage> {
+  <FilterResult, RefinementMessage> {
 
   private final float threshold;
   /**
@@ -44,48 +50,50 @@ public class FrequentOrRefinementCandidate
 
   @Override
   public void reduce(
-    Iterable<SubgraphMessage> iterable,
-    Collector<SubgraphMessage> collector) throws
+    Iterable<FilterResult> messages,
+    Collector<RefinementMessage> collector) throws
     Exception {
 
-    ArrayList<SubgraphMessage> x = Lists.newArrayList(iterable);
-
     // copy list of all workers
-    Collection<Integer> workerIdsWithoutReport = Sets
-      .newHashSet(workerGraphCount.keySet());
+    Collection<Integer> workerIdsWithoutReport =
+      Lists.newLinkedList(workerGraphCount.keySet());
 
-    // init aggregate variables
-    CompressedSubgraph code = null;
-    int support = 0;
-    boolean atLeastOnceLocallyFrequent = false;
+
+    // evaluate first message
+    Iterator<FilterResult> iterator = messages.iterator();
+    FilterResult message = iterator.next();
+
+    CompressedSubgraph subgraph = message.getSubgraph();
+    workerIdsWithoutReport.remove(message.getWorkerId());
+
+    int support = message.getSupport();
+
+    boolean atLeastOnceLocallyFrequent = message.isLocallyFrequent();
 
     // for each worker report
-    for(SubgraphMessage triple : x) {
-      code = triple.getSubgraph();
+    while (iterator.hasNext()) {
+      message = iterator.next();
 
-      Integer reportedWorkerId = triple.f2;
-      Boolean locallyFrequent = triple.f3;
+      support += message.getSupport();
 
-      support += triple.f1;
-
-      if(!atLeastOnceLocallyFrequent && locallyFrequent) {
-        atLeastOnceLocallyFrequent = true;
+      if(!atLeastOnceLocallyFrequent) {
+        atLeastOnceLocallyFrequent = message.isLocallyFrequent();
       }
 
-      workerIdsWithoutReport.remove(reportedWorkerId);
+      workerIdsWithoutReport.remove(message.getWorkerId());
     }
 
 
     // CANDIDATE SELECTION
 
     if(atLeastOnceLocallyFrequent) {
-
       // support of all workers known
       if(workerIdsWithoutReport.isEmpty()) {
         // if globally frequent
         if(support >= minSupport) {
           // emit complete support message
-          collector.collect(new SubgraphMessage(code, support, -1, true));
+          collector.collect(new RefinementMessage(subgraph, support,
+            RefinementMessage.GLOBALLY_FREQUENT));
         }
       } else {
         int estimation = support;
@@ -96,12 +104,15 @@ public class FrequentOrRefinementCandidate
         }
         // if likely globally frequent
         if(estimation >= minSupport) {
+
           // emit incomplete support message
-          collector.collect(new SubgraphMessage(code, support, -1, false));
+          collector.collect(new RefinementMessage(subgraph, support,
+            RefinementMessage.PARTIAL_RESULT));
 
           // add refinement calls to missing workers
           for(Integer workerId : workerIdsWithoutReport) {
-            collector.collect(new SubgraphMessage(code, 0, workerId, false));
+            collector.collect(new RefinementMessage(subgraph, workerId,
+              RefinementMessage.REFINEMENT_CALL));
           }
         }
       }

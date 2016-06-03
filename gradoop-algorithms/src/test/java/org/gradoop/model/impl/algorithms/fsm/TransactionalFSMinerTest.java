@@ -1,191 +1,87 @@
 package org.gradoop.model.impl.algorithms.fsm;
 
-import org.apache.flink.api.common.functions.FilterFunction;
+import com.google.common.collect.Lists;
 import org.apache.flink.api.java.DataSet;
-import org.gradoop.datagen.fsmtransactions.FSMTransactionGeneratorConfig;
 import org.gradoop.datagen.fsmtransactions.PredictableFSMTransactionGenerator;
-import org.gradoop.datagen.fsmtransactions.RandomFSMTransactionGenerator;
 import org.gradoop.model.GradoopFlinkTestBase;
 import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMiner;
-import org.gradoop.model.impl.algorithms.fsm.common.BroadcastNames;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common
   .GradoopTransactionalFSMEncoder;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedSubgraph;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.ObjectWithCount;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.WithCount;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine
-  .FilterRefineTransactionalFSMiner;
-import org.gradoop.model.impl.algorithms.fsm.iterative
-  .IterativeTransactionalFSMiner;
+  .FilterRefineGSpanMiner;
+import org.gradoop.model.impl.algorithms.fsm.iterative.IterativeGSpanMiner;
 import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTriple;
-import org.gradoop.model.impl.functions.bool.And;
+import org.gradoop.model.impl.functions.bool.Equals;
+import org.gradoop.model.impl.operators.count.Count;
 import org.gradoop.model.impl.pojo.EdgePojo;
 import org.gradoop.model.impl.pojo.GraphHeadPojo;
 import org.gradoop.model.impl.pojo.VertexPojo;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.Collection;
+
 public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
 
   @Test
-  public void testIterative() throws Exception {
-    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> input =
-      new PredictableFSMTransactionGenerator<>(getConfig(), 100)
-        .execute();
-
-    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(1.0f);
-    fsmConfig.setMinEdgeCount(2);
-    fsmConfig.setMaxEdgeCount(2);
-
-    GradoopTransactionalFSMEncoder<GraphHeadPojo, VertexPojo, EdgePojo>
-      encoder = new GradoopTransactionalFSMEncoder<>();
-
-    DataSet<EdgeTriple> edges = encoder.encode(input, fsmConfig);
-
-    TransactionalFSMiner iMiner = new IterativeTransactionalFSMiner();
-    iMiner.setExecutionEnvironment(
-      input.getConfig().getExecutionEnvironment());
-    DataSet<ObjectWithCount<CompressedSubgraph>> iResult =
-      iMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
-
-    GradoopFSMTestUtils.sortTranslateAndPrint(
-      iResult,
-      encoder.getVertexLabelDictionary(),
-      encoder.getEdgeLabelDictionary());
-
-    Assert.assertEquals(702, iResult.count());
-  }
-
-  @Test
-  public void testFilterRefine() throws Exception {
-    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> input =
-      new PredictableFSMTransactionGenerator<>(getConfig(), 100)
-        .execute();
-
-    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.8f);
-
-    GradoopTransactionalFSMEncoder<GraphHeadPojo, VertexPojo, EdgePojo>
-      encoder = new GradoopTransactionalFSMEncoder<>();
-
-    DataSet<EdgeTriple> edges = encoder.encode(input, fsmConfig);
-
-    TransactionalFSMiner iMiner = new FilterRefineTransactionalFSMiner();
-
-    DataSet<ObjectWithCount<CompressedSubgraph>> iResult =
-      iMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
-
-//    iResult.map(new PrintDfsCode())
-//      .withBroadcastSet(encoder.getVertexLabelDictionary(), BroadcastNames.VERTEX_DICTIONARY)
-//      .withBroadcastSet(encoder.getEdgeLabelDictionary(), BroadcastNames.EDGE_DICTIONARY)
-//      .print();
-
-    Assert.assertEquals(60 * 3, iResult.count());
-  }
-
-  @Test
-  public void testIterativeVsFilterRefine() throws Exception {
-    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> input =
+  public void testMinersSeparately() throws Exception {
+    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> collection =
       new PredictableFSMTransactionGenerator<>(getConfig(), 100).execute();
 
-
-//    getExecutionEnvironment().setParallelism(3);
-
-    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.80f);
-    int edgeCount = 4;
-    fsmConfig.setMinEdgeCount(edgeCount);
-    fsmConfig.setMaxEdgeCount(edgeCount);
+    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(1.0f);
 
     GradoopTransactionalFSMEncoder<GraphHeadPojo, VertexPojo, EdgePojo>
       encoder = new GradoopTransactionalFSMEncoder<>();
 
-    DataSet<EdgeTriple> edges = encoder.encode(input, fsmConfig);
+    DataSet<EdgeTriple> edges = encoder.encode(collection, fsmConfig);
 
-    TransactionalFSMiner iMiner = new IterativeTransactionalFSMiner();
-    iMiner.setExecutionEnvironment(
-      input.getConfig().getExecutionEnvironment());
-    DataSet<ObjectWithCount<CompressedSubgraph>> iResult =
-      iMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
+    for (TransactionalFSMiner miner : getTransactionalFSMiners()) {
+      miner.setExecutionEnvironment(
+        collection.getConfig().getExecutionEnvironment());
+      DataSet<WithCount<CompressedSubgraph>> frequentSubgraphs =
+        miner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
-    TransactionalFSMiner frMiner = new FilterRefineTransactionalFSMiner();
-    DataSet<ObjectWithCount<CompressedSubgraph>> frResult =
-      frMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
+      Assert.assertEquals(702, frequentSubgraphs.count());
+    }
+  }
 
-    collectAndAssertTrue(
-      And.reduce(
-        iResult.fullOuterJoin(frResult)
-          .where(0).equalTo(0)
-          .with(new EqualSupport())
-          .withBroadcastSet(
-            encoder.getVertexLabelDictionary(),
-            BroadcastNames.VERTEX_DICTIONARY)
-          .withBroadcastSet(
-            encoder.getEdgeLabelDictionary(),
-            BroadcastNames.EDGE_DICTIONARY)
-      )
-    );
+  private Collection<TransactionalFSMiner> getTransactionalFSMiners() {
+    Collection<TransactionalFSMiner> miners = Lists.newArrayList();
+
+    miners.add(new IterativeGSpanMiner());
+    miners.add(new FilterRefineGSpanMiner());
+    return miners;
   }
 
   @Test
-  public void testRandomGenerator() throws Exception {
-    FSMTransactionGeneratorConfig generatorConfig =
-      new FSMTransactionGeneratorConfig(
-        100, // graph count
-        10,  // min vertex count
-        20,  // max vertex count
-        5,   // vertex label count
-        1,   // vertex label size
-        20,  // min edge count
-        50, // max edge count
-        5,  // edgeLabelCount,
-        1   // edgeLabelSize
-      );
+  public void testMinersVersus() throws Exception {
+    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> collection =
+      new PredictableFSMTransactionGenerator<>(getConfig(), 10).execute();
 
-    RandomFSMTransactionGenerator<GraphHeadPojo, VertexPojo, EdgePojo> gen =
-      new RandomFSMTransactionGenerator<>(getConfig(), generatorConfig);
-
-    GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> input =
-      gen.execute();
-
-//    input.getConfig().getExecutionEnvironment().setParallelism(1);
-
-    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.3f);
+    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.4f);
 
     GradoopTransactionalFSMEncoder<GraphHeadPojo, VertexPojo, EdgePojo>
       encoder = new GradoopTransactionalFSMEncoder<>();
 
-    DataSet<EdgeTriple> edges = encoder.encode(input, fsmConfig);
+    DataSet<EdgeTriple> edges = encoder.encode(collection, fsmConfig);
 
-    TransactionalFSMiner iMiner = new IterativeTransactionalFSMiner();
+    TransactionalFSMiner iMiner = new IterativeGSpanMiner();
     iMiner.setExecutionEnvironment(
-      input.getConfig().getExecutionEnvironment());
-    DataSet<ObjectWithCount<CompressedSubgraph>> iResult =
+      collection.getConfig().getExecutionEnvironment());
+    DataSet<WithCount<CompressedSubgraph>> iResult =
       iMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
-    TransactionalFSMiner frMiner = new FilterRefineTransactionalFSMiner();
-    DataSet<ObjectWithCount<CompressedSubgraph>> frResult =
-      frMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
+    TransactionalFSMiner fsMiner = new FilterRefineGSpanMiner();
+    DataSet<WithCount<CompressedSubgraph>> frResult =
+      fsMiner.mine(edges, encoder.getMinSupport(), fsmConfig);
 
-    collectAndAssertTrue(
-      And.reduce(
-        iResult.fullOuterJoin(frResult)
-          .where(0).equalTo(0)
-          .with(new EqualSupport())
-          .withBroadcastSet(
-            encoder.getVertexLabelDictionary(),
-            BroadcastNames.VERTEX_DICTIONARY)
-          .withBroadcastSet(
-            encoder.getEdgeLabelDictionary(),
-            BroadcastNames.EDGE_DICTIONARY)
-      )
+    collectAndAssertTrue(Equals
+      .cross(Count.count(iResult),
+        Count.count(iResult.join(frResult).where(0).equalTo(0)))
     );
-  }
-
-  private class WrongCount implements FilterFunction<ObjectWithCount<CompressedSubgraph>> {
-    @Override
-    public boolean filter(ObjectWithCount<CompressedSubgraph> subgraph) throws
-      Exception {
-      return subgraph.getSupport() % 10 != 0;
-    }
   }
 }

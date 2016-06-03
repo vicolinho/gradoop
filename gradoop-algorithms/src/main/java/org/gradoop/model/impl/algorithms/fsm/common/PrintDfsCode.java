@@ -3,9 +3,9 @@ package org.gradoop.model.impl.algorithms.fsm.common;
 import org.apache.flink.api.common.functions.RichMapFunction;
 import org.apache.flink.configuration.Configuration;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.SerializedSubgraph;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.ObjectWithCount;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.WithCount;
 
-public class PrintDfsCode extends RichMapFunction<ObjectWithCount<SerializedSubgraph>, String> {
+public class PrintDfsCode extends RichMapFunction<WithCount<SerializedSubgraph>, String> {
 
   private DfsCodeTranslator translator;
 
@@ -17,7 +17,7 @@ public class PrintDfsCode extends RichMapFunction<ObjectWithCount<SerializedSubg
 
 
   @Override
-  public String map(ObjectWithCount<SerializedSubgraph> subgraph) throws Exception {
+  public String map(WithCount<SerializedSubgraph> subgraph) throws Exception {
     return subgraph.getSupport() + ";" +
       translator.translate(subgraph.getObject().getDfsCode())
 //      + subgraph.getDfsCode()

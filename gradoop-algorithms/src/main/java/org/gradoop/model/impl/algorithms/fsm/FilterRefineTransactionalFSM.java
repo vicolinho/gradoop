@@ -22,8 +22,7 @@ import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common.TransactionalFSM;
-import org.gradoop.model.impl.algorithms.fsm.filterrefine
-  .FilterRefineTransactionalFSMiner;
+import org.gradoop.model.impl.algorithms.fsm.filterrefine.FilterRefineGSpanMiner;
 
 /**
  * The gSpan frequent subgraph mining algorithm implemented as Gradoop Operator
@@ -40,7 +39,7 @@ public class FilterRefineTransactionalFSM
    * @param fsmConfig frequent subgraph mining configuration
    */
   public FilterRefineTransactionalFSM(FSMConfig fsmConfig) {
-    super(fsmConfig, new FilterRefineTransactionalFSMiner());
+    super(fsmConfig, new FilterRefineGSpanMiner());
   }
 
   @Override

@@ -2,17 +2,17 @@ package org.gradoop.model.impl.algorithms.fsm.iterative.functions;
 
 import org.apache.flink.api.common.functions.GroupCombineFunction;
 import org.apache.flink.util.Collector;
-import org.gradoop.model.impl.algorithms.fsm.common.tuples.ObjectWithCount;
+import org.gradoop.model.impl.algorithms.fsm.common.tuples.WithCount;
 
 /**
  * Created by peet on 02.06.16.
  */
 public class Support<T>
-  implements GroupCombineFunction<T, ObjectWithCount<T>> {
+  implements GroupCombineFunction<T, WithCount<T>> {
 
 
   @Override
-  public void combine(Iterable<T> iterable, Collector<ObjectWithCount<T>> collector) throws Exception {
+  public void combine(Iterable<T> iterable, Collector<WithCount<T>> collector) throws Exception {
 
     int support = 0;
     boolean first = true;
@@ -27,7 +27,7 @@ public class Support<T>
       support++;
     }
 
-    collector.collect(new ObjectWithCount<>(object, support));
+    collector.collect(new WithCount<>(object, support));
 
   }
 }
