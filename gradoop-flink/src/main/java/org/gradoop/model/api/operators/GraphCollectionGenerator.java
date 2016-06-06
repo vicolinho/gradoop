@@ -27,12 +27,12 @@ import org.gradoop.model.impl.GraphCollection;
  * @param <V> EPGM vertex type
  * @param <E> EPGM edge type
  */
-public interface CollectionGenerator
+public interface GraphCollectionGenerator
   <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge>
   extends Operator {
 
   /**
-   * executes the operator
+   * generates the graph collection
    * @return graph collection
    */
   GraphCollection<G, V, E> execute();

@@ -1,9 +1,9 @@
 package org.gradoop.model.impl.algorithms.fsm;
 
 import org.apache.flink.api.java.DataSet;
-import org.gradoop.datagen.fsmtransactions.FSMTransactionGeneratorConfig;
-import org.gradoop.datagen.fsmtransactions.PredictableFSMTransactionGenerator;
-import org.gradoop.datagen.fsmtransactions.RandomFSMTransactionGenerator;
+import org.gradoop.datagen.transactions.FSMTransactionGeneratorConfig;
+import org.gradoop.datagen.transactions.PredictableTransactionsGenerator;
+import org.gradoop.datagen.transactions.RandomFSMTransactionGenerator;
 import org.gradoop.model.GradoopFlinkTestBase;
 import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMiner;
@@ -26,7 +26,7 @@ public class FSMTransactionGeneratorTest extends GradoopFlinkTestBase {
   @Test
   public void testPredictableGenerator() throws Exception {
     GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> input =
-      new PredictableFSMTransactionGenerator<>(getConfig(), 100)
+      new PredictableTransactionsGenerator<>(getConfig(), 100, )
       .execute();
 
     FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.95f);

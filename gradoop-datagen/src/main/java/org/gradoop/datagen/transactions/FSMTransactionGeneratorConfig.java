@@ -15,7 +15,7 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.datagen.fsmtransactions;
+package org.gradoop.datagen.transactions;
 
 import com.google.common.collect.Lists;
 import org.apache.commons.lang3.StringUtils;

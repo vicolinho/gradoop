@@ -2,7 +2,7 @@ package org.gradoop.model.impl.algorithms.fsm;
 
 import com.google.common.collect.Lists;
 import org.apache.flink.api.java.DataSet;
-import org.gradoop.datagen.fsmtransactions.PredictableFSMTransactionGenerator;
+import org.gradoop.datagen.transactions.PredictableTransactionsGenerator;
 import org.gradoop.model.GradoopFlinkTestBase;
 import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMiner;
@@ -30,7 +30,7 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
   @Test
   public void testMinersSeparately() throws Exception {
     GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> collection =
-      new PredictableFSMTransactionGenerator<>(getConfig(), 100).execute();
+      new PredictableTransactionsGenerator<>(getConfig(), 100, ).execute();
 
     FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(1.0f);
 
@@ -60,7 +60,7 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
   @Test
   public void testMinersVersus() throws Exception {
     GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> collection =
-      new PredictableFSMTransactionGenerator<>(getConfig(), 10).execute();
+      new PredictableTransactionsGenerator<>(getConfig(), 10, ).execute();
 
     FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.4f);
 

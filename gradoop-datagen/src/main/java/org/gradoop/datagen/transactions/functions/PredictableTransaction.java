@@ -1,4 +1,4 @@
-package org.gradoop.datagen.fsmtransactions.functions;
+package org.gradoop.datagen.transactions.functions;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;

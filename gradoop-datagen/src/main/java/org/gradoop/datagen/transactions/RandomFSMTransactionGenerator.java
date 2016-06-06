@@ -15,15 +15,15 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.datagen.fsmtransactions;
+package org.gradoop.datagen.transactions;
 
 import com.google.common.collect.Lists;
-import org.gradoop.datagen.fsmtransactions.functions.RandomTransaction;
+import org.gradoop.datagen.transactions.functions.RandomTransaction;
 import org.apache.flink.api.java.DataSet;
 import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
-import org.gradoop.model.api.operators.CollectionGenerator;
+import org.gradoop.model.api.operators.GraphCollectionGenerator;
 import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.tuples.GraphTransaction;
 import org.gradoop.model.impl.operators.count.Count;
@@ -41,7 +41,7 @@ import java.util.Random;
  */
 public class RandomFSMTransactionGenerator
   <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge>
-  implements CollectionGenerator<G, V, E> {
+  implements GraphCollectionGenerator<G, V, E> {
 
   /**
    * Gradoop configuration

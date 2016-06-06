@@ -18,4 +18,4 @@
 /**
  * data generation for frequent subgraph mining
  */
-package org.gradoop.datagen.fsmtransactions;
+package org.gradoop.datagen.transactions;
