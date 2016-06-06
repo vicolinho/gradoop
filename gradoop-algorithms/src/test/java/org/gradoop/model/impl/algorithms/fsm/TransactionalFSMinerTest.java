@@ -13,7 +13,7 @@ import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedSubgraph;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.WithCount;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine
   .FilterRefineGSpanMiner;
-import org.gradoop.model.impl.algorithms.fsm.iterative.IterativeGSpanMiner;
+import org.gradoop.model.impl.algorithms.fsm.iterative.GSpanBulkIteration;
 import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTriple;
 import org.gradoop.model.impl.functions.bool.Equals;
 import org.gradoop.model.impl.operators.count.Count;
@@ -52,7 +52,7 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
   private Collection<TransactionalFSMiner> getTransactionalFSMiners() {
     Collection<TransactionalFSMiner> miners = Lists.newArrayList();
 
-    miners.add(new IterativeGSpanMiner());
+    miners.add(new GSpanBulkIteration());
     miners.add(new FilterRefineGSpanMiner());
     return miners;
   }
@@ -69,7 +69,7 @@ public class TransactionalFSMinerTest   extends GradoopFlinkTestBase {
 
     DataSet<EdgeTriple> edges = encoder.encode(collection, fsmConfig);
 
-    TransactionalFSMiner iMiner = new IterativeGSpanMiner();
+    TransactionalFSMiner iMiner = new GSpanBulkIteration();
     iMiner.setExecutionEnvironment(
       collection.getConfig().getExecutionEnvironment());
     DataSet<WithCount<CompressedSubgraph>> iResult =

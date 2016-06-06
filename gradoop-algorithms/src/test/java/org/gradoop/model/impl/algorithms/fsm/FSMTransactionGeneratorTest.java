@@ -6,6 +6,7 @@ import org.gradoop.datagen.transactions.predictable.PredictableTransactionsGener
 import org.gradoop.datagen.transactions.random.RandomFSMTransactionGenerator;
 import org.gradoop.model.GradoopFlinkTestBase;
 import org.gradoop.model.impl.GraphCollection;
+import org.gradoop.model.impl.GraphTransactions;
 import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMiner;
 import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
 import org.gradoop.model.impl.algorithms.fsm.common
@@ -13,7 +14,7 @@ import org.gradoop.model.impl.algorithms.fsm.common
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedSubgraph;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.WithCount;
 import org.gradoop.model.impl.algorithms.fsm.filterrefine.FilterRefineGSpanMiner;
-import org.gradoop.model.impl.algorithms.fsm.iterative.IterativeGSpanMiner;
+import org.gradoop.model.impl.algorithms.fsm.iterative.GSpanBulkIteration;
 import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTriple;
 import org.gradoop.model.impl.functions.utils.WithEmptySide;
 import org.gradoop.model.impl.pojo.EdgePojo;
@@ -25,9 +26,14 @@ public class FSMTransactionGeneratorTest extends GradoopFlinkTestBase {
 
   @Test
   public void testPredictableGenerator() throws Exception {
+    GraphTransactions transactions =
+      new PredictableTransactionsGenerator<>(100, 1, true, getConfig())
+        .execute();
+
+
     GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> input =
-      new PredictableTransactionsGenerator<>(100, , , getConfig(), )
-      .execute();
+      GraphCollection.fromTransactions(
+        , getConfig());
 
     FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.95f);
 
@@ -36,7 +42,7 @@ public class FSMTransactionGeneratorTest extends GradoopFlinkTestBase {
 
     DataSet<EdgeTriple> edges = encoder.encode(input, fsmConfig);
 
-    TransactionalFSMiner iMiner = new IterativeGSpanMiner();
+    TransactionalFSMiner iMiner = new GSpanBulkIteration();
     iMiner.setExecutionEnvironment(
       input.getConfig().getExecutionEnvironment());
     DataSet<WithCount<CompressedSubgraph>> iResult =
@@ -82,7 +88,7 @@ public class FSMTransactionGeneratorTest extends GradoopFlinkTestBase {
 
     DataSet<EdgeTriple> edges = encoder.encode(input, fsmConfig);
 
-    TransactionalFSMiner iMiner = new IterativeGSpanMiner();
+    TransactionalFSMiner iMiner = new GSpanBulkIteration();
     iMiner.setExecutionEnvironment(
       input.getConfig().getExecutionEnvironment());
     DataSet<WithCount<CompressedSubgraph>> iResult =

@@ -25,7 +25,7 @@ import org.gradoop.model.impl.algorithms.fsm.iterative.tuples.IterationItem;
 
 import java.util.Collection;
 
-public class IterativeGSpanMiner extends AbstractGSpanMiner {
+public class GSpanBulkIteration extends AbstractGSpanMiner {
 
   @Override
   public DataSet<WithCount<CompressedSubgraph>> mine(DataSet<EdgeTriple> edges,

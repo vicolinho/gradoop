@@ -15,7 +15,7 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.impl.algorithms.fsm.common;
+package org.gradoop.model.impl.algorithms.fsm;
 
 import org.apache.flink.api.java.DataSet;
 import org.gradoop.model.api.EPGMEdge;
@@ -26,8 +26,17 @@ import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMDecoder;
 import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMEncoder;
 import org.gradoop.model.impl.algorithms.fsm.api.TransactionalFSMiner;
+import org.gradoop.model.impl.algorithms.fsm.common.FSMConfig;
+import org.gradoop.model.impl.algorithms.fsm.common
+  .GradoopTransactionalFSMDecoder;
+import org.gradoop.model.impl.algorithms.fsm.common.GradoopTransactionalFSMEncoder;
+
+import org.gradoop.model.impl.algorithms.fsm.common.TransactionalFsmAlgorithm;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.CompressedSubgraph;
 import org.gradoop.model.impl.algorithms.fsm.common.tuples.WithCount;
+import org.gradoop.model.impl.algorithms.fsm.filterrefine
+  .FilterRefineGSpanMiner;
+import org.gradoop.model.impl.algorithms.fsm.iterative.GSpanBulkIteration;
 import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTriple;
 
 /**
@@ -38,7 +47,7 @@ import org.gradoop.model.impl.algorithms.fsm.pre.tuples.EdgeTriple;
  * @param <V> vertex type
  * @param <E> edge type
  */
-public abstract class TransactionalFSM
+public class TransactionalFSM
   <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge>
   implements UnaryCollectionToCollectionOperator<G, V, E> {
 
@@ -46,27 +55,33 @@ public abstract class TransactionalFSM
    * frequent subgraph mining configuration
    */
   protected final FSMConfig fsmConfig;
-
-  final TransactionalFSMEncoder<GraphCollection<G, V, E>> encoder;
-  protected final TransactionalFSMiner miner;
-  TransactionalFSMDecoder<GraphCollection<G, V, E>> decoder;
+  /**
+   * input encoder (pre processing)
+   */
+  private final TransactionalFSMEncoder<GraphCollection<G, V, E>> encoder;
+  /**
+   * FSM implementation (actual algorithm)
+   */
+  private final TransactionalFSMiner miner;
 
   /**
    * constructor
    * @param fsmConfig frequent subgraph mining configuration
-   * @param miner
+   * @param algorithm FSM implementation
    */
-  protected TransactionalFSM(FSMConfig fsmConfig, TransactionalFSMiner miner) {
+  public TransactionalFSM(FSMConfig fsmConfig, TransactionalFsmAlgorithm
+    algorithm) {
     this.fsmConfig = fsmConfig;
     this.encoder = new GradoopTransactionalFSMEncoder<>();
-    this.miner = miner;
+    this.miner = getMiner(algorithm);
   }
 
   @Override
   public GraphCollection<G, V, E> execute(
     GraphCollection<G, V, E> collection)  {
 
-    decoder = new GradoopTransactionalFSMDecoder<>(collection.getConfig());
+    TransactionalFSMDecoder<GraphCollection<G, V, E>> decoder =
+      new GradoopTransactionalFSMDecoder<>(collection.getConfig());
 
     DataSet<EdgeTriple> edges = encoder.encode(collection, fsmConfig);
 
@@ -78,6 +93,24 @@ public abstract class TransactionalFSM
       encoder.getVertexLabelDictionary(),
       encoder.getEdgeLabelDictionary()
     );
+  }
+
+  /**
+   * returns FSM implementation by a given enum
+   * @param algorithm enum
+   * @return FSM implementation
+   */
+  private TransactionalFSMiner getMiner(TransactionalFsmAlgorithm algorithm) {
+    TransactionalFSMiner algorithmMiner = null;
+
+    switch (algorithm) {
+    case GSPAN_BULKITERATION: algorithmMiner = new GSpanBulkIteration();
+      break;
+    case GSPAN_FILTERREFINE: algorithmMiner = new FilterRefineGSpanMiner();
+      break;
+    }
+
+    return algorithmMiner;
   }
 
   @Override
