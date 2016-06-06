@@ -18,4 +18,4 @@
 /**
  * function related to data generation for frequent subgraph mining
  */
-package org.gradoop.datagen.transactions.functions;
+package org.gradoop.datagen.transactions.random;

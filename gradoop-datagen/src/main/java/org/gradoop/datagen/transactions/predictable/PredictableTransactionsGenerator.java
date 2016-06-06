@@ -15,10 +15,10 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.datagen.transactions;
+package org.gradoop.datagen.transactions.predictable;
 
 import org.apache.flink.api.java.DataSet;
-import org.gradoop.datagen.transactions.functions.PredictableTransaction;
+import org.gradoop.datagen.transactions.predictable.PredictableTransaction;
 import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
@@ -32,49 +32,52 @@ import org.gradoop.util.GradoopFlinkConfig;
  * Subgraph Mining algorithms.
  *
  *
- * @param <G>
- * @param <V>
- * @param <E>
+ * @param <G> EPGM graph head type.
+ * @param <V> EPGM Vertex type.
+ * @param <E> EPGM Edge type.
  */
 public class PredictableTransactionsGenerator
   <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge>
   implements GraphTransactionsGenerator<G, V, E> {
 
-  /**
-   * Gradoop configuration
-   */
-  private final GradoopFlinkConfig<G, V, E> gradoopConfig;
+
   /**
    * specifies the number of generated graphs
    */
   private final long graphCount;
   /**
-   * sets the minimum number of embeddings per subgraph pattern
+   * sets the minimum number of embeddings per subgraph pattern.
    */
   private final int graphSize;
+  /**
+   * sets the graph type: true => multigraph, false => simple graph
+   */
+  private final boolean multigraph;
+  /**
+   * Gradoop configuration
+   */
+  private final GradoopFlinkConfig<G, V, E> config;
 
-  public PredictableTransactionsGenerator(
-    GradoopFlinkConfig<G, V, E> gradoopConfig, long graphCount, int graphSize) {
-    this.gradoopConfig = gradoopConfig;
+  public PredictableTransactionsGenerator(long graphCount, int graphSize,
+    boolean multigraph, GradoopFlinkConfig<G, V, E> config) {
+
     this.graphCount = graphCount;
     this.graphSize = graphSize;
+    this.multigraph = multigraph;
+    this.config = config;
   }
 
   @Override
   public GraphTransactions<G, V, E> execute() {
 
-    DataSet<Long> seeds = gradoopConfig
+    DataSet<Long> graphNumbers = config
       .getExecutionEnvironment()
       .generateSequence(1, graphCount);
 
-    DataSet<GraphTransaction<G, V, E>> transactions = seeds
-      .map(new PredictableTransaction<>(
-        gradoopConfig.getGraphHeadFactory(),
-        gradoopConfig.getVertexFactory(),
-        gradoopConfig.getEdgeFactory()
-      ));
+    DataSet<GraphTransaction<G, V, E>> transactions = graphNumbers
+      .map(new PredictableTransaction<>(graphSize, multigraph, config));
 
-    return new GraphTransactions<>(transactions, gradoopConfig);
+    return new GraphTransactions<>(transactions, config);
   }
 
   @Override

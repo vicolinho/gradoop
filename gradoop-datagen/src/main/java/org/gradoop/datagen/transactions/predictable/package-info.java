@@ -16,6 +16,7 @@
  */
 
 /**
- * contains generators for graph transactions
+ * contains classes for a predictable data generator for transactional
+ * frequent subgraph mining
  */
-package org.gradoop.datagen.transactions;
+package org.gradoop.datagen.transactions.predictable;

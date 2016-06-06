@@ -15,10 +15,9 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.datagen.transactions;
+package org.gradoop.datagen.transactions.random;
 
 import com.google.common.collect.Lists;
-import org.gradoop.datagen.transactions.functions.RandomTransaction;
 import org.apache.flink.api.java.DataSet;
 import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.api.EPGMGraphHead;
