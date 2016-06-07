@@ -24,7 +24,7 @@ import org.gradoop.model.impl.pojo.VertexPojo;
 import org.gradoop.model.impl.tuples.GraphTransaction;
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 public class PredictableTransactionTest extends GradoopFlinkTestBase {
 

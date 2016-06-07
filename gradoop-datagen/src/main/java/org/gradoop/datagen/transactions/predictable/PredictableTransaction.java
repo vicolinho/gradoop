@@ -30,14 +30,21 @@ import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMGraphHeadFactory;
 import org.gradoop.model.api.EPGMVertex;
 import org.gradoop.model.api.EPGMVertexFactory;
-import org.gradoop.model.impl.tuples.GraphTransaction;
 import org.gradoop.model.impl.id.GradoopId;
 import org.gradoop.model.impl.id.GradoopIdSet;
+import org.gradoop.model.impl.tuples.GraphTransaction;
 import org.gradoop.util.GradoopFlinkConfig;
 
 import java.util.List;
 import java.util.Set;
 
+/**
+ * graphNumber => GraphTransaction
+ *
+ * @param <G> graph head type
+ * @param <V> vertex type
+ * @param <E> edge type
+ */
 public class PredictableTransaction
   <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge>
   implements MapFunction<Long, GraphTransaction<G, V, E>>
@@ -46,7 +53,7 @@ public class PredictableTransaction
   /**
    * list of vertex labels
    */
-  private static final List<String> vertexLabels = Lists
+  private static final List<String> VERTEX_LABELS = Lists
     .newArrayList("A", "B", "C", "D", "E", "F", "G", "H", "J", "K");
   /**
    * sets the minimum number of embeddings per subgraph pattern.
@@ -105,17 +112,16 @@ public class PredictableTransaction
 
     for (int vertexLabelIndex = 0; vertexLabelIndex <= maxVertexLabelIndex;
          vertexLabelIndex++) {
-      String vertexLabel = vertexLabels.get(vertexLabelIndex);
+      String vertexLabel = VERTEX_LABELS.get(vertexLabelIndex);
 
       for (int patternCopy = 1; patternCopy <= graphSize; patternCopy++) {
         addPattern(vertexLabel, centerVertex, vertices, edges);
       }
     }
-
-    for(V vertex : vertices) {
+    for (V vertex : vertices) {
       vertex.setGraphIds(graphIds);
     }
-    for(E edge : edges) {
+    for (E edge : edges) {
       edge.setGraphIds(graphIds);
     }
 
@@ -139,7 +145,7 @@ public class PredictableTransaction
     createEdge(
       centerVertex.getId(), multiBottomId.toString(), multiBottomId, edges);
 
-    if(multigraph) {
+    if (multigraph) {
       // parallel edges and loop
       GradoopId multiTopId = createVertex(vertexLabel, vertices);
 

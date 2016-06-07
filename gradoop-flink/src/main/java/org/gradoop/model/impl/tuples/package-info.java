@@ -16,6 +16,6 @@
  */
 
 /**
- * function related to data generation for frequent subgraph mining
+ * Contains EPGM tuple representations.
  */
-package org.gradoop.datagen.transactions.random;
+package org.gradoop.model.impl.tuples;

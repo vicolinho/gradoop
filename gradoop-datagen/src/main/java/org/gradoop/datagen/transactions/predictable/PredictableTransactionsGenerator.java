@@ -18,7 +18,6 @@
 package org.gradoop.datagen.transactions.predictable;
 
 import org.apache.flink.api.java.DataSet;
-import org.gradoop.datagen.transactions.predictable.PredictableTransaction;
 import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
@@ -58,6 +57,14 @@ public class PredictableTransactionsGenerator
    */
   private final GradoopFlinkConfig<G, V, E> config;
 
+  /**
+   * constructor
+   *
+   * @param graphCount number of graphs to generate
+   * @param graphSize minimum number of embeddings per subgraph pattern
+   * @param multigraph multigraph mode
+   * @param config Gradoop configuration
+   */
   public PredictableTransactionsGenerator(long graphCount, int graphSize,
     boolean multigraph, GradoopFlinkConfig<G, V, E> config) {
 

@@ -14,8 +14,8 @@
     <artifactId>gradoop-datagen</artifactId>
     <packaging>jar</packaging>
 
-    <name>Gradoop DataGen</name>
-    <description>Gradoop data generators.
+    <name>Gradoop Datagen</name>
+    <description>Gradoop Data Generators.
     </description>
 
     <build>
@@ -45,29 +45,7 @@
         <!-- Gradoop -->
         <dependency>
             <groupId>org.gradoop</groupId>
-            <artifactId>gradoop-core</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.gradoop</groupId>
             <artifactId>gradoop-flink</artifactId>
-        </dependency>
-
-        <!-- Flink -->
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-clients_2.11</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.flink</groupId>
-            <artifactId>flink-java</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <scope>compile</scope>
         </dependency>
 
         <!-- Test dependencies -->
@@ -98,21 +76,6 @@
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <scope>test</scope>
-        </dependency>
-
-        <!-- HBase -->
-        <dependency>
-            <groupId>org.apache.hbase</groupId>
-            <artifactId>hbase-testing-util</artifactId>
-            <type>test-jar</type>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.hbase</groupId>
-            <artifactId>hbase-server</artifactId>
-            <type>test-jar</type>
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -24,8 +24,8 @@ import org.gradoop.model.api.EPGMVertex;
 import org.gradoop.model.impl.tuples.GraphTransaction;
 
 /**
- * Describes all operators that can be applied on a single logical graph in the
- * EPGM.
+ * Describes all operators that can be applied on a collection of graph
+ * transactions in the EPGM.
  *
  * @param <V> EPGM vertex type
  * @param <E> EPGM edge type
@@ -34,5 +34,10 @@ import org.gradoop.model.impl.tuples.GraphTransaction;
 public interface GraphTransactionsOperators
   <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge> {
 
+  /**
+   * Reveals the wrapped data set of graph transactions.
+   *
+   * @return set of graph transactions
+   */
   DataSet<GraphTransaction<G, V, E>> getTransactions();
 }
