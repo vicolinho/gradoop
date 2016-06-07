@@ -18,7 +18,7 @@
 package org.gradoop.model.impl.algorithms.fsm.encoders.functions;
 
 import org.apache.flink.api.common.functions.MapFunction;
-import org.gradoop.model.impl.algorithms.fsm.config.FSMConfig;
+import org.gradoop.model.impl.algorithms.fsm.config.FsmConfig;
 
 /**
  * graphCount =[threshold]=> minimum support
@@ -34,7 +34,7 @@ public class MinFrequency implements MapFunction<Long, Integer> {
    * constructor
    * @param fsmConfig mining configuration
    */
-  public MinFrequency(FSMConfig fsmConfig) {
+  public MinFrequency(FsmConfig fsmConfig) {
     this.threshold = fsmConfig.getThreshold();
   }
 

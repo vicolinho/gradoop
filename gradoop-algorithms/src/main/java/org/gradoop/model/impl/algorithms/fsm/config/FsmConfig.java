@@ -22,7 +22,7 @@ import java.io.Serializable;
 /**
  * frequent subgraph mining configuration
  */
-public class FSMConfig implements Serializable {
+public class FsmConfig implements Serializable {
 
   /**
    * MinimumDfsCode relative support of a subgraph.
@@ -54,7 +54,7 @@ public class FSMConfig implements Serializable {
    * @param directed direction mode
    * @param multiGraph multigraph mode
    */
-  public FSMConfig(float threshold, boolean directed, boolean multiGraph) {
+  public FsmConfig(float threshold, boolean directed, boolean multiGraph) {
     this.threshold = threshold;
     this.directed = directed;
     this.multiGraph = multiGraph;
@@ -95,8 +95,8 @@ public class FSMConfig implements Serializable {
    * @param threshold minimum relative support of a subgraph
    * @return configuration for directed multigraphs
    */
-  public static FSMConfig forDirectedMultigraph(float threshold) {
-    return new FSMConfig(threshold, true, true);
+  public static FsmConfig forDirectedMultigraph(float threshold) {
+    return new FsmConfig(threshold, true, true);
   }
 
   public float getLikelinessThreshold() {

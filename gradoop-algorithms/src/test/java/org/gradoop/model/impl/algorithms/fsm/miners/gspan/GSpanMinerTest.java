@@ -6,11 +6,10 @@ import org.gradoop.datagen.transactions.predictable.PredictableTransactionsGener
 import org.gradoop.model.GradoopFlinkTestBase;
 import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.GraphTransactions;
-import org.gradoop.model.impl.algorithms.fsm.config.FSMConfig;
-import org.gradoop.model.impl.algorithms.fsm.miners.TransactionalFSMiner;
+import org.gradoop.model.impl.algorithms.fsm.config.FsmConfig;
+import org.gradoop.model.impl.algorithms.fsm.miners.TransactionalFsMiner;
 import org.gradoop.model.impl.algorithms.fsm.miners.gspan.common.pojos.CompressedSubgraph;
-import org.gradoop.model.impl.algorithms.fsm.encoders
-  .GraphCollectionTFSMEncoder;
+import org.gradoop.model.impl.algorithms.fsm.encoders.GraphCollectionTFsmEncoder;
 import org.gradoop.model.impl.tuples.WithCount;
 import org.gradoop.model.impl.algorithms.fsm.miners.gspan.filterrefine.GSpanFilterRefine;
 import org.gradoop.model.impl.algorithms.fsm.miners.gspan.bulkiteration.GSpanBulkIteration;
@@ -37,14 +36,14 @@ public class GSpanMinerTest extends GradoopFlinkTestBase {
       GraphCollection
         .fromTransactions(transactions.getTransactions(), getConfig());
 
-    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(1.0f);
+    FsmConfig fsmConfig = FsmConfig.forDirectedMultigraph(1.0f);
 
-    GraphCollectionTFSMEncoder<GraphHeadPojo, VertexPojo, EdgePojo>
-      encoder = new GraphCollectionTFSMEncoder<>();
+    GraphCollectionTFsmEncoder<GraphHeadPojo, VertexPojo, EdgePojo>
+      encoder = new GraphCollectionTFsmEncoder<>();
 
     DataSet<EdgeTriple> edges = encoder.encode(collection, fsmConfig);
 
-    for (TransactionalFSMiner miner : getTransactionalFSMiners()) {
+    for (TransactionalFsMiner miner : getTransactionalFSMiners()) {
       miner.setExecutionEnvironment(
         collection.getConfig().getExecutionEnvironment());
       DataSet<WithCount<CompressedSubgraph>> frequentSubgraphs =
@@ -54,8 +53,8 @@ public class GSpanMinerTest extends GradoopFlinkTestBase {
     }
   }
 
-  private Collection<TransactionalFSMiner> getTransactionalFSMiners() {
-    Collection<TransactionalFSMiner> miners = Lists.newArrayList();
+  private Collection<TransactionalFsMiner> getTransactionalFSMiners() {
+    Collection<TransactionalFsMiner> miners = Lists.newArrayList();
 
     miners.add(new GSpanBulkIteration());
     miners.add(new GSpanFilterRefine());
@@ -72,20 +71,20 @@ public class GSpanMinerTest extends GradoopFlinkTestBase {
       GraphCollection
         .fromTransactions(transactions.getTransactions(), getConfig());
 
-    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.4f);
+    FsmConfig fsmConfig = FsmConfig.forDirectedMultigraph(0.4f);
 
-    GraphCollectionTFSMEncoder<GraphHeadPojo, VertexPojo, EdgePojo>
-      encoder = new GraphCollectionTFSMEncoder<>();
+    GraphCollectionTFsmEncoder<GraphHeadPojo, VertexPojo, EdgePojo>
+      encoder = new GraphCollectionTFsmEncoder<>();
 
     DataSet<EdgeTriple> edges = encoder.encode(collection, fsmConfig);
 
-    TransactionalFSMiner iMiner = new GSpanBulkIteration();
+    TransactionalFsMiner iMiner = new GSpanBulkIteration();
     iMiner.setExecutionEnvironment(
       collection.getConfig().getExecutionEnvironment());
     DataSet<WithCount<CompressedSubgraph>> iResult =
       iMiner.mine(edges, encoder.getMinFrequency(), fsmConfig);
 
-    TransactionalFSMiner fsMiner = new GSpanFilterRefine();
+    TransactionalFsMiner fsMiner = new GSpanFilterRefine();
     DataSet<WithCount<CompressedSubgraph>> frResult =
       fsMiner.mine(edges, encoder.getMinFrequency(), fsmConfig);
 

@@ -3,7 +3,7 @@ package org.gradoop.model.impl.algorithms.fsm.miners.gspan.common;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.apache.flink.hadoop.shaded.com.google.common.collect.Maps;
-import org.gradoop.model.impl.algorithms.fsm.config.FSMConfig;
+import org.gradoop.model.impl.algorithms.fsm.config.FsmConfig;
 import org.gradoop.model.impl.algorithms.fsm.miners.gspan.common.comparators.DfsCodeSiblingComparator;
 
 import org.gradoop.model.impl.algorithms.fsm.miners.gspan.common.pojos
@@ -307,7 +307,7 @@ public class GSpan {
   }
 
   public static void growEmbeddings(final GSpanTransaction transaction,
-    Collection<DfsCode> frequentParentSubgraphs, FSMConfig fsmConfig)
+    Collection<DfsCode> frequentParentSubgraphs, FsmConfig fsmConfig)
   {
     Map<DfsCode, Collection<DFSEmbedding>> childCodeEmbeddings = null;
 
@@ -415,7 +415,7 @@ public class GSpan {
   }
 
   public static DfsCode minimumDfsCode(
-    final Collection<DfsCode> dfsCodes, final FSMConfig fsmConfig) {
+    final Collection<DfsCode> dfsCodes, final FsmConfig fsmConfig) {
 
     Iterator<DfsCode> iterator = dfsCodes.iterator();
 
@@ -431,7 +431,7 @@ public class GSpan {
   }
 
   private static DfsCodeSiblingComparator getSiblingComparator(
-    FSMConfig fsmConfig) {
+    FsmConfig fsmConfig) {
     return new DfsCodeSiblingComparator(fsmConfig.isDirected());
   }
 
@@ -458,7 +458,7 @@ public class GSpan {
   }
 
   public static boolean isMinimumDfsCode(
-    DfsCode subgraph, FSMConfig fsmConfig) {
+    DfsCode subgraph, FsmConfig fsmConfig) {
 
     GSpanTransaction transaction = createTransaction(subgraph);
     DfsCode minDfsCode = getMinimumDFSCode(transaction, fsmConfig);
@@ -467,7 +467,7 @@ public class GSpan {
   }
 
   public static DfsCode getMinimumDFSCode(
-    GSpanTransaction transaction, FSMConfig fsmConfig) {
+    GSpanTransaction transaction, FsmConfig fsmConfig) {
     DfsCode minDfsCode = null;
 
     while (transaction.hasGrownSubgraphs()) {
@@ -485,7 +485,7 @@ public class GSpan {
   }
 
   public static boolean contains(
-    GSpanTransaction graph, DfsCode subgraph, FSMConfig fsmConfig) {
+    GSpanTransaction graph, DfsCode subgraph, FsmConfig fsmConfig) {
 
 
     Iterator<DfsStep> iterator = subgraph.getSteps().iterator();

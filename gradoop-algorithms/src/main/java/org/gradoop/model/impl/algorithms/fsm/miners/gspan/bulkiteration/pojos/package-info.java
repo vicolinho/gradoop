@@ -15,18 +15,7 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.impl.algorithms.fsm.miners.gspan.bulkiteration.functions;
-
-import org.apache.flink.api.common.functions.FilterFunction;
-import org.gradoop.model.impl.algorithms.fsm.miners.gspan.bulkiteration.pojos.IterationItem;
-
 /**
- * IterationItem represents graph?
+ * Pojos used within the bulk iteration-based gSpan implementation.
  */
-public class IsCollector implements FilterFunction<IterationItem> {
-
-  @Override
-  public boolean filter(IterationItem iterationItem) throws Exception {
-    return iterationItem.isCollector();
-  }
-}
+package org.gradoop.model.impl.algorithms.fsm.miners.gspan.bulkiteration.pojos;

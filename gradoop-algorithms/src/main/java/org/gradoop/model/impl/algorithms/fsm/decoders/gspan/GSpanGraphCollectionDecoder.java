@@ -8,7 +8,7 @@ import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
 import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.algorithms.fsm.config.BroadcastNames;
-import org.gradoop.model.impl.algorithms.fsm.decoders.TransactionalFSMDecoder;
+import org.gradoop.model.impl.algorithms.fsm.decoders.TransactionalFsmDecoder;
 import org.gradoop.model.impl.algorithms.fsm.decoders.gspan.functions.DfsDecoder;
 import org.gradoop.model.impl.algorithms.fsm.decoders.gspan.functions.EdgeLabelDecoder;
 import org.gradoop.model.impl.algorithms.fsm.decoders.gspan.functions.ExpandEdges;
@@ -28,7 +28,7 @@ import java.util.List;
 
 public class GSpanGraphCollectionDecoder
   <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge>
-  implements TransactionalFSMDecoder<GraphCollection<G, V, E>> {
+  implements TransactionalFsmDecoder<GraphCollection<G, V, E>> {
 
   private final GradoopFlinkConfig<G, V, E> gradoopConfig;
 

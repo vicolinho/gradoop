@@ -3,7 +3,7 @@ package org.gradoop.model.impl.algorithms.fsm;
 import org.gradoop.model.GradoopFlinkTestBase;
 import org.gradoop.model.api.operators.UnaryCollectionToCollectionOperator;
 import org.gradoop.model.impl.GraphCollection;
-import org.gradoop.model.impl.algorithms.fsm.config.FSMConfig;
+import org.gradoop.model.impl.algorithms.fsm.config.FsmConfig;
 import org.gradoop.model.impl.algorithms.fsm.config.TransactionalFsmAlgorithm;
 import org.gradoop.model.impl.pojo.EdgePojo;
 import org.gradoop.model.impl.pojo.GraphHeadPojo;
@@ -14,7 +14,7 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.Collection;
 
-public class TransactionalFSMTest extends GradoopFlinkTestBase {
+public class TransactionalFsmTest extends GradoopFlinkTestBase {
 
   @Test
   public void testSingleEdges() throws Exception {
@@ -194,12 +194,12 @@ public class TransactionalFSMTest extends GradoopFlinkTestBase {
     Collection<UnaryCollectionToCollectionOperator
       <GraphHeadPojo, VertexPojo, EdgePojo>> miners = new ArrayList<>();
 
-    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.7f);
+    FsmConfig fsmConfig = FsmConfig.forDirectedMultigraph(0.7f);
 
-    miners.add(new TransactionalFSM<GraphHeadPojo, VertexPojo, EdgePojo>(
+    miners.add(new TransactionalFsm<GraphHeadPojo, VertexPojo, EdgePojo>(
         fsmConfig, TransactionalFsmAlgorithm.GSPAN_BULKITERATION));
 
-    miners.add(new TransactionalFSM<GraphHeadPojo, VertexPojo, EdgePojo>(
+    miners.add(new TransactionalFsm<GraphHeadPojo, VertexPojo, EdgePojo>(
       fsmConfig, TransactionalFsmAlgorithm.GSPAN_FILTERREFINE));
 
     return miners;

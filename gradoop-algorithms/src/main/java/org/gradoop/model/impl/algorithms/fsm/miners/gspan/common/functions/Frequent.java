@@ -23,7 +23,7 @@ import org.gradoop.model.impl.algorithms.fsm.config.BroadcastNames;
 import org.gradoop.model.impl.tuples.WithCount;
 
 /**
- * filters frequent (Countable<CompressedDfsCode>s, Support), i.e., Support > minFrequency
+ * filters frequent (Countable<CompressedDfsCode>s, Frequency), i.e., Frequency > minFrequency
  */
 public class Frequent<T> extends RichFilterFunction<WithCount<T>> {
 

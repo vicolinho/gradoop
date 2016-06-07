@@ -4,7 +4,7 @@ import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.gradoop.model.impl.algorithms.fsm.miners.gspan.GSpanBase;
 import org.gradoop.model.impl.algorithms.fsm.config.BroadcastNames;
-import org.gradoop.model.impl.algorithms.fsm.config.FSMConfig;
+import org.gradoop.model.impl.algorithms.fsm.config.FsmConfig;
 import org.gradoop.model.impl.algorithms.fsm.miners.gspan.common.functions.Frequent;
 import org.gradoop.model.impl.algorithms.fsm.miners.gspan.common.pojos.GSpanTransaction;
 import org.gradoop.model.impl.algorithms.fsm.miners.gspan.common.pojos.CompressedSubgraph;
@@ -25,7 +25,7 @@ public class GSpanFilterRefine
 
   @Override
   public DataSet<WithCount<CompressedSubgraph>> mine(DataSet<EdgeTriple> edges,
-                                                      DataSet<Integer> minSupport, FSMConfig fsmConfig) {
+                                                      DataSet<Integer> minSupport, FsmConfig fsmConfig) {
 
     setFsmConfig(fsmConfig);
     DataSet<GSpanTransaction> transactions = createTransactions(edges);

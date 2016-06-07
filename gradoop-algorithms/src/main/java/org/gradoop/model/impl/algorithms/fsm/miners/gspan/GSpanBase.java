@@ -3,8 +3,8 @@ package org.gradoop.model.impl.algorithms.fsm.miners.gspan;
 import org.apache.flink.api.java.DataSet;
 import org.apache.flink.api.java.ExecutionEnvironment;
 import org.apache.flink.api.java.tuple.Tuple3;
-import org.gradoop.model.impl.algorithms.fsm.config.FSMConfig;
-import org.gradoop.model.impl.algorithms.fsm.miners.TransactionalFSMiner;
+import org.gradoop.model.impl.algorithms.fsm.config.FsmConfig;
+import org.gradoop.model.impl.algorithms.fsm.miners.TransactionalFsMiner;
 import org.gradoop.model.impl.algorithms.fsm.miners.gspan.common.functions.SearchSpace;
 import org.gradoop.model.impl.algorithms.fsm.miners.gspan.common.pojos.SerializedSubgraph;
 import org.gradoop.model.impl.algorithms.fsm.miners.gspan.common.pojos.GSpanTransaction;
@@ -16,14 +16,14 @@ import org.gradoop.model.impl.id.GradoopId;
 /**
  * Created by peet on 17.05.16.
  */
-public abstract class GSpanBase implements TransactionalFSMiner {
+public abstract class GSpanBase implements TransactionalFsMiner {
 
   /**
    * maximum iteration, if no maximum edge count provided
    */
   protected ExecutionEnvironment env;
 
-  protected FSMConfig fsmConfig;
+  protected FsmConfig fsmConfig;
 
 
   protected DataSet<Tuple3<GradoopId, EdgeTripleWithoutTargetLabel, SerializedSubgraph>> frequent(
@@ -41,7 +41,7 @@ public abstract class GSpanBase implements TransactionalFSMiner {
     this.env = env;
   }
 
-  public void setFsmConfig(FSMConfig fsmConfig) {
+  public void setFsmConfig(FsmConfig fsmConfig) {
     this.fsmConfig = fsmConfig;
   }
 

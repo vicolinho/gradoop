@@ -5,7 +5,7 @@ import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
 import org.gradoop.model.impl.GraphCollection;
-import org.gradoop.model.impl.algorithms.fsm.config.FSMConfig;
+import org.gradoop.model.impl.algorithms.fsm.config.FsmConfig;
 import org.gradoop.model.impl.algorithms.fsm.miners.gspan.common.functions.Frequent;
 import org.gradoop.model.impl.functions.utils.AddCount;
 import org.gradoop.model.impl.algorithms.fsm.config.BroadcastNames;
@@ -33,9 +33,9 @@ import org.gradoop.model.impl.operators.count.Count;
 import java.util.List;
 import java.util.Map;
 
-public class GraphCollectionTFSMEncoder
+public class GraphCollectionTFsmEncoder
   <G extends EPGMGraphHead, V extends EPGMVertex, E extends EPGMEdge>
-  implements TransactionalFSMEncoder<GraphCollection<G, V, E>> {
+  implements TransactionalFsmEncoder<GraphCollection<G, V, E>> {
 
   /**
    * minimum support
@@ -60,7 +60,7 @@ public class GraphCollectionTFSMEncoder
    */
   @Override
   public DataSet<EdgeTriple> encode(
-    GraphCollection<G, V, E> collection, FSMConfig fsmConfig) {
+    GraphCollection<G, V, E> collection, FsmConfig fsmConfig) {
 
     setMinFrequency(collection, fsmConfig);
 
@@ -76,7 +76,7 @@ public class GraphCollectionTFSMEncoder
   }
 
   private void setMinFrequency(GraphCollection<G, V, E> collection,
-    FSMConfig fsmConfig) {
+    FsmConfig fsmConfig) {
     this.minFrequency = Count
       .count(collection.getGraphHeads())
       .map(new MinFrequency(fsmConfig));

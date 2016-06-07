@@ -18,7 +18,7 @@
 package org.gradoop.model.impl.algorithms.fsm.miners.gspan.bulkiteration.functions;
 
 import org.apache.flink.api.common.functions.FilterFunction;
-import org.gradoop.model.impl.algorithms.fsm.miners.gspan.bulkiteration.tuples.IterationItem;
+import org.gradoop.model.impl.algorithms.fsm.miners.gspan.bulkiteration.pojos.IterationItem;
 
 
 /**

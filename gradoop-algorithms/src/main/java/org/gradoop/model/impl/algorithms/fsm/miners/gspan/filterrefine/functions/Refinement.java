@@ -3,7 +3,7 @@ package org.gradoop.model.impl.algorithms.fsm.miners.gspan.filterrefine.function
 import org.apache.flink.api.common.functions.FlatJoinFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.util.Collector;
-import org.gradoop.model.impl.algorithms.fsm.config.FSMConfig;
+import org.gradoop.model.impl.algorithms.fsm.config.FsmConfig;
 import org.gradoop.model.impl.algorithms.fsm.miners.gspan.common.GSpan;
 import org.gradoop.model.impl.algorithms.fsm.miners.gspan.common.pojos.DfsCode;
 import org.gradoop.model.impl.algorithms.fsm.miners.gspan.common.pojos.GSpanTransaction;
@@ -17,9 +17,9 @@ public class Refinement implements FlatJoinFunction<
   Tuple2<Integer, Collection<GSpanTransaction>>, WithCount<CompressedSubgraph>> {
 
 
-  private final FSMConfig fsmConfig;
+  private final FsmConfig fsmConfig;
 
-  public Refinement(FSMConfig config) {
+  public Refinement(FsmConfig config) {
     fsmConfig = config;
   }
 

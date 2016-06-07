@@ -6,7 +6,7 @@ import org.gradoop.model.impl.tuples.WithCount;
 
 import java.util.List;
 
-public interface TransactionalFSMDecoder<T> {
+public interface TransactionalFsmDecoder<T> {
 
   T decode(
     DataSet<WithCount<CompressedSubgraph>> frequentSubgraphs,

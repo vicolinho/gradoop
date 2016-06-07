@@ -5,7 +5,7 @@ import com.google.common.collect.Maps;
 import org.apache.flink.api.common.functions.FlatMapFunction;
 import org.apache.flink.api.java.tuple.Tuple2;
 import org.apache.flink.util.Collector;
-import org.gradoop.model.impl.algorithms.fsm.config.FSMConfig;
+import org.gradoop.model.impl.algorithms.fsm.config.FsmConfig;
 import org.gradoop.model.impl.algorithms.fsm.miners.gspan.common.GSpan;
 import org.gradoop.model.impl.algorithms.fsm.miners.gspan.common.pojos.DfsCode;
 import org.gradoop.model.impl.algorithms.fsm.miners.gspan.common.pojos.GSpanTransaction;
@@ -19,9 +19,9 @@ import java.util.Map;
 public class LocalGSpan implements FlatMapFunction
   <Tuple2<Integer, Collection<GSpanTransaction>>, FilterResult> {
 
-  private final FSMConfig fsmConfig;
+  private final FsmConfig fsmConfig;
 
-  public LocalGSpan(FSMConfig fsmConfig) {
+  public LocalGSpan(FsmConfig fsmConfig) {
     this.fsmConfig = fsmConfig;
   }
 

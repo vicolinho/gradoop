@@ -15,30 +15,34 @@
  * along with Gradoop. If not, see <http://www.gnu.org/licenses/>.
  */
 
-package org.gradoop.model.impl.algorithms.fsm.miners.gspan.bulkiteration.functions;
 
-import org.apache.flink.api.common.functions.FlatMapFunction;
+package org.gradoop.model.impl.functions.utils;
+
+import org.apache.flink.api.common.functions.GroupCombineFunction;
 import org.apache.flink.util.Collector;
-import org.gradoop.model.impl.algorithms.fsm.miners.gspan.common.pojos.CompressedSubgraph;
 import org.gradoop.model.impl.tuples.WithCount;
-import org.gradoop.model.impl.algorithms.fsm.miners.gspan.bulkiteration.tuples.IterationItem;
 
+import java.util.Iterator;
 
 /**
- * Collector => [CompressedDfsCode,..]
+ * (t, count1),..,(t, countN) => (t, SUM(count1,..,countN))
+ *
+ * @param <T> data type
  */
-public class ExpandFrequentDfsCodes implements
-  FlatMapFunction<IterationItem, WithCount<CompressedSubgraph>> {
+public class SumCount<T>
+  implements GroupCombineFunction<WithCount<T>, WithCount<T>> {
 
   @Override
-  public void flatMap(IterationItem iterationItem,
-    Collector<WithCount<CompressedSubgraph>> collector) throws Exception {
+  public void combine(Iterable<WithCount<T>> iterable,
+    Collector<WithCount<T>> collector) throws Exception {
 
+    Iterator<WithCount<T>> iterator = iterable.iterator();
+    WithCount<T> withCount = iterator.next();
 
-    for (WithCount<CompressedSubgraph> compressedDfsCode :
-      iterationItem.getFrequentSubgraphs()) {
-
-      collector.collect(compressedDfsCode);
+    while (iterator.hasNext()) {
+      withCount.setCount(withCount.getCount() + iterator.next().getCount());
     }
+
+    collector.collect(withCount);
   }
 }

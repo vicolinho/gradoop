@@ -3,14 +3,14 @@ package org.gradoop.model.impl.algorithms.fsm.miners.gspan;
 import com.google.common.collect.Lists;
 import org.gradoop.model.GradoopFlinkTestBase;
 import org.gradoop.model.impl.GraphCollection;
-import org.gradoop.model.impl.algorithms.fsm.config.FSMConfig;
-import org.gradoop.model.impl.algorithms.fsm.encoders.TransactionalFSMEncoder;
+import org.gradoop.model.impl.algorithms.fsm.config.FsmConfig;
+import org.gradoop.model.impl.algorithms.fsm.encoders.TransactionalFsmEncoder;
 import org.gradoop.model.impl.algorithms.fsm.miners.gspan.common.GSpan;
 import org.gradoop.model.impl.algorithms.fsm.miners.gspan.common.pojos.DfsCode;
 import org.gradoop.model.impl.algorithms.fsm.miners.gspan.common.pojos.DfsStep;
 import org.gradoop.model.impl.algorithms.fsm.miners.gspan.common.pojos.GSpanTransaction;
 import org.gradoop.model.impl.algorithms.fsm.encoders.tuples.EdgeTriple;
-import org.gradoop.model.impl.algorithms.fsm.encoders.GraphCollectionTFSMEncoder;
+import org.gradoop.model.impl.algorithms.fsm.encoders.GraphCollectionTFsmEncoder;
 import org.gradoop.model.impl.pojo.EdgePojo;
 import org.gradoop.model.impl.pojo.GraphHeadPojo;
 import org.gradoop.model.impl.pojo.VertexPojo;
@@ -27,7 +27,7 @@ public class GSpanTest extends GradoopFlinkTestBase {
   @Test
   public void testMinDfsCodeCalculation() {
 
-    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.7f);
+    FsmConfig fsmConfig = FsmConfig.forDirectedMultigraph(0.7f);
 
     //       -a->
     //  (0:A)    (1:A)
@@ -69,11 +69,12 @@ public class GSpanTest extends GradoopFlinkTestBase {
     GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo> searchSpace =
       loader.getGraphCollectionByVariables("g1");
 
-    TransactionalFSMEncoder
-      <GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo>> encoder =
-      new GraphCollectionTFSMEncoder<>();
+    TransactionalFsmEncoder<GraphCollection<GraphHeadPojo, VertexPojo, EdgePojo>>
 
-    FSMConfig fsmConfig = FSMConfig.forDirectedMultigraph(0.7f);
+      encoder =
+      new GraphCollectionTFsmEncoder<>();
+
+    FsmConfig fsmConfig = FsmConfig.forDirectedMultigraph(0.7f);
 
 
     Collection<EdgeTriple> edges =

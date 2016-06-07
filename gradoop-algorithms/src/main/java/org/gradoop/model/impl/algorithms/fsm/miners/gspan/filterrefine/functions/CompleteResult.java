@@ -22,7 +22,7 @@ import org.gradoop.model.impl.algorithms.fsm.miners.gspan.filterrefine.tuples
   .RefinementMessage;
 
 /**
- * filters frequent (CompressedDfsCodes, Support), i.e., Support > minFrequency
+ * filters frequent (CompressedDfsCodes, Frequency), i.e., Frequency > minFrequency
  */
 public class CompleteResult
   implements FilterFunction<RefinementMessage> {

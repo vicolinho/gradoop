@@ -5,7 +5,7 @@ import org.apache.flink.api.common.functions.RichGroupReduceFunction;
 import org.apache.flink.configuration.Configuration;
 import org.apache.flink.util.Collector;
 import org.gradoop.model.impl.algorithms.fsm.config.BroadcastNames;
-import org.gradoop.model.impl.algorithms.fsm.config.FSMConfig;
+import org.gradoop.model.impl.algorithms.fsm.config.FsmConfig;
 import org.gradoop.model.impl.algorithms.fsm.miners.gspan.common.pojos.CompressedSubgraph;
 import org.gradoop.model.impl.algorithms.fsm.miners.gspan.filterrefine.tuples.FilterResult;
 import org.gradoop.model.impl.algorithms.fsm.miners.gspan.filterrefine.tuples
@@ -32,7 +32,7 @@ public class FrequentOrRefinementCandidate
   private Integer minSupport;
   private Map<Integer, Integer> workerGraphCount;
 
-  public FrequentOrRefinementCandidate(FSMConfig fsmConfig) {
+  public FrequentOrRefinementCandidate(FsmConfig fsmConfig) {
     this.threshold = fsmConfig.getThreshold();
   }
 
