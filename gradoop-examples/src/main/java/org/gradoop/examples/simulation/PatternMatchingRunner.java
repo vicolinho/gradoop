@@ -28,6 +28,7 @@ import org.gradoop.model.impl.LogicalGraph;
 import org.gradoop.model.impl.operators.matching.PatternMatching;
 import org.gradoop.model.impl.operators.matching.common.query.DFSTraverser;
 import org.gradoop.model.impl.operators.matching.isomorphism.explorative.ExplorativeSubgraphIsomorphism;
+import org.gradoop.model.impl.operators.matching.isomorphism.explorative2.ExplorativeSubgraphIsomorphism2;
 import org.gradoop.model.impl.operators.matching.simulation.dual.DualSimulation;
 import org.gradoop.model.impl.pojo.EdgePojo;
 import org.gradoop.model.impl.pojo.GraphHeadPojo;
@@ -60,13 +61,25 @@ public class PatternMatchingRunner extends AbstractRunner
    */
   private static final String ALGO_ISO_EXP_BC_HASH_FIRST = "iso-exp-bc-hf";
   /**
+   * Refers to {@link ExplorativeSubgraphIsomorphism2}
+   */
+  private static final String ALGO_ISO_EXP2 = "iso-exp2";
+  /**
+   * Refers to {@link ExplorativeSubgraphIsomorphism2} using
+   * BROADCAST_HASH_FIRST as {@link JoinHint} for extending embeddings.
+   */
+  private static final String ALGO_ISO_EXP2_BC_HASH_FIRST = "iso-exp2-bc-hf";
+
+  /**
    * Used for console output
    */
   private static final String[] AVAILABLE_ALGORITHMS = new String[] {
       ALGO_DUAL_BULK,
       ALGO_DUAL_DELTA,
       ALGO_ISO_EXP,
-      ALGO_ISO_EXP_BC_HASH_FIRST
+      ALGO_ISO_EXP_BC_HASH_FIRST,
+      ALGO_ISO_EXP2,
+      ALGO_ISO_EXP2_BC_HASH_FIRST
   };
   /**
    * Option to declare path to input graph
@@ -184,6 +197,13 @@ public class PatternMatchingRunner extends AbstractRunner
       break;
     case ALGO_ISO_EXP_BC_HASH_FIRST:
       op = new ExplorativeSubgraphIsomorphism<>(query, attachData,
+        new DFSTraverser(), BROADCAST_HASH_FIRST, BROADCAST_HASH_FIRST);
+      break;
+    case ALGO_ISO_EXP2:
+      op = new ExplorativeSubgraphIsomorphism2<>(query, attachData);
+      break;
+    case ALGO_ISO_EXP2_BC_HASH_FIRST:
+      op = new ExplorativeSubgraphIsomorphism2<>(query, attachData,
         new DFSTraverser(), BROADCAST_HASH_FIRST, BROADCAST_HASH_FIRST);
       break;
     default :

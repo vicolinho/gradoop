@@ -154,6 +154,23 @@ public class ExplorativeSubgraphIsomorphism
     this.vertexStepJoinStrategy = vertexStepJoinStrategy;
   }
 
+  /**
+   * Returns the traversal code for the current operator execution.
+   *
+   * @return traversal code
+   */
+  protected TraversalCode getTraversalCode() {
+    return traversalCode;
+  }
+
+  protected JoinOperatorBase.JoinHint getEdgeStepJoinStrategy() {
+    return edgeStepJoinStrategy;
+  }
+
+  protected JoinOperatorBase.JoinHint getVertexStepJoinStrategy() {
+    return vertexStepJoinStrategy;
+  }
+
   @Override
   protected GraphCollection<G, V, E> executeForVertex(
     LogicalGraph<G, V, E> graph) {
@@ -221,16 +238,7 @@ public class ExplorativeSubgraphIsomorphism
     // Post-Processing (build Graph Collection from embeddings)
     //--------------------------------------------------------------------------
 
-    DataSet<EPGMElement> epgmElements = result
-      .<Tuple1<Embedding>>project(0)
-      .flatMap(new ElementsFromEmbedding<>(traversalCode,
-        graph.getConfig().getGraphHeadFactory(),
-        graph.getConfig().getVertexFactory(),
-        graph.getConfig().getEdgeFactory()));
-
-    return doAttachData() ?
-      extractGraphCollectionWithData(epgmElements, graph, true) :
-      extractGraphCollection(epgmElements, graph.getConfig(), true);
+    return postProcess(graph, result);
   }
 
   /**
@@ -256,6 +264,27 @@ public class ExplorativeSubgraphIsomorphism
       .map(new Superstep<EmbeddingWithTiePoint>());
 
     // traverse to outgoing/incoming edges
+    DataSet<EmbeddingWithTiePoint> nextWorkSet =
+      traverseEdges(edges, superstep, embeddings);
+
+    // traverse to vertices
+    nextWorkSet = traverseVertices(vertices, superstep, nextWorkSet);
+
+    // ITERATION FOOTER
+    return embeddings.closeWith(nextWorkSet, nextWorkSet);
+  }
+
+  /**
+   * Traverse to the next edges according to the current traversal code.
+   *
+   * @param edges       edge candidates
+   * @param superstep   current superstep
+   * @param embeddings  current embeddings
+   * @return grown embeddings
+   */
+  private DataSet<EmbeddingWithTiePoint> traverseEdges(
+    DataSet<TripleWithCandidates> edges, DataSet<Integer> superstep,
+    IterativeDataSet<EmbeddingWithTiePoint> embeddings) {
     DataSet<EdgeStep> edgeSteps = edges
       .filter(new EdgeHasCandidate(traversalCode))
       .withBroadcastSet(superstep, BC_SUPERSTEP)
@@ -280,7 +309,20 @@ public class ExplorativeSubgraphIsomorphism
         .withBroadcastSet(getVertexMapping(), Printer.VERTEX_MAPPING)
         .withBroadcastSet(getEdgeMapping(), Printer.EDGE_MAPPING);
     }
+    return nextWorkSet;
+  }
 
+  /**
+   * Traverse to the next vertices according to the current traversal code.
+   *
+   * @param vertices    vertex candidates
+   * @param superstep   current superstep
+   * @param embeddings  current embeddings
+   * @return grown embeddings
+   */
+  protected DataSet<EmbeddingWithTiePoint> traverseVertices(
+    DataSet<IdWithCandidates> vertices, DataSet<Integer> superstep,
+    DataSet<EmbeddingWithTiePoint> embeddings) {
     // traverse to vertices
     DataSet<VertexStep> vertexSteps = vertices
       .filter(new VertexHasCandidate(traversalCode))
@@ -294,21 +336,41 @@ public class ExplorativeSubgraphIsomorphism
         .withBroadcastSet(getEdgeMapping(), Printer.EDGE_MAPPING);
     }
 
-    nextWorkSet = nextWorkSet
+    embeddings = embeddings
       .join(vertexSteps, vertexStepJoinStrategy)
       .where(1).equalTo(0) // tiePointId == vertexId
       .with(new UpdateVertexMappings(traversalCode));
 
     if (LOG.isDebugEnabled()) {
-      nextWorkSet = nextWorkSet
+      embeddings = embeddings
         .map(new PrintEmbeddingWithWeldPoint(true, "post-vertex-update"))
         .withBroadcastSet(getVertexMapping(), Printer.VERTEX_MAPPING)
         .withBroadcastSet(getEdgeMapping(), Printer.EDGE_MAPPING);
     }
 
-    // ITERATION FOOTER
-    return embeddings
-      .closeWith(nextWorkSet, nextWorkSet);
+    return embeddings;
+  }
+
+  /**
+   * Build a graph collection from the resulting embeddings and attach original
+   * data to the vertices and edges if necessary.
+   *
+   * @param graph   input graph
+   * @param result  embeddings
+   * @return graph collection representing the embeddings
+   */
+  protected GraphCollection<G, V, E> postProcess(LogicalGraph<G, V, E> graph,
+    DataSet<EmbeddingWithTiePoint> result) {
+    DataSet<EPGMElement> epgmElements = result
+      .<Tuple1<Embedding>>project(0)
+      .flatMap(new ElementsFromEmbedding<>(traversalCode,
+        graph.getConfig().getGraphHeadFactory(),
+        graph.getConfig().getVertexFactory(),
+        graph.getConfig().getEdgeFactory()));
+
+    return doAttachData() ?
+      extractGraphCollectionWithData(epgmElements, graph, true) :
+      extractGraphCollection(epgmElements, graph.getConfig(), true);
   }
 
   @Override
