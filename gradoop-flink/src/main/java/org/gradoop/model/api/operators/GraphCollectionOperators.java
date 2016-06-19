@@ -22,12 +22,12 @@ import org.apache.flink.api.java.DataSet;
 import org.gradoop.model.api.EPGMEdge;
 import org.gradoop.model.api.EPGMGraphHead;
 import org.gradoop.model.api.EPGMVertex;
+import org.gradoop.model.impl.GraphCollection;
 import org.gradoop.model.impl.GraphTransactions;
 import org.gradoop.model.impl.LogicalGraph;
 import org.gradoop.model.impl.id.GradoopId;
 import org.gradoop.model.impl.id.GradoopIdSet;
 import org.gradoop.util.Order;
-import org.gradoop.model.impl.GraphCollection;
 
 /**
  * Describes all operators that can be applied on a collection of logical
@@ -281,4 +281,17 @@ public interface GraphCollectionOperators
    * @return graph transactions representing the graph collection
    */
   GraphTransactions<G, V, E> toTransactions();
+
+  /**
+   * Transforms a filtered graph collection into a set of graph transactions.
+   * This mehtod generates only objects of Tuple2<GradoopId,EPGMElement> that
+   * satisfy the exclusion or inclusion criteria of a graph id for the broadcast
+   * dataset
+   * @param broadcast dataset of graph ids
+   * @param isExclusion criteria that an id must NOT(true) be in the
+   * broadcast set
+   * @return graph transactions representing the graph collection
+   */
+  GraphTransactions<G, V, E> toTransactions(
+    DataSet<GradoopId> broadcast, boolean isExclusion);
 }

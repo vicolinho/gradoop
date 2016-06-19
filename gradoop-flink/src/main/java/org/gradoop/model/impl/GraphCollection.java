@@ -36,14 +36,17 @@ import org.gradoop.model.api.operators.UnaryCollectionToGraphOperator;
 import org.gradoop.model.impl.functions.bool.Not;
 import org.gradoop.model.impl.functions.bool.Or;
 import org.gradoop.model.impl.functions.bool.True;
+
 import org.gradoop.model.impl.functions.epgm.BySameId;
 import org.gradoop.model.impl.functions.epgm.GraphElementExpander;
+import org.gradoop.model.impl.functions.epgm.GraphElementsHeadsToTransaction;
 import org.gradoop.model.impl.functions.epgm.GraphTransactionTriple;
-import org.gradoop.model.impl.functions.epgm.TransactionGraphHead;
+import org.gradoop.model.impl.functions.epgm.GraphElementWithBroadcast;
+import org.gradoop.model.impl.functions.epgm.Id;
 import org.gradoop.model.impl.functions.epgm.TransactionEdges;
 import org.gradoop.model.impl.functions.epgm.TransactionVertices;
-import org.gradoop.model.impl.functions.epgm.Id;
-import org.gradoop.model.impl.functions.epgm.GraphElementsHeadsToTransaction;
+import org.gradoop.model.impl.functions.epgm.TransactionGraphHead;
+
 import org.gradoop.model.impl.functions.graphcontainment.InAnyGraph;
 import org.gradoop.model.impl.functions.graphcontainment.InGraph;
 import org.gradoop.model.impl.functions.utils.First;
@@ -565,7 +568,8 @@ public class GraphCollection
   }
 
   /**
-   * {@inheritDoc}
+   * Transforms a graph collection into a set of graph transactions.
+   * @return graph transactions representing the graph collection
    */
   @Override
   public GraphTransactions<G, V, E> toTransactions() {
@@ -579,6 +583,24 @@ public class GraphCollection
       verticesAndEdges.coGroup(getGraphHeads()).where(0).equalTo(
         new Id<G>()).with(
         new GraphElementsHeadsToTransaction<G, V, E>());
+    return new GraphTransactions<G, V, E>(transactions, getConfig());
+  }
+
+  @Override
+  public GraphTransactions<G, V, E> toTransactions(DataSet<GradoopId> graphIds,
+    boolean isExclusion) {
+    DataSet<Tuple2<GradoopId, EPGMGraphElement>> graphVertices = getVertices()
+            .flatMap(new GraphElementWithBroadcast<V>(isExclusion)).
+                withBroadcastSet(graphIds, GraphElementWithBroadcast.GRAPH_IDS);
+    DataSet<Tuple2<GradoopId, EPGMGraphElement>> graphEdges = getEdges()
+            .flatMap(new GraphElementWithBroadcast<E>(isExclusion)).
+                withBroadcastSet(graphIds, GraphElementWithBroadcast.GRAPH_IDS);
+    DataSet<Tuple2<GradoopId, EPGMGraphElement>> verticesAndEdges =
+            graphVertices.union(graphEdges);
+    DataSet<GraphTransaction<G, V, E>>  transactions =
+            verticesAndEdges.coGroup(getGraphHeads()).where(0).equalTo(
+                    new Id<G>()).with(
+                    new GraphElementsHeadsToTransaction<G, V, E>());
     return new GraphTransactions<G, V, E>(transactions, getConfig());
   }
 }

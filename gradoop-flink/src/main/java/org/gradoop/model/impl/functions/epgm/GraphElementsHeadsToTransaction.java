@@ -49,17 +49,20 @@ public class GraphElementsHeadsToTransaction
     Collector<GraphTransaction<G, V, E>> out) throws Exception {
     Set<V> vertices = new HashSet<V>();
     Set<E> edges = new HashSet<E>();
-    G head = second.iterator().next();
-    Iterator<Tuple2<GradoopId, EPGMGraphElement>> iterator = first.iterator();
-    while (iterator.hasNext()) {
-      EPGMGraphElement el = iterator.next().f1;
-      if (el instanceof EPGMVertex) {
-        vertices.add((V) el);
-      } else if (el instanceof EPGMEdge) {
-        edges.add((E) el);
+    Iterator<G> headIterator = second.iterator();
+    if (headIterator.hasNext()) {
+      G head = headIterator.next();
+      Iterator<Tuple2<GradoopId, EPGMGraphElement>> iterator = first.iterator();
+      while (iterator.hasNext()) {
+        EPGMGraphElement el = iterator.next().f1;
+        if (el instanceof EPGMVertex) {
+          vertices.add((V) el);
+        } else if (el instanceof EPGMEdge) {
+          edges.add((E) el);
+        }
       }
+      out.collect(new GraphTransaction<G, V, E>(head, vertices, edges));
     }
-    out.collect(new GraphTransaction<G, V, E>(head, vertices, edges));
     out.close();
   }
 }
